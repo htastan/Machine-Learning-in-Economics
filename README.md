@@ -14,5 +14,5 @@ Instructor: Prof. Dr. Hüseyin Taştan
 
 2. **Basic Concepts in Machine Learning** 
     * Slides: [html](https://raw.githack.com/htastan/Machine-Learning-in-Economics/main/Slides/Basic-concepts-in-ML.html) 
-    * Lab: [Introduction to R programming](https://raw.githack.com/htastan/Machine-Learning-in-Economics/main/Labs/Lab-01-Intro-to-R-and-RStudio-Part-2.html)
+    * Lab: [Introduction to R programming](https://raw.githack.com/htastan/Machine-Learning-in-Economics/main/Labs/Lab-02-Intro-to-R-and-RStudio-Part-2.html)
     
