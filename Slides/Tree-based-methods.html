@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Tree-Based Methods</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Hüseyin Taştan" />
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/metropolis.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Tree-Based Methods
+## Machine Learning in Economics
+### Hüseyin Taştan
+### Yildiz Technical University
+
+---
+
+class: my-large-font, inverse, middle, center, clear 
+background-image: url("img/orman.jpg")
+background-position: center
+background-size: cover
+
+&lt;style type="text/css"&gt;
+.remark-slide-content {
+    font-size: 28px;
+    padding: 1em 4em 1em 4em;
+}
+.my-large-font {
+  font-size: 40px;
+}
+.my-small-font {
+  font-size: 20px;
+}
+.my-medium-font {
+  font-size: 25px;
+}
+&lt;/style&gt;
+
+
+
+## Lecture Outline
+
+- [Decision tree basics](#basics)
+- [Regression trees](#regtrees)
+- [Classification Trees](#classtrees)
+- Aggregation methods 
+  - [Bagging](#bagging) 
+  - [Random Forests](#randomforests)
+  - [Boosting](#boosting) 
+
+---
+name: basics 
+
+# Decision Trees
+
+* Can be applied to both regression and classification problems. 
+
+* Decision trees segment or stratify `\(X\)` variables (feature space) into simple and easily interpretable regions. The splitting or segmenting rules can be represented by a decision tree.  
+
+* Given a new observation, the prediction is computed by checking the region that observation belongs.  
+
+* An important drawback of decision trees is that it generally perform worse than other regression and classification methods.
+
+* Solution: Use aggregation methods. These involve estimating a large number of trees and then aggregating them: e.g., bagging, random forests, and boosting. 
+
+---
+name: regtrees 
+
+# Stratification of feature space
+
+Steps: 
+1. Divide the predictor space, i.e., the set of possible values for `\(X_1, X_2,\ldots,X_p\)`, into `\(J\)` **distinct** and **non-overlapping** regions:
+`\(R_1, R_2, \ldots, R_J\)`
+1. For an observation that falls into region `\(R_j\)`, compute the prediction using the training mean in that region. 
+
+Regions can be found by minimizing the following sum of squared residuals:
+`$$\sum_{j=1}^{J} \sum_{i \in R_{j}}\left(y_{i}-\hat{y}_{R_{j}}\right)^{2}$$`
+where  `\(\hat{y}_{R_{j}}\)` is the average in region `\(j\)`. Note that the feature space is divided into simple boxes. 
+
+---
+# Forming Regions 
+
+.pull-left[
+![](img/tree1.png)
+]
+
+.pull-right[
+* For simplicity, assume that there are two features, `\(X_1\)` and `\(X_2\)`. 
+* We can split `\(x\)` values into sub-regions iteratively. 
+* The cut-points that determine region boundaries can be found by solving the optimization problem. 
+* Assume that the number of regions is 5. 
+]
+
+---
+# Forming Regions 
+
+.pull-left[
+![](img/tree2.png)
+]
+
+.pull-right[
+1. Using the cut-point `\(X_1 = t_1\)`, the data is split into two regions.  
+]
+
+---
+# Forming Regions 
+
+.pull-left[
+![](img/tree3.png)
+]
+
+.pull-right[
+1. Using the cut-point `\(X_1 = t_1\)`, the data is split into two regions.
+1. If  `\(X_1&lt;t_1\)` then split on `\(X_2=t_2\)`. 
+]
+
+---
+# Forming Regions 
+
+.pull-left[
+![](img/tree4.png)
+]
+
+.pull-right[
+1. Using the cut-point `\(X_1 = t_1\)`, the data is split into two regions.
+1. If  `\(X_1&lt;t_1\)` then split on `\(X_2=t_2\)`.
+1. If `\(X_1&gt;t_1\)` then split on `\(X_1=t_3\)`. 
+]
+
+---
+#  Forming Regions 
+
+.pull-left[
+![](img/tree5.png)
+]
+
+.pull-right[
+1. Using the cut-point `\(X_1 = t_1\)`, the data is split into two regions.
+1. If  `\(X_1&lt;t_1\)` then split on `\(X_2=t_2\)`.
+1. If `\(X_1&gt;t_1\)` then split on `\(X_1=t_3\)`.
+1. If `\(X_1&gt;t_3\)` then split on `\(X_2=t_4\)`. 
+]
+
+---
+# Forming Regions 
+
+.pull-left[
+![](img/tree8.PNG)
+]
+
+.pull-right[
+![:scale 60%](img/tree7.PNG)
+* The number of internal nodes: 4
+* The number of terminal nodes (or leaves): 5
+* Segments connecting nodes are called branches.
+]
+
+---
+# Interpretation 
+
+.pull-left[
+![](img/tree8.PNG)
+]
+
+.pull-right[
+* A tree is interpreted from top to bottom. 
+* At a given node, `\(X_j \leq t_k\)` indicates left-hand branch, and the right-hand branch indicates `\(X_j&gt;t_k\)`. 
+* For example, if `\(X_1\leq t_1\)` and `\(X_2\leq t_2\)` then the prediction is `\(R_1\)` which is the mean in the region. 
+]
+
+---
+# Example: Data = Hitters 
+
+.pull-left[
+![](img/tree9.PNG)
+]
+
+.pull-right[
+* A simple regression tree to predict baseball players' salary, using two variables, Years and Hits.  
+* Salary is in natural logarithms.
+* For a player with  less than 4.5 (Years) experience, the predicted log(Salary) is 5.11, i.e., `\(1000\times e^{5.11}=165174\)` `$`
+
+* For a player with Years&gt;4.5 and Hits less than 117.5, the prediction is `\(1000\times e^{6}=402834\)` `$`
+]
+
+---
+# Another illustration of regression tree  
+
+.pull-left[
+![](img/tree10.png) 
+]
+
+.pull-right[
+* Three regions are represented as
+1. `\(R_1 = \{X| Years&lt;4.5\}\)`
+1. `\(R_2 = \{X| Years\geq 4.5,~Hits&lt;117.5 \}\)`
+1. `\(R_3 = \{X| Years\geq 4.5,~Hits\geq 117.5 \}\)`
+]
+
+---
+# Another illustration of regression tree   
+
+.pull-left[
+![](img/tree11.PNG)
+]
+
+.pull-right[
+* Three regions are represented as 
+1. `\(R_1 = \{X| Years&lt;4.5\}\)`
+1. `\(R_2 = \{X| Years\geq 4.5,~Hits&lt;117.5 \}\)`
+1. `\(R_3 = \{X| Years\geq 4.5,~Hits\geq 117.5 \}\)`
+
+* For a new observation, the mean of the region it belongs is the prediction (shown in red). 
+]
+
+---
+# Building trees 
+
+* Typically, a regression tree performs well in the training set, but not in the test set. 
+
+* The reason for this is over-fitting. The resulting tree tends to be very large. 
+
+* Solution: prune unnecessary branches and obtain a smaller tree which is more successful. Smaller tree = fewer leaves (terminal nodes).  
+
+* Smaller trees tend to have bias but the variance is much smaller. 
+
+* Pruning trees: 
+  1. Start with a large tree 
+  1. Select a subtree using cross-validation that gives the best test performance. 
+
+* This strategy is not feasible because the number of subtrees tend to be very large.
+
+---
+# Pruning trees 
+
+* Instead of that strategy, we can consider a set of trees indexed by a tuning parameter `\(\alpha\)` and consider the following objective function: 
+`$$\sum_{m=1}^{|T|} \sum_{i: x_{i} \in R_{m}}\left(y_{i}-\hat{y}_{R_{m}}\right)^{2}+\alpha|T|$$`
+where `\(|T|\)` is the number of leaves 
+
+* `\(\alpha\)` parameter measures the trade-off between tree complexity and model's fit 
+* When `\(\alpha=0\)`, we have the initial large tree, `\(T_0\)`. 
+
+* As `\(\alpha\)` increases, tree becomes smaller (the number of leaves declines).
+
+* The tuning parameter `\(\alpha\)` can be chosen by cross-validation. 
+
+---
+# Example: Data = Hitters 
+
+.pull-left[
+![:scale 100%](img/tree12.PNG)
+]
+
+.pull-right[
+* Unpruned tree is shown 
+* The data set is divided into two parts: training data (n=132) and validation set (n=132) 
+* For different `\(\alpha\)` values, the test error is estimated using 6-fold cross-validation. 
+]
+
+---
+background-color: #FFFFFF
+# Example: Data = Hitters 
+
+.pull-left[
+![:scale 100%](img/tree13.PNG)
+]
+
+.pull-right[
+* The graph shows MSEs for different tree sizes represented by `\(\alpha\)`.
+* The smallest cross-validation MSE (blue) is obtained at  `\(\alpha=3\)`  
+* Notice that as tree grows training error keeps declining (leading to over-fitting). 
+]
+
+---
+background-color: #FFFFFF
+name: classtrees 
+
+# Classification trees
+
+* Similar to regression trees algorithmically. 
+* But now the response variable is categorical rather than continuous.  
+* For each region (or node) we predict the **most common category** among the training data within that region. 
+
+.pull-left[
+![:scale 100%](img/titanic1.PNG)
+]
+.pull-right[
+* Example: Surviving the Titanic accident 
+* Two predictors are used in the classification tree (`Survived ~ Age + Sex`)
+]
+
+---
+background-color: #FFFFFF
+
+# Titanic data 
+
+.center[![:scale 90%](img/titanic2.PNG)]
+
+---
+# Measuring performance in classification trees
+
+* The splits are chosen by minimizing classification error instead of minimizing SSR. 
+
+* The **classification error rate** ( `\(E\)` ) is defined as
+`$$E = 1-\max_k(\hat{p}_{mk})$$`
+where `\(\hat{p}_{mk}\)` is the proportion of observations in region `\(m\)` and category `\(k\)` in the training set. 
+
+* Disadvantage: `\(E\)` is not sensitive enough to grow trees. In practice, two alternative criteria are available:
+
+  1. Gini indeksi ( `\(G\)` )
+
+  1. Entropi ( `\(D\)` )
+
+
+---
+# Classification performance criteria
+
+.pull-left[
+Gini index: 
+`$$G = \sum_{k=1}^{K}  \hat{p}_{mk}(1-\hat{p}_{mk})$$`
+Entropy: 
+`$$D=-\sum_{k=1}^{K} \hat{p}_{mk} \log(\hat{p}_{mk})$$`
+]
+.pull-right[
+* Gini index is a measure of total variability in `\(K\)` classes 
+* When `\(\hat{p}_{mk}\)` values are close to 0 or 1, `\(G\)` takes on small values. 
+* For this reason, Gini index is also a measure of node purity. A small value implies that a node consists of observations predominantly from a single class 
+* Similarly, the entropy measure also takes on small values when `\(\hat{p}_{mk}\)` is closer to 0 or 1.
+]
+
+
+---
+background-color: #FFFFFF
+
+.pull-left[
+`\(p(1-p),~~0&lt;p&lt;1\)`
+![:scale 100%](img/Gini.PNG)
+]
+
+.pull-right[
+`\(-p\log(1-p),~~0&lt;p&lt;1\)`
+![:scale 100%](img/Entropi.PNG)
+]
+
+---
+background-color: #FFFFFF
+# Example: Data set = Heart Disease
+## Unpruned Tree
+![:scale 100%](img/heart1.PNG)
+
+---
+background-color: #FFFFFF
+# Pruned Tree (by cross-validation)
+.center[![:scale 90%](img/heart2.PNG)]
+
+Thal=thallium test, categorical variable (with levels= normal, reversible, fixed): Thal:a (normal, left), other Thal groups (right) (see ISLR, p.312)
+
+
+---
+class: my-medium-font
+title: blank 
+# Advantages and Disadvantages of Trees
+.pull-left[
+**Advantages** 
+* Easy to explain and interpret. 
+* Can be represented visually.
+* Can be applied to both regression and classification problems
+* Some believe that trees represent human-decision making proccess more successfully than other approaches  
+* Categorical predictors can be added without the need to convert them into dummy variables. 
+]
+--
+.pull-right[
+**Disadvantages** 
+* Prediction performance is generally worse than other regression and classification approaches. 
+* A small change in data can lead to important changes in the trees 
+* For example, if we split training data randomly into two parts and grow separate trees we may obtain completely different results (**high variance**).  
+]
+--
+
+**Alternative**: 
+Instead of growing a single tree, grow a large number of trees and then aggregate them: **Random Forests, Bagging, Boosting**
+
+---
+name: bagging
+
+# Bagging (**B**ootstrap **Agg**regat**ing**)
+
+* Trees tend to have high variance.  
+
+* A way to reduce the variance is to grow a large number of trees and then aggregate them. 
+
+* Bagging is a general-purpose procedure for reducing the variance of a statistical learning method. It can be particularly useful in the context of decision trees.
+
+* Bagging involves two parts: Bootstrapping (i.e., generating many training sets)
+and averaging over bootstrapped samples
+
+---
+# Bagging
+
+* Let's assume that we have an i.i.d. random sample,  `\((Z_1, Z_2,\ldots,Z_n)\)`, drawn from a population with mean `\(\mu\)` and variance `\(\sigma^2\)`. Then, the variance of the sample average `\(\bar{Z}\)` will be `\(\sigma^2/n\)`. 
+* In other words, taking the average (i.e., aggregating) reduces the variance. 
+* Bagging works in a similar manner. In fact, it can be applied to any machine learning algorithm. 
+* It works as follows: for `\(B\)` different training sets, estimate the prediction model for each: `\(\hat{f}^1(x), \hat{f}^2(x),\ldots,\hat{f}^B(x)\)`. Then take the average of all predictions
+`$$\hat{f}_{avg} =\frac{1}{B} \sum_{b=1}^{B} \hat{f}^b(x)$$`
+* Practical difficulty: we only have a single training data
+
+
+---
+# Bagging (**B**ootstrap **Agg**regat**ing**)
+.pull-left[
+* We can create different training sets using **bootstrap** method 
+* Bootstrap Aggregating: Randomly draw (with replacement) a data set from the training data and estimate the model. Repeat `\(B\)` times and take the average: 
+`$$\hat{f}_{bag} =\frac{1}{B} \sum_{b=1}^{B} \hat{f}^{*b}(x)$$`
+* No pruning.  
+]
+.pull-right[
+![:scale 100%](img/bagging2.PNG) 
+]
+
+---
+# Out-of-bag Error
+
+* How can we estimate test error in the Bagging method? 
+
+* It is possible to estimate the test error without cross-validation 
+
+* When we apply Bootstrap to grow trees, approximately 2/3 of data will be used. The remaining 1/3 can be used as validation set 
+
+* In each bootstrap iteration, the remaining one-third observations that are not used in training are known as  **out-of-bag (OOB)** observations.
+
+---
+# Out-of-bag Error
+
+* We can use these OOB observations in estimating test error. This is called the **OOB error** (for regression problems OOB MSE; for classification problems OOB classification error) 
+
+* We do not need to run a separate cross-validation analysis
+
+
+* For each bootstrap iteration, the OOB error can be computed easily 
+
+* For large `\(B\)` values, this approach produces results similar to leave-one-out cross-validation (LOOCV)  
+
+
+---
+class: my-medium-font 
+
+# Variable importance measures
+
+* Bagging generally improves prediction accuracy compared to a single tree 
+* But the resulting model cannot be interpreted because it is a combination of a large number of trees. It cannot be represented by a tree 
+* The practical problem is that we do not know which variables are important 
+
+.pull-left[
+* **Variable importance measures** can be used for this problem. 
+* In regression trees, we can save the reduction in SSR coming from splits for each predictor and then take the average for all `\(B\)` trees. Large values indicate important variables.   
+* In classification trees, we can use reductions in the Gini index 
+]
+.pull-right[
+![:scale 80%](img/bagging3.PNG) 
+]
+
+---
+name: randomforests
+
+# Random Forests 
+
+* In bagging, we estimate a separate tree in each iteration. We use the same feature set (predictors) even though observations are different 
+
+* Because of this, the resulting trees tend to be similar to each other. For example, when there is a single dominant predictor, that variable will appear in all trees.  
+
+* The resulting trees and hence the predictions will be similar. In other words, the correlation among trees will be very high. 
+
+* This leads to increased variance even after aggregation. 
+
+
+
+---
+# Random Forests 
+
+* Random Forest method follows similar steps but attempts to reduce the correlation and variance (**de-correlating**) by using not all  `\(p\)` variables but a random subset `\(m\)`  
+
+* More specifically, each time a split is made, a new random selection of, say `\(m\approx \sqrt{p}\)`,  `\(X\)` variables are used. 
+
+* This implies that different sets of variables are considered a given split. 
+
+* For example, we may use `\(X_1,X_3,X_5\)` variables in a given split while using `\(X_2,X_4\)` in another split ( for a set of `\(p=5\)` features). 
+
+* Bagging is a special case of Random Forests. We obtain Bagging when `\(m=p\)` 
+
+---
+name: boosting 
+
+# Boosting 
+
+* Boosting is similar to Bagging and Random Forests. But trees are grown sequentially using the information in previous trees 
+
+* Boosting does not use bootstrap sampling. The boosting algorithm is summarized in the next slide 
+
+* There are 3 tuning parameters in the boosting algorithm:
+  * `\(B\)` = number of trees. Big values may lead over-fitting. Chosen by cross-validation
+  * Shrinkage parameter = `\(\lambda\)` controls learning rate. In practice, it can be set to 0.01 or 0.001
+  * The number of nodes in trees = `\(d\)`. In pracitce it can be set to `\(d=1\)`.
+
+---
+class: my-medium-font
+# Boosting algorithm for regression trees (p. 323)
+
+1. Set `\(\hat{f}(x)=0\)` and `\(r_i=y_i\)` for all `\(i\)` in the training set 
+1. For `\(b=1,2,\ldots,B\)` repeat: 
+  
+  a. Fit a tree `\(\hat{f}^b\)` with `\(d\)` splits (i.e., `\(d+1\)` terminal nodes) 
+  b. Update `\(\hat{f}(x)\)` by adding in a shrunken version of the new tree: 
+  `$$\hat{f}(x) \leftarrow \hat{f}(x)+\lambda \hat{f}^{b}(x)$$`
+  c. Update the residuals: 
+  `$$r_{i} \leftarrow r_{i}-\lambda \hat{f}^{b}\left(x_{i}\right)$$`
+1. Output the boosted model: 
+`$$\hat{f}(x)=\sum_{b=1}^{B} \lambda \hat{f}^{b}(x)$$`
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script src="macros.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false,
+"ratio": "16:9"
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

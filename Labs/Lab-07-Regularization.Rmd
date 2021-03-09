@@ -1,0 +1,726 @@
+---
+title: "Linear Model Selection and Regularization" 
+subtitle: Machine Learning in Economics
+author: 
+  name: "Prof. Dr. Hüseyin Taştan"
+  affiliation: "Yildiz Technical University"
+date: "Spring 2021"
+output:
+  html_document: 
+    number_sections: true
+    theme: readable
+    highlight: haddock 
+    # code_folding: show
+    toc: yes
+    toc_depth: 3
+    toc_float: yes
+    keep_md: false
+
+
+---
+<style type="text/css"> 
+body{
+  font-size: 12pt;
+}
+code.r{
+  font-size: 12pt;
+}
+</style>
+
+```{r setup, include=FALSE}
+# knitr::opts_chunk$set(echo = TRUE, results = 'asis', fig.show = 'asis')
+knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning=FALSE)
+``` 
+
+<br/>
+<br/>
+
+
+
+# Subset Selection
+
+## Best Subset Selection
+
+This example is based on the Credit data set (also used in the text). 
+The purpose is to construct a predictive model for the variable "Balance". 
+We will use `regsubsets()` function which is a part of the `leaps` package. 
+For more information visit the CRAN page: [leaps: Regression Subset Selection](https://cran.r-project.org/web/packages/leaps/index.html).
+
+```{r}
+library(ISLR)
+library(leaps)
+regfit.full <- regsubsets(Balance ~ . -ID, data = Credit)
+summary(regfit.full)
+```
+
+An asterisk (*) indicates that the variable is selected in the respective model. For example, the best two-variable model contains only `Income` and `Rating.` The best three-variable model contains `Income`, `Rating`, and `Student` dummy. 
+
+By default only up to 8-variable models are reported. This can be changed using `nvmax` option:  
+```{r}
+regfit.full <- regsubsets(Balance ~ . -ID, data = Credit, nvmax = 11)
+summary(regfit.full) 
+```
+
+The output above shows us the best models for each set of models that contain $k$ variables where $k=1,2,...,11$. There are 10 variables in the data set but because ethnicity has three levels we created two dummies (one of them is the base group). 
+
+We have 11 model selection criteria for each model listed above. Which one 
+should we choose? The following code chunk prints Adj.R2 on the screen: 
+```{r}
+reg.summary <- summary(regfit.full)
+reg.summary$rsq 
+```
+
+According to this output, the Model that contains 7 variables has the maximum Adj.R2=0.9548167. 
+
+Similarly, what's the best model according to the `Cp` (or, equivalently, `AIC`) criterion?
+```{r}
+reg.summary <- summary(regfit.full)
+reg.summary$cp 
+```
+
+According to the output above, the minimum `Cp` is 5.574883, corresponding to the Model that contains 6 variables.
+
+We can automatize this and plot the results for easy evaluation. The following code chunk
+does that. 
+```{r}
+# the number of variables 
+p <- 11
+# 2x2 plot grid
+par(mfrow=c(2,2))
+# plot RSS
+plot(reg.summary$rss, xlab="Number of Variables", xaxt="n", ylab="RSS", type="o")
+axis(1, at = seq(1, p, by = 1),las=2)
+
+# plot Adj.R2
+plot(reg.summary$adjr2, xlab="Number of Variables", xaxt="n", ylab="Adjusted RSq",type="o")
+axis(1, at = seq(1, p, by = 1),las=2)
+# find the model with max Adj.R2
+best <- which.max(reg.summary$adjr2)
+# put red dot on the graph that marks the best according to Adj.R2 
+points(best, reg.summary$adjr2[best], col="red", cex=2, pch=20)
+
+# plot Cp
+plot(reg.summary$cp, xlab="Number of Variables", xaxt="n", ylab="Cp",type='o')
+axis(1, at = seq(1, p, by = 1),las=2)
+# find the best according to Cp
+bestCp <- which.min(reg.summary$cp)
+points(bestCp, reg.summary$cp[bestCp], col="red", cex=2, pch=20)
+
+# plot BICs
+plot(reg.summary$bic, xlab="Number of Variables", xaxt="n", ylab="BIC", type='o')
+bestBIC <- which.min(reg.summary$bic)
+points(bestBIC, reg.summary$bic[bestBIC], col="red", cex=2, pch=20) 
+axis(1, at = seq(1, p, by = 1),las=2)
+```
+
+**Exercise**: Can you write a function that automatizes the computations in the code chunk above and plots the results?
+
+The chosen model is marked with a red dot. `Adj.R2` chooses the model with 7 variables, `Cp` chooses the model with 6 variables, and `BIC` chooses the model with 4 variables. These results conform to our expectations. The `BIC` tends to choose smaller models in finite samples because it puts a larger penalty as models become more complex. Note that `RSS`  is not used to select models.  
+
+Alternatively, we can use the `leaps::plot.regsubsets()` function to display the selected variables for the best model with a given number of predictors, ranked according to the `BIC`, `Cp`, `adjusted R2`, or `AIC`. For example, 
+
+```{r}
+plot(regfit.full,scale="adjr2")
+```
+
+The top row of plot above contains a black square for each variable selected
+according to the optimal model associated with Adjusted Rsquared. So the optimal model contains the following variables: `income`, `limit`, `rating`, `cards`, `age`, `gender` dummy, and `student` dummy (7 variables plus intercept). 
+
+Similarly, using `Cp`
+```{r}
+plot(regfit.full, scale="Cp")
+```
+
+And according to `BIC`: 
+```{r}
+plot(regfit.full, scale="bic")
+```
+
+The `BIC` chooses the smallest model that contains the following variables: income, limit, cards, and student dummy. To see that coefficient estimates associated with that model, we can run: 
+```{r} 
+coef(regfit.full, 4)
+```
+
+## Forward and Backward Stepwise Selection 
+
+We can also use the `regsubsets()` function to perform forward stepwise
+or backward stepwise selection, using the argument `method="forward"` or
+`method="backward"`.
+
+```{r}
+regfit.fwd <- regsubsets(Balance ~ . -ID, data = Credit, nvmax=11, method="forward")
+reg.fwd.summary <- summary(regfit.fwd)
+reg.fwd.summary
+```
+
+
+```{r}
+regfit.bwd <- regsubsets(Balance ~ . -ID, data = Credit, nvmax=11, method="backward")
+reg.bwd.summary <- summary(regfit.bwd)
+reg.bwd.summary
+```
+
+The forward and the best subset selection algorithms produce the same set of variables up to the models containing 3 variables. For example, compare the models with 2 variables: 
+```{r}
+coef(regfit.full, 2)
+coef(regfit.fwd, 2)  
+```
+
+Similarly, for 3-variable models: 
+```{r}
+coef(regfit.full, 3)
+coef(regfit.fwd, 3)  
+```
+
+But the best 4-variable models identified by the full subset selection and forward selection are different: 
+```{r}
+coef(regfit.full, 4)
+coef(regfit.fwd, 4)  
+```
+
+**Exercise** Check if 5-variable (or larger) models are the same. 
+
+Which model is the best? Using the `Cp` criterion, the best model is 
+```{r}
+coef(regfit.fwd, which.min(reg.fwd.summary$cp)) 
+```
+
+This is the same as the best subset selection algorithm: 
+```{r}
+coef(regfit.full, which.min(reg.summary$cp))
+```
+
+However, when we use the `BIC` criterion: 
+```{r}
+coef(regfit.fwd, which.min(reg.fwd.summary$bic))  
+```
+
+Compare this to the best subset selection result: 
+```{r}
+coef(regfit.full, which.min(reg.summary$bic)) 
+```
+
+Similarly, using the backward selection, overall the best model according to the BIC 
+is 
+```{r}
+coef(regfit.bwd, which.min(reg.bwd.summary$bic))  
+```
+
+**Exercise** Is the best 2-variable model from the backward selection is the same as the best 2-variable model from the forward selection? What about 3-variable models?
+
+
+## Validation Set Approach and Cross-validation
+
+Now we must use only the training data set to select variables. If the full data set is used to perform the best subset selection step, the validation set errors and cross-validation errors that we obtain will not be accurate estimates of the
+test error.
+
+### Validation Set Approach
+
+To use the validation set approach, we start by splitting the data set into training and testing parts, just like we did in our previous classes. 
+```{r}
+set.seed(1)
+train <- sample(c(TRUE, FALSE), nrow(Credit), replace = TRUE)
+test <- (!train) 
+```
+
+The variable `train` equals `TRUE` if the corresponding observation is included
+in the training set. The full data set is randomly split into two parts.  
+
+Now, we apply `regsubsets()` to the training set in order to perform best
+subset selection:
+```{r}
+regfit.best <- regsubsets(Balance ~ . -ID, data = Credit[train,], nvmax=11) 
+```
+
+What is the validation error for the best model of each model size. We first make a model matrix from the test data?
+
+```{r}
+test.mat <- model.matrix(Balance ~ . -ID, data = Credit[test,]) 
+```
+
+The function `model.matrix()` is used to form the $X$ matrix from the data. 
+Now we run a loop, and for each size `i`, we extract the coefficients from `regfit.best` for the best model of that size, multiply them with the appropriate columns of the test model matrix to form the predictions, and compute the test MSE.
+
+```{r}
+val.errors <- rep(NA, 11)
+for(i in 1:11){
+  coefi <- coef(regfit.best, id = i)
+  pred <- test.mat[, names(coefi)] %*% coefi
+  val.errors[i] <- mean( (Credit$Balance[test] - pred)^2 )
+}
+val.errors 
+```
+
+Which one is the best, i.e., the smallest?
+```{r}
+which.min(val.errors) 
+```
+
+And the best model is
+```{r}
+coef(regfit.best, 7) 
+```
+
+As noted in the ISLR lab in chapter 6, the procedure above is straightforward but a little bit tedious because there is no `predict()` function in the `regsubsets()`. 
+We can write our own predict function to be used later. Remember: if you repeat the same computations over and over again, it is best to write a function instead of copying and pasting the previous code. 
+
+```{r}
+predict.regsubsets <- function(object, newdata, id,...){
+  form <- as.formula(object$call[[2]])
+  mat <- model.matrix(form, newdata)
+  coefi <- coef(object, id=id)
+  xvars <- names(coefi)
+  mat[, xvars] %*% coefi
+} 
+```
+
+The validation set approach produced the best model as the one that contains 7 variables (see above). What is the best model that contains 7 variables according to the best subset selection algorithm? The following code chunk answers that question: 
+```{r}
+regfit.best <- regsubsets(Balance ~ . -ID, data=Credit, nvmax=11)
+coef(regfit.best, 7) 
+```
+This is the same as the model chosen by the validation set approach. Note that we used full data in this case (not training data). 
+
+**Exercise** If we use training data in the best subset selection algorithm, which model do we get? Is it the same?
+
+### Cross-validation Approach
+
+First, we need to decide the number of folds, $k$, over which we must perform best subset selection. 
+
+```{r}
+# number of folds
+k <- 10
+# number of obs
+n <- nrow(Credit)
+# number of variables
+p <- 11
+# set seed for replication
+set.seed(1)
+# create a vector that allocates each observation to one of k = 10 folds
+folds <- sample(1:k, n, replace=TRUE)
+# create a matrix to store the results
+cv.errors <- matrix(NA,k,p, dimnames=list(NULL, paste(1:p))) 
+```
+
+In the code chunk above, the elements of folds that equal `j` are in the test set in the `j`th fold, and the remainder are in the training set.
+
+```{r}
+table(folds) 
+```
+
+Now we are ready to perform cross-validation within a loop. 
+```{r}
+for(j in 1:k){
+  best.fit <- regsubsets(Balance ~ . -ID, data=Credit[folds!=j,], nvmax=p)
+  for(i in 1:p){
+    pred <- predict(best.fit, Credit[folds==j,], id=i)
+    cv.errors[j,i] <- mean( (Credit$Balance[folds==j]-pred)^2)
+  }
+} 
+```
+
+This gives us a $10\times 11$ matrix: 
+```{r}
+cv.errors 
+```
+
+We use the `apply()` function to average over the columns of this matrix in order to obtain a vector for which the `j`th element is the cross-validation error for the i-variable model.
+
+```{r}
+mean.cv.errors <- apply(cv.errors, 2, mean)
+mean.cv.errors 
+```
+
+```{r}
+par(mfrow=c(1,1))
+best.cv <- which.min(mean.cv.errors) 
+plot(mean.cv.errors, type='b', xaxt="n", 
+     xlab="Numbe of variables", 
+     ylab="Cross-validation error")
+points(best.cv, mean.cv.errors[best.cv], col="red", cex=2, pch=20) 
+axis(1, at = seq(1, 11, by = 1),las=2)
+```
+
+The cross-validation approach selects a 6-variable model. 
+
+Estimate a 6-variable model using the best subset selection approach: 
+```{r}
+reg.best <- regsubsets(Balance ~ . -ID, data=Credit, nvmax=p)
+coef(reg.best, best.cv)  
+```
+
+**Exercise**: Compare the model selected by CV with the previous approaches. 
+
+```{r, echo=FALSE, results="hold"}
+# empty the workspace
+rm(list=ls()) 
+```
+
+# Shrinkage Methods: Ridge Regression and LASSO
+
+We will use `glmnet` package to perform the ridge regression and the LASSO. The main function is  `glmnet()` which only accepts vectors and matrices. We will not use `y ~ x` syntax. The missing values in the data set must be removed before proceeding. 
+
+We first create a vector y containing response variable, and a matrix X containing 
+variables. 
+
+```{r}
+x <- model.matrix(Balance ~ . -ID, Credit)[,-1]
+y <- Credit$Balance 
+```
+
+Note that `x` matrix excludes the intercept column: 
+```{r}
+head(x) 
+```
+`model.matrix()[,-1]` omits the first column (which is the intercept by default). 
+
+The `model.matrix()`function is particularly useful for creating `x`; not only
+does it produce a matrix corresponding to the 11 predictors but it also
+automatically transforms any qualitative variables into dummy variables.
+The latter property is important because `glmnet()` can only take numerical,
+quantitative inputs.
+
+## Ridge Regression 
+
+The `glmnet()` function has an `alpha` argument that determines what type
+of model is fit. If `alpha=0` then a ridge regression model is fit, and if `alpha=1` then a lasso model is fit.
+
+```{r}
+library(glmnet)
+grid <- 10^seq(10,-2,length=100)
+ridge.mod <- glmnet(x, y, alpha=0, lambda=grid)
+```
+
+The tuning parameter $\lambda$ values are determined on a grid from $\lambda=10^{10}$ to $\lambda=10^{-2}$ (you may use the default settings as well). This set of values cover a range of possibilities from a model with only an intercept to the OLS regression. Also, `glmnet()` automatically standardizes variables. 
+
+We have a set of coefficients for each value of $\lambda$. 
+
+```{r}
+dim(coef(ridge.mod)) 
+```
+
+There are 12 models in our example, one for each predictor plus an intercept model. 
+To access a particular set of coefficients we can use 
+```{r}
+ridge.mod$lambda[50]
+coef(ridge.mod)[,50] 
+```
+
+
+We now split the sample into a training set and a test set in order
+to estimate the test error of ridge regression. 
+```{r}
+set.seed(1)
+train <- sample(1:nrow(x), nrow(x)/2)
+test <- (-train)
+y.test <- y[test] 
+```
+
+Next we fit a ridge regression model on the training set, and evaluate
+its MSE on the test set, using $\lambda=5$. Note the use of the `predict()`
+function again. This time we get predictions for a test set, by replacing
+`type="coefficients"` with the `newx` argument.
+
+```{r}
+ridge.mod <- glmnet(x[train,], y[train], alpha=0, lambda=grid, thresh=1e-12)
+ridge.pred <- predict(ridge.mod, s=5, newx=x[test,])
+mean((ridge.pred - y.test)^2) 
+```
+
+The test MSE is 10364.53 We can compare this to a model without any x variable. In that case, we would predict each observation in the test set using the average of y variable in the training set. 
+```{r}
+mean((mean(y[train]) - y.test)^2) 
+```
+
+We'd obtain the same result if we used a very large value for `lambda`: 
+```{r}
+ridge.pred <- predict(ridge.mod, s=1e10, newx=x[test,])
+mean((ridge.pred-y.test)^2) 
+```
+
+Is there any benefit to using the ridge regression with $\lambda=5$ instead of plain OLS regression? The ridge regression with $\lambda=0$ gives  the OLS result, so: 
+```{r}
+ridge.pred <- predict(ridge.mod, s=0, newx = x[test,], exact = T, 
+                      x = x[train,], y = y[train])
+mean((ridge.pred - y.test)^2) 
+```
+
+It looks like the ridge regression indeed provides improvement over OLS regression. 
+Compare coefficient estimates from `lm()` function and `glmnet()` with `s=0`: 
+```{r}
+lm(y ~ x, subset = train)
+predict(ridge.mod, s = , exact = T, type = "coefficients", 
+        x = x[train, ], y = y[train])[1:12, ] 
+```
+
+In the computations above we used an arbitrary value for $\lambda$. We can use 
+cross-validation to choose the tuning parameter. The function `cv.glmnet()` can be used to perform k-fold cross-validation (default is 10-fold)
+
+```{r}
+set.seed(1)
+cv.out <- cv.glmnet(x[train,], y[train], alpha=0, lambda=grid)
+plot(cv.out)
+bestlam <- cv.out$lambda.min
+bestlam 
+```
+
+The value of the tuning parameter that gives the smallest cross-validation error is $\lambda=0.01$. The test MSE associated with that value is 
+
+
+```{r}
+ridge.pred <- predict(ridge.mod, s=bestlam, newx=x[test,])
+mean((ridge.pred - y.test)^2) 
+```
+
+
+The final model: 
+```{r}
+out <- glmnet(x, y, alpha=0)
+predict(out, type="coefficients", s=bestlam)[1:12,] 
+```
+
+Note that none of the coefficients are zero. The ridge regression does not perform variable selection. 
+
+
+## The LASSO 
+
+The function `glmnet()` performs the LASSO when we set `alpha=1`. 
+```{r}
+lasso.mod <- glmnet(x[train,], y[train], alpha=1, lambda=grid) 
+#  plot(lasso.mod) 
+```
+
+
+Perform cross-validation: 
+```{r}
+set.seed(1)
+cv.out <- cv.glmnet(x[train,], y[train], alpha=1, lambda=grid)
+plot(cv.out)
+bestlam <- cv.out$lambda.min
+bestlam
+lasso.pred <- predict(lasso.mod, s=bestlam, newx=x[test,])
+mean((lasso.pred - y.test)^2) 
+```
+
+
+The resulting model is 
+```{r}
+# out <- glmnet(x,y,alpha=1,lambda=grid)
+out <- glmnet(x,y,alpha=1)
+lasso.coef <- predict(out, type="coefficients", s=bestlam)[1:12,]
+lasso.coef 
+```
+
+
+None of the coefficients are zero: 
+```{r}
+lasso.coef[lasso.coef!=0] 
+```
+
+Note that for sufficiently large lambda, the LASSO can perform variable selection. Consider for example: 
+```{r} 
+out <- glmnet(x,y,alpha=1)
+lasso.coef <- predict(out, type="coefficients", s=10)[1:12,]
+lasso.coef  
+```
+
+In that case, the final model would be 
+```{r}
+lasso.coef[lasso.coef!=0] 
+```
+
+
+# A Simulated Example 
+
+This example is partly based on the exercise 8 on p.262 of the ISLR text. 
+We will first simulate a data set in which true relationship is a cubic polynomial. 
+Nevertheless, the data set contains powers of x up to 10 degree. See the simulation part below. We will then perform variable selection procedures. 
+
+## Simulate the data set
+
+```{r}
+set.seed(99) # for replication
+n   <- 400
+x   <- rnorm(n, mean=0, sd=1)
+eps <- rnorm(n, mean=0, sd=1)
+f   <- 5  +1*x - 2*x^2 - 1*x^3  
+y   <- f + eps
+df <- data.frame(y, x1=x, x2=x^2, x3=x^3, x4=x^4, x5=x^5, x6=x^6,
+            x7=x^7, x8=x^8, x9=x^9, x10=x^10)
+
+# df <- data.frame(y, x1=x, x2=x^2, x3=x^3, x4=x^4, x5=x^5, x6=rnorm(n),
+#              x7=rnorm(n), x8=rnorm(n), x9=rnorm(n), x10=rnorm(n),
+#              x11=runif(n), x12=runif(n), x13=runif(n), x14=runif(n),
+#              x15=runif(n))
+head(df) 
+
+library(ggplot2)
+ggplot(df, aes(x=x1,y=y))+
+  geom_point() +
+  geom_line(aes(x1,f))
+```
+
+## Best subset selection
+
+```{r}
+library(leaps)
+regfit.full <- regsubsets(y ~ ., data = df, nvmax = 10)
+#summary(regfit.full) 
+```
+
+```{r}
+reg.summary <- summary(regfit.full)
+
+# 2x2 plot grid
+par(mfrow=c(2,2))
+# plot RSS
+plot(reg.summary$rss, xlab="Number of Variables", xaxt="n", ylab="RSS", type="o")
+axis(1, at = seq(1, 10, by = 1),las=2)
+
+# plot Adj.R2
+plot(reg.summary$adjr2, xlab="Number of Variables", xaxt="n", ylab="Adjusted RSq",type="o")
+axis(1, at = seq(1, 10, by = 1),las=2)
+# find the model with max Adj.R2
+best <- which.max(reg.summary$adjr2)
+# put red dot on the graph that marks the best according to Adj.R2 
+points(best, reg.summary$adjr2[best], col="red", cex=2, pch=20)
+
+# plot Cp
+plot(reg.summary$cp, xlab="Number of Variables", xaxt="n", ylab="Cp",type='o')
+axis(1, at = seq(1, 10, by = 1),las=2)
+# find the best according to Cp
+bestCp <- which.min(reg.summary$cp)
+points(bestCp, reg.summary$cp[bestCp], col="red", cex=2, pch=20)
+
+# plot BICs
+plot(reg.summary$bic, xlab="Number of Variables", xaxt="n", ylab="BIC", type='o')
+bestBIC <- which.min(reg.summary$bic)
+points(bestBIC, reg.summary$bic[bestBIC], col="red", cex=2, pch=20) 
+axis(1, at = seq(1, 10, by = 1),las=2)
+```
+
+```{r}
+regfit.fwd <- regsubsets(y ~ ., data = df, nvmax=10, method="forward")
+reg.fwd.summary <- summary(regfit.fwd)
+reg.fwd.summary
+```
+
+```{r}
+regfit.bwd <- regsubsets(y ~ ., data = df, nvmax=10, method="backward")
+reg.bwd.summary <- summary(regfit.bwd)
+reg.bwd.summary
+```
+
+```{r}
+coef(regfit.full, 3)
+coef(regfit.fwd, 3)  
+coef(regfit.bwd, 3)
+```
+
+Which model is the best? Using the `Cp` criterion, the best model is 
+```{r}
+coef(regfit.full, which.min(reg.summary$cp))
+coef(regfit.fwd, which.min(reg.fwd.summary$cp)) 
+coef(regfit.bwd, which.min(reg.bwd.summary$cp))
+```
+
+According to the `BIC` criterion: 
+```{r}
+coef(regfit.full, which.min(reg.summary$bic))
+coef(regfit.fwd, which.min(reg.fwd.summary$bic)) 
+coef(regfit.bwd, which.min(reg.bwd.summary$bic))
+```
+
+According to the `adj.Rsq` criterion: 
+```{r}
+coef(regfit.full, which.max(reg.summary$adjr2))
+coef(regfit.fwd, which.max(reg.fwd.summary$adjr2)) 
+coef(regfit.bwd, which.max(reg.bwd.summary$adjr2))
+```
+
+## LASSO with Cross-validation to choose lambda
+
+```{r}
+x <- model.matrix(y ~ ., df)[,-1]
+y <- df$y 
+```
+
+```{r}
+set.seed(666)
+train <- sample(1:nrow(x), nrow(x)/2)
+test <- (-train)
+y.test <- y[test] 
+```
+
+```{r}
+library(glmnet)
+lasso.mod <- glmnet(x[train,], y[train], alpha=1)
+plot(lasso.mod) 
+```
+
+Perform cross-validation to choose lambda: 
+```{r}
+set.seed(1)
+cv.out <- cv.glmnet(x[train,], y[train], alpha=1)
+plot(cv.out)
+bestlam <- cv.out$lambda.min
+bestlam
+lasso.pred <- predict(lasso.mod, s=bestlam, newx=x[test,])
+mean((lasso.pred - y.test)^2) 
+```
+The variables x4-x10 are all zeros: 
+```{r}
+out <- glmnet(x,y,alpha=1)
+lasso.coef <- predict(out, type="coefficients", s=bestlam)[1:11,]
+lasso.coef 
+```
+
+```{r}
+# sprintf("%.5f",lasso.coef[lasso.coef!=0])
+lasso.coef[abs(lasso.coef)>0.0001]
+```
+
+# Application: Predictors of Economic Growth
+
+In this application we will use the Barro-Lee (1994) growth data set which is available as part of the `hdm` package by  [Belloni et al., hdm: High-Dimensional Metrics](https://journal.r-project.org/archive/2016/RJ-2016-040/RJ-2016-040.pdf)
+
+```{r}
+# install.packages("hdm")
+library(hdm)
+```
+
+The data set is available as 
+```{r}
+data("GrowthData")
+```
+
+There are $n=90$ countries and $p=60$ predictors in the data set including many macroeconomic indicators.
+
+The standard income convergence model can be written as 
+$$Y_{i,T}=\beta_{0}+\beta_{1} Y_{i,0}+\sum_{j=2}^{p} \beta_{j} X_{i j}+\varepsilon_{i},\quad i=1,\dots,n,$$
+where $Y_{i,T}$ is the growth rate of GDP per capita over the periods 1965-1975 and 1975-1985. $Y_{i,0}$ is the natural logarithm of the initial GDP of country $i$. $X_{i j}$ represent factors that may affect the growth performance of countries. Because there many potentially important variables, the selection becomes especially important. The convergence hypothesis states that  $\beta_1<0$. 
+
+
+```{r}
+# standard lasso using glmnet
+y <- GrowthData$Outcome
+x <- model.matrix(Outcome ~ . -intercept, data=GrowthData)[,-1]
+lasso_fit1 <- glmnet(x, y, alpha=1)
+plot(lasso_fit1)
+cv.out <- cv.glmnet(x, y, alpha=1)
+plot(cv.out)
+bestlam <- cv.out$lambda.min
+bestlam
+out <- glmnet(x, y, alpha=1, lambda=bestlam)
+coefficients(out)
+```
+
+**Exercise**: Interpret the output. Compare results to the standard OLS. 
+
+
+
+<br>
+<div class="tocify-extend-page" data-unique="tocify-extend-page" style="height: 0;"></div>
+
+
+

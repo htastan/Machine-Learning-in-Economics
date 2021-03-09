@@ -1,0 +1,272 @@
+---
+title: "Unsupervised Learning" 
+subtitle: Machine Learning in Economics
+author: 
+  name: "Prof. Dr. Hüseyin Taştan"
+  affiliation: "Yildiz Technical University"
+date: "Spring 2021"
+output:
+  html_document: 
+    number_sections: true
+    theme: readable
+    highlight: haddock 
+    # code_folding: show
+    toc: yes
+    toc_depth: 3
+    toc_float: yes
+    keep_md: false
+
+
+---
+<style type="text/css"> 
+body{
+  font-size: 12pt;
+}
+code.r{
+  font-size: 12pt;
+}
+</style>
+
+```{r setup, include=FALSE}
+# knitr::opts_chunk$set(echo = TRUE, results = 'asis', fig.show = 'asis')
+knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning=FALSE)
+``` 
+
+<br/>
+<br/>
+
+# Principal Components
+
+We will use `USArrests` data set which is a part of the base `R`.   
+```{r} 
+library(ISLR)
+states <- row.names(USArrests) 
+names(USArrests)
+```
+
+
+```{r}
+apply(USArrests, 2, mean)
+```
+
+```{r}
+apply(USArrests, 2, var) 
+```
+
+There are several packages to conduct PCA analysis (`prcomp`, `princomp`, etc.)
+We standardize each variable using the option `scale=TRUE`
+```{r}
+pr.out <- prcomp(USArrests, scale=TRUE)
+names(pr.out) 
+```
+
+The center and scale components correspond to the means and standard
+deviations of the variables that were used for scaling prior to implementing
+PCA.
+```{r}
+pr.out$center
+```
+
+```{r}
+pr.out$scale
+```
+
+The `rotation` matrix provides the principal component loadings; each column
+of `pr.out$rotation` contains the corresponding principal component
+loading vector
+```{r}
+pr.out$rotation
+```
+
+Principle component score vectors: 
+```{r}
+dim(pr.out$x)  
+```
+
+We can plot the first two principal components as follows
+```{r}
+biplot(pr.out, scale=0, cex=0.6)
+```
+
+The `scale=0` argument to `biplot()` ensures that the arrows are scaled to 
+represent the loadings; other values for scale give slightly different biplots
+with different interpretations.
+
+Notice that this figure is a mirror image of Figure 10.1. Recall that
+the principal components are only unique up to a sign change, so we can
+reproduce Figure 10.1 by making a few small changes
+```{r}
+pr.out$rotation <- -pr.out$rotation
+pr.out$x <- -pr.out$x
+biplot(pr.out, scale=0, cex=0.6)
+```
+
+Importance of principal components: 
+```{r}
+summary(pr.out)
+```
+
+We see that the first principal component explains 62.0% of the variance
+in the data, the next principal component explains 24.7% of the variance,
+and so forth.
+
+```{r}
+screeplot(pr.out, type="lines") 
+```
+
+```{r}
+pr.out$sdev
+pr.var <- pr.out$sdev^2
+pr.var
+pve <- pr.var/sum(pr.var)
+pve
+plot(pve, xlab="Principal Component", ylab="Proportion of Variance Explained", ylim=c(0,1),type='b')
+plot(cumsum(pve), xlab="Principal Component", ylab="Cumulative Proportion of Variance Explained", ylim=c(0,1),type='b')
+```
+
+## Example: Body Data 
+
+We saw this data set in our previous classes. 
+
+```{r}
+load("../Data/body.RData") 
+bodydata <- subset(body, select = -c(age, gender, gender_dummy)) 
+str(bodydata)
+```
+
+Inspecting the correlation matrix we see that these features are highly correlated. 
+```{r}
+library(ggcorrplot)
+cormat <- round(cor(bodydata), 2)
+ggcorrplot(cormat, hc.order = TRUE, type = "lower", outline.color = "white")
+```
+```{r}
+pr.out <- prcomp(bodydata, scale=TRUE)
+summary(pr.out)  
+# change the signs of factor loadings
+pr.out$rotation <- -pr.out$rotation
+pr.out$x <- -pr.out$x
+biplot(pr.out, scale=0, cex=0.6)
+```
+
+```{r} 
+pr.var <- pr.out$sdev^2 
+pve <- pr.var/sum(pr.var)
+pve
+plot(pve, xlab="Principal Component", ylab="Proportion of Variance Explained", ylim=c(0,1),type='b')
+plot(cumsum(pve), xlab="Principal Component", ylab="Cumulative Proportion of Variance Explained", ylim=c(0,1),type='b')
+```
+
+Approximately 85% of the total variation can be explained by the first 5 principal components. 
+
+
+# K-Means Clustering 
+The function `kmeans()` performs K-means clustering in R. We begin with
+a simple simulated example in which there truly are two clusters in the
+data: the first 25 observations have a mean shift relative to the next 25
+observations.
+```{r}
+set.seed(2)
+x <- matrix(rnorm(50*2), ncol=2)
+x[1:25,1]=x[1:25,1]+3
+x[1:25,2]=x[1:25,2]-4
+km.out <- kmeans(x,2,nstart=20)
+km.out$cluster
+plot(x, col=(km.out$cluster+1), main="K-Means Clustering Results with K=2", xlab="", ylab="", pch=20, cex=2) 
+```
+
+In this example, we knew that there really were two clusters because
+we generated the data. However, for real data, in general we do not know
+the true number of clusters. We could instead have performed K-means
+clustering on this example with K = 3.
+
+
+```{r}
+set.seed(4)
+km.out <- kmeans(x,3,nstart=20)
+km.out
+plot(x, col=(km.out$cluster+1), main="K-Means Clustering Results with K=3", xlab="", ylab="", pch=20, cex=2)
+```
+When K = 3, K-means clustering splits up the two clusters.
+It is strongly recommended to run K-means clustering with a large
+value of nstart, such as 20 or 50, since otherwise an undesirable local
+optimum may be obtained.
+
+```{r}
+set.seed(3)
+km.out <- kmeans(x,3,nstart=1)
+km.out$tot.withinss
+km.out <- kmeans(x,3,nstart=20)
+km.out$tot.withinss
+```
+
+## Example: Bodydata 
+
+```{r}
+km.out <- kmeans(bodydata,2,nstart=20)
+plot(bodydata[,1:3],col=(km.out$cluster),cex=2)
+```
+
+Plot clustering based on weight and height and compare to the actual gender factor: 
+```{r} 
+# Large blank circles are the resulting clusters
+plot(bodydata[,22:23],col=(km.out$cluster),cex=2)
+# put dots inside circles representing observed gender
+# red = men, black = women
+points(body[,23:24], col=c(1,2)[body$gender], pch=19, cex=1)
+```
+```{r} 
+observed_class <- c(1,2)[body$gender]
+km_cluster <- km.out$cluster
+ratio <- sum(observed_class == km_cluster)/nrow(bodydata)
+ratio
+```
+
+84% of observations seem to be clustered correctly. Note that if know the clusters 
+we'd not apply K-Means cluster method. THis was just for demonstration purposes. 
+When we know the labels there are better classification methods which we've discussed in our previous classes. 
+
+# Hierarchical Clustering 
+
+The `hclust()` function implements hierarchical clustering in R.
+
+
+```{r}
+hc.complete <- hclust(dist(x), method="complete")
+hc.average <- hclust(dist(x), method="average")
+hc.single <- hclust(dist(x), method="single")
+par(mfrow=c(1,3))
+plot(hc.complete,main="Complete Linkage", xlab="", sub="", cex=.9)
+plot(hc.average, main="Average Linkage", xlab="", sub="", cex=.9)
+plot(hc.single, main="Single Linkage", xlab="", sub="", cex=.9)
+```
+
+```{r}
+cutree(hc.complete, 2)
+```
+
+```{r}
+cutree(hc.average, 2)
+```
+
+
+```{r}
+cutree(hc.single, 2)
+```
+
+
+```{r}
+cutree(hc.single, 4)
+```
+
+To scale the variables before performing hierarchical clustering of the
+observations, we use the scale() function:
+```{r}
+xsc=scale(x)
+plot(hclust(dist(xsc), method="complete"), main="Hierarchical Clustering with Scaled Features")
+```
+
+
+<br>
+<div class="tocify-extend-page" data-unique="tocify-extend-page" style="height: 0;"></div>
+

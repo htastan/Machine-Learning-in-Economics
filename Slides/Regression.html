@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Regression Analysis</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Hüseyin Taştan" />
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/metropolis.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Regression Analysis
+## Machine Learning in Economics
+### Hüseyin Taştan
+### Yildiz Technical University
+
+---
+
+class: my-medium-font
+
+&lt;style type="text/css"&gt;
+.remark-slide-content {
+    font-size: 28px;
+    padding: 1em 4em 1em 4em;
+}
+.my-large-font {
+  font-size: 40px;
+}
+.my-small-font {
+  font-size: 20px;
+}
+.my-medium-font {
+  font-size: 30px;
+}
+&lt;/style&gt;
+
+
+
+# Lecture Outline
+
+- [Simple Linear Regression Model](#simple)
+
+- [Goodness-of-fit Measures, Statistical Inference](#fit)
+
+- [Multiple Linear Regression Model](#multiple) 
+
+- [Categorical `\(X\)` Variables](#categoricalX)
+
+- [Interaction Variables](#interaction)
+
+- [Diagnosing potential problems](#problems) 
+
+---
+name: simple 
+
+# Simple Linear Regression Model
+ 
+
+* Assume that `\(f(x)\)` is linear in parameters (approximately) and there is a single predictor. Then the Population Regression Function (PRF) is 
+`$$y =  \beta_0 + \beta_1 X + \epsilon$$` 
+
+* Using training data, `\(\{y_i, x_i: i=1,2,\ldots,n\}\)`,  the prediction is
+`$$\hat{y}_i = \hat{\beta}_0 + \hat{\beta}_1 x_i$$`
+
+* Observed = prediction + residual: 
+`$$y_i = \underbrace{\hat{\beta}_0 + \hat{\beta}_1 x_i}_{\hat{y}_i} + e_i$$`
+
+* Estimation method: Ordinary Least Squares (OLS) chooses `\(\hat{\beta}_j\)` such that the sum of squared residuals is minimum.
+
+---
+# OLS Estimation 
+
+Optimization problem for the simple case: 
+`$$\min_{\hat{\beta}_0, \hat{\beta}_1} SSR = \sum_{i=1}^n (y_i -  \hat{\beta}_0 - \hat{\beta}_1 x_i)^2$$`
+
+SSR: sum of squared residuals (note: sometimes called RSS - residual sum of squares)
+
+* First Order Conditions (FOC): 
+`$$\frac{\partial SSR}{\partial \hat{\beta}_0 } = -2 \sum_{i=1}^n (y_i - \hat{\beta}_0 - \hat{\beta}_1 x_i) = 0$$`
+`$$\frac{\partial SSR}{\partial \hat{\beta}_1 } = -2 \sum_{i=1}^n x_i(y_i - \hat{\beta}_0 - \hat{\beta}_1 x_i) = 0$$`
+
+---
+# OLS Estimation 
+
+* Solving FOC
+
+* Slope parameter
+`$$\hat{\beta}_1 = \frac{\sum_{i=1}^n (x_i - \bar{x})(y_i - \bar{y})}{\sum_{i=1}^n (x_i - \bar{x})^2}$$`
+
+* Intercept
+`$$\hat{\beta}_0 = \bar{y} - \hat{\beta}_1 \bar{x}$$`
+
+where `\(\bar{y}\)` and `\(\bar{x}\)` are the sample averages. 
+`$$\bar{y} = \frac{1}{n}\sum_{i=1}^n y_i,\quad \bar{x} = \frac{1}{n}\sum_{i=1}^n x_i$$`
+---
+# OLS Estimation: Example
+ 
+$$\widehat{Sales} = 7.03 + 0.0475~ TV Advertisements $$
+
+.center[![:scale 65%](img/reg1.PNG)]
+
+&lt;small&gt;(figure source: James et al. (ISLR), Fig.3.1, p.62)&lt;small&gt;
+
+---
+# OLS Objective Function
+
+ Contour plot (left), Surface plot (right)
+ 
+.center[![:scale 80%](img/reg2.PNG)] 
+
+&lt;small&gt;(figure source: James et al. (ISLR), Fig.3.2, p.63)&lt;small&gt;
+
+---
+# Population vs Sample Regression Function
+
+* Population regression function (PRF) is unknown in practice. 
+
+* We estimate PRF using training data. As training data changes, parameter estimates also change.  
+
+* Unknown parameters (coefficients): `\(\beta_0\)`, `\(\beta_1\)`
+
+* OLS estimators: `\(\hat{\beta}_0\)`, `\(\hat{\beta}_1\)`, these are random variables because they are functions of data (which is random). 
+
+* In practice, we only have a single data set. How can we assess the accuracy of the model? 
+
+---
+# PRF vs SRF 
+
+Assume that PRF is given by `\(Y= 2 + 3X + \epsilon\)` (we can simulate data)
+
+.center[![:scale 75%](img/reg3.PNG)]
+
+Left: PRF (red), Prediction (black); Right: several predictions based on repeated sampling &lt;small&gt;(figure source: James et al. (ISLR), Fig.3.2, p.64)&lt;small&gt;
+
+---
+# Algebraic properties of OLS estimators
+
+* The sum and sample average of residuals are zero
+`$$\sum_{i=1}^n \hat{e}_i = 0,~~~~~\bar{\hat{e}_i} = 0$$`
+
+* The sample covariance between residuals and `\(x\)` is zero
+`$$\sum_{i=1}^n x_i\hat{e}_i = 0$$`
+
+* The point `\((\bar{x},\bar{y})\)` is always on the regression line
+
+* Average of predicted values is equal to the average of observed values:
+`\(\bar{y}=\bar{\hat{y}}\)`
+
+---
+name: fit 
+
+# Model's explanatory power
+
+* For each observation: `\(y_i = \hat{y}_i + \hat{\epsilon}_i\)`. Subtract sample averages from both sides and square and sum:
+
+.pull-left[
+* Total Sum of Squares (SST)
+`$$SST = \sum_{i=1}^n (y_i -\bar{y})^2$$`
+
+* Explained Sum of Squares (SSE)
+`$$SSE = \sum_{i=1}^n (\hat{y}_i -\bar{y})^2$$`
+]
+
+.pull-right[
+* Residual Sum of Squares (SSR)
+`$$SSR = \sum_{i=1}^n \hat{u}_i^2$$`
+
+* Total variability decomposition:  
+`$$SST = SSE + SSR$$`
+]
+
+---
+class: my-small-font
+# A Goodness-of-fit Measure
+
+* The total variability in `\(y\)` can be written as 
+`$$SST = SSE + SSR$$`
+
+* Divide both sides by SST 
+`$$1 = \frac{SSE}{SST} + \frac{SSR}{SST}$$`
+
+* Coefficient of determination, `\(0\leq R^2\leq 1\)`: 
+`$$R^2 = \frac{SSE}{SST} = 1 - \frac{SSR}{SST}$$`
+
+* Interpretation: Approximately `\(100\times R^2\)` percent of the variability in `\(y\)` can be explained by variations in `\(x\)` 
+
+* Shortcoming: As we add new variables `\(R^2\)` always increases or remains the same, it never decreases. It cannot be used in model selection. 
+
+---
+# Standard errors of OLS estimators
+
+* Assume constat variance: `\(Var(\epsilon)=\sigma^2\)`. Then for the simple linear regression model, the standard errors are given by  
+
+`$$\operatorname{SE}\left(\hat{\beta}_{0}\right)^{2}=\sigma^{2}\left[\frac{1}{n}+\frac{\bar{x}^{2}}{\sum_{i=1}^{n}\left(x_{i}-\bar{x}\right)^{2}}\right]$$`
+
+`$$\operatorname{SE}\left(\hat{\beta}_{1}\right)^{2}=\frac{\sigma^{2}}{\sum_{i=1}^{n}\left(x_{i}-\bar{x}\right)^{2}}$$`
+SE = standard error
+
+* These standard errors can be used in hypothesis testing and calculating confidence intervals. 
+
+---
+# Hypothesis Tests
+
+.pull-left[
+* Always about PRF: `\(Y=\beta_0 + \beta_1 X + \epsilon\)` 
+
+* Null hypothesis: No relationship between `\(X\)` and `\(Y\)`  
+`$$H_0: \beta_1 = 0$$` 
+
+* Alternative hypothesis: There is a relationship between `\(X\)` and `\(Y\)`  
+`$$H_a: \beta_1 \neq 0$$`
+]
+
+.pull-right[
+* We can use `\(t\)` test. The `\(t\)` statistic under `\(H_0\)` : 
+`$$t = \frac{\hat{\beta}_1-0}{\operatorname{SE}\left(\hat{\beta}_{1}\right)}$$`
+
+* If there is no relationship between `\(X\)` and `\(Y\)` (in other words the null is correct) then `\(t\)` statistic follows `\(t\)` distribution with `\(n-2\)` degrees of freedom. ]
+
+---
+# Decision rule for the t-test 
+
+* In the simple linear regression, the decision rule for `\(H_0: \beta_1 = 0\)` and the alternative `\(H_a: \beta_1 \neq 0\)` is 
+
+&gt; For a given Type-I error probability, `\(\alpha = Pr(|T|&gt;c_{\alpha/2}~|~H_0)\)`, if the absolute value of the computed `\(t\)` statistic is larger than the critical value `\(c_{\alpha/2}\)` then we can reject the null hypothesis. `$$\mbox{Reject}~H_0~\mbox{if}~ t&gt;c_{\alpha/2}~~ \mbox{or}~~ t&lt;-c_{\alpha/2}$$`
+
+(Note: `\(T\)` is a random variable that follows a `\(t\)` distribution with `\(n-2\)` degrees of freedom.)
+
+---
+# Decision rule for the t-test
+
+* In practice, we never know if `\(H_0\)` is true or not. Thus we can make two types of errors in our decision. The probabilities of these errors are 
+
+  * Type-I error probability: `\(Pr(REJECT~~ H_0|~H_0~is~TRUE)\)`.
+
+  * Type-II error probability: `\(Pr(ACCEPT~~ H_0|~H_0~is~WRONG)\)`.  
+
+* In classical testing framework, we set the Type-I error probability, usually denoted by `\(\alpha\)`, at some small value, say `\(0.05\)` and conduct the test. 
+
+* Using `\(p\)`-value may be more practical. 
+
+---
+# p-Value 
+
+* Instead of looking up critical values every time we run the test, we may attempt to estimate `\(\alpha\)` based on the data 
+
+* `\(p\)`-value: Given that the null is correct, what is the probability of obtaining a `\(t\)` random variable larger than the calculated `\(t\)` statistic in absolute value (for two-sided tests)?
+
+* A small `\(p\)`-value implies that there is evidence against the null hypothesis in the data. 
+
+---
+# p-value
+
+* Example: `\(n-2=65\)`, Computed `\(t\)` statistic is `\(t=1.82\)`. Then
+`$$p-value=Pr(T&gt;1.82|H_0) + Pr(T&lt;-1.82|H_0) = 0.0367 + 0.0367 = 0.0734$$` 
+
+.pull-left[
+* Here is the `R` code
+
+```r
+2*pt(1.82, df=65, lower.tail = FALSE)
+```
+
+```
+## [1] 0.07336374
+```
+* The smallest significance level that would lead to the rejection of `\(H_0\)` is 7.34%. 
+]
+
+.pull-right[
+* We reject `\(H_0\)` for all `\(\alpha\)` levels larger than the p-value.
+
+* For example, if we use `\(\alpha=0.05\)`, then we cannot reject `\(H_0\)`. A small `\(p\)`-value implies that there is strong evidence against the null hypothesis. (under the assumption that the null is correct) 
+]
+
+
+---
+name: multiple
+
+# Multiple Linear Regression Model
+
+`$$y = \beta_0 + \beta_1 x_1 + \beta_2x_2 \ldots + \beta_p x_p +\epsilon$$`
+* If we have several predictors or features, we can add them simultaneously. 
+
+* Since the model is still linear in parameters, we can use OLS method. Based on a training data the fitted value is: 
+`$$\hat{y} = \hat{\beta}_0 + \hat{\beta}_1 x_1 + \hat{\beta}_2 x_2 \ldots + \hat{\beta}_p x_p$$`
+
+* Interpretation of coefficients: assuming that all other variables are fixed (ceteris paribus) then in response to a unit change in `\(x_j\)`, the outcome, `\(y\)`, is predicted to change by `\(\hat{\beta}_j\)` on average, `\(j=1,2,\ldots,p\)`.
+
+---
+# OLS Prediction Surface 
+
+.pull-left[
+![:scale 100%](img/reg4.PNG)
+]
+
+.pull-right[
+* When there are two predictors, `\(X_1\)` and `\(X_2\)`, the OLS regression line turns into a surface. 
+
+* Red dots: observations
+
+* OLS minimizes the distance of these points to the surface. 
+]
+&lt;small&gt;(figure source: James et al. (ISLR), Fig.3.4, p.73)&lt;small&gt;
+
+---
+# Example (Table 3.4, p. 74) 
+.pull-left[
+
+|            | Estimate| Std. Error| t value| Pr(&gt;&amp;#124;t&amp;#124;)|
+|:-----------|--------:|----------:|-------:|------------------:|
+|(Intercept) |    2.939|      0.312|   9.422|             0.0000|
+|TV          |    0.046|      0.001|  32.809|             0.0000|
+|radio       |    0.189|      0.009|  21.893|             0.0000|
+|newspaper   |   -0.001|      0.006|  -0.177|             0.8599|
+
+Multiple regression: `\(sales = \beta_0 + \beta_1 TV + \beta_2 Radio + \beta_3 Newspaper + \epsilon\)`
+]
+
+.pull-right[
+
+|            | Estimate| Std. Error| t value| Pr(&gt;&amp;#124;t&amp;#124;)|
+|:-----------|--------:|----------:|-------:|------------------:|
+|(Intercept) |   12.351|      0.621|  19.876|             0.0000|
+|newspaper   |    0.055|      0.017|   3.300|             0.0011|
+
+Simple regression: `\(sales = \alpha_0 + \alpha_1 Newspaper + \epsilon\)`
+]
+
+---
+# F Test 
+
+* We can test if the model is statistically significant as a whole using the  `\(F\)` statistic. The null and alternative hypotheses are
+`$$H_0:\beta_1=\beta_2=\ldots=\beta_p=0$$`
+`$$H_a: \mbox{at least one}~\beta_j\neq 0$$`
+
+* F statistic 
+`$$F = \frac{R^2/p}{(1-R^2)/(n-p-1)}\sim~F_{p,n-p-1}$$`
+`$$F = \frac{(SST-SSR)/p}{SSR/(n-p-1)},~~~~~~R^2=1-\frac{SSR}{SST}$$`
+
+---
+name: categoricalX
+
+# Categorical X variables 
+
+* Two groups: gender = Male, Female
+`$$x_{i}=\left\{\begin{array}{ll}
+1, &amp; \text { if } i . \text { person is female} \\
+0, &amp; \text { if } i . \text { person is male. }
+\end{array}\right.$$`
+
+`$$y_{i}=\beta_{0}+\beta_{1} x_{i}+\epsilon_{i}=\left\{\begin{array}{ll}
+\beta_{0}+\beta_{1}+\epsilon_{i}, &amp; \text { if } i . \text {person is female} \\
+\beta_{0}+\epsilon_{i}, &amp; \text { if } i . \text {person is male. }
+\end{array}\right.$$`
+
+
+* `\(\beta_0\)`: intercept for the Male group
+* `\(\beta_{0}+\beta_{1}\)`: intercept for the Female group
+* Single dummy is sufficient for two groups
+* For multiple categories, say `\(m\)`, we just need `\(m-1\)` dummy variables. For example, if ethnicity has 3 categories we need to add 2 dummies. The excluded group will be represented by the intercept (comparison or base group). 
+
+---
+name: interaction
+
+# Interactions
+
+* In some cases, the marginal impact of one predictor may depend on another vaariable  
+
+* For example in the sales and advertising example, the radio advertisements may increase the impact of the TV advertisements 
+`$$sales = \beta_{0}+\beta_{1}~ TV+\beta_{2}~ Radio + \beta_3~ (TV\times Radio) + \epsilon$$`
+or
+`$$sales = \beta_{0}+(\beta_{1}+\beta_3 Radio)~ TV+\beta_{2}~ Radio  + \epsilon$$`
+Thus 
+`$$\frac{\Delta Sales}{\Delta TV}=\beta_{1}+\beta_3 Radio,\quad \frac{\Delta Sales}{\Delta Radio}=\beta_{2}+\beta_3 TV$$`
+
+---
+# Interaction: Example
+
+|              | Estimate| Std. Error| t value| Pr(&gt;&amp;#124;t&amp;#124;)|
+|:-------------|--------:|----------:|-------:|------------------:|
+|(Intercept)   |   6.7502|     0.2479| 27.2328|             0.0000|
+|TV            |   0.0191|     0.0015| 12.6990|             0.0000|
+|radio         |   0.0289|     0.0089|  3.2408|             0.0014|
+|I(TV * radio) |   0.0011|     0.0001| 20.7266|             0.0000|
+
+* TV, radio: advertising expenditures in USD 
+* What is the impact of a  1000 USD increase in radio advertisements? 
+* `\(\Delta Sales = (0.0289+0.0011TV)\times 1000 = 28.9 + 1.1TV\)`
+* In the sample, average TV ads is 147USD. Substituting this into the equation above we find that the average impact is 190.6 USD. 
+
+---
+# Nonlinear relationships
+
+* Using appropriate transformations of `\(y\)` and `\(x\)` variables, we can flexibly model nonlinear relationships.  
+
+* In practice, the most widely used transformations are the natural logarithm transformation and power (or exponential) transformations. 
+
+* Polynomial regression: We add powers of `\(X\)` variables such as `\(X^2\)` and `\(X^3\)`. For example, quadratic model: 
+`$$Y = \beta_0 + \beta_1 X + \beta_2 X^2 + \epsilon$$`
+This is in fact an interaction of `\(X\)` variable with itself. The impact of `\(X\)` on `\(Y\)` depends on where the change occurs. 
+
+---
+# Nonlinear relationships
+
+
+* Step function: We obtain categorical variables by dividing the values of `\(X\)` into non-overlapping intervals.
+
+
+* Spline and Smoothing spline: by applying step functions and polynomials together we try to find the best fit.
+
+* Local regression
+
+* Generalized Additive Models (GAMs)
+
+* We will cover these extension in the future classes
+
+(for details see ch7. in the ISLR text)
+
+---
+# Diagnosing potential problems
+
+Nonlinear relationships:  
+
+![](img/reg5.PNG)
+
+---
+name: problems 
+
+# Diagnosing potential problems 
+
+Autocorrelation in the residuals, `\(\rho\)`, (in time series regressions)
+
+.pull-left[
+![:scale 100%](img/reg6.PNG)
+]
+
+.pull-right[ 
+* Autocorrelation coefficient = `\(\rho\)`
+* `\(\rho=0\)` means no autocorrelation. 
+* As `\(\rho\)` increases we observe a visible pattern in the residuals. No autocorrelation implies random scatter of residuals around zero. But if they are autocorrelated, then the probability of observing a positive (negative) value following a positive (negative) value increases.  
+]
+
+---
+# Diagnosing potential problems
+
+Nonconstant error variance (heteroskedasticity) 
+![:scale 100%](img/reg7.PNG)
+
+---
+# Diagnosing potential problems
+
+Outliers: extremely large or small `\(y_i\)` values
+
+![:scale 100%](img/reg8.PNG)
+point 20 is an outlier. RED: outlier included. Dashed blue: outlier excluded. Not much difference in this example but it can effect the stadard errors and model accuracy significantly. 
+
+---
+# Diagnosing potential problems
+
+High leverage points: Extremely large or small `\(x_i\)` values
+
+![:scale 100%](img/reg9.PNG)
+Observation 41 is a high leverage point. Excluded (blue dashed). Estimation results are sensitive (left). Middle: red obs. is a high leverage point. Right: diagram of standardized residuals and leverage values, `\(h_i\)`. (see ISLR, equation 3.37, p.98)
+
+---
+# Diagnosing potential problems
+
+Collinearity or Multicollinearity
+
+![:scale 100%](img/reg10.PNG)
+
+---
+# Diagnosing potential problems: Collinearity
+
+.pull-left[
+![:scale 100%](img/reg11.PNG)
+]
+
+.pull-right[
+- Under perfect multicollinearity OLS estimators are undefined. 
+- But under high multicollinearity arising from highly correlated *X*  variables, OLS standard errors become larger. Thus it becomes difficult to obtain precise estimates. 
+]
+- **Left**: Contour plot of OLS objective function with low correlation between `\(X\)` variables; **Right**: Contour plot with highly correlated `\(X\)` variables
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script src="macros.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false,
+"ratio": "16:9"
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

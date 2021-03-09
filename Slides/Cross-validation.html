@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Validation and Resampling Methods</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Hüseyin Taştan" />
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/metropolis.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Validation and Resampling Methods
+## Machine Learning in Economics
+### Hüseyin Taştan
+### Yildiz Technical University
+
+---
+
+class: my-medium-font
+
+&lt;style type="text/css"&gt;
+.remark-slide-content {
+    font-size: 28px;
+    padding: 1em 4em 1em 4em;
+}
+.my-large-font {
+  font-size: 40px;
+}
+.my-small-font {
+  font-size: 25px;
+}
+.my-medium-font {
+  font-size: 30px;
+}
+&lt;/style&gt;
+
+
+
+# Outline
+
+- [Estimating test error](#testerror)
+
+- [Validation set approach](#validation)
+
+- [Leave-One-Out Cross-Validation](#loocv)
+
+- [*k*-fold Cross-Validation](#kfoldcv)
+
+- [Cross-Validation using Time Series Data](#tscv)
+
+- [Bootstrap](#bootstrap)
+
+---
+name: testerror 
+
+# Training and Test Error Revisited
+.center[![:scale 80%](img/biasvar1.PNG)] 
+
+---
+# Example
+.pull-left[
+As an example, consider the following polynomial regression: 
+`$$y=\beta_0 + \beta_1 x + \beta_2 x^2 + \ldots + \beta_p x^p +\epsilon$$`
+(Dataset = AUTO, y=mpg (miles per gallon), x=horsepower)
+
+* Question: What is the degree of polynomial that gives the best predictions (that is, for which the MSE is the minimum)?
+]
+.pull-right[
+![:scale 100%](img/mpg1.PNG)
+]
+
+---
+name: validation 
+
+# Estimating Test Error: Validation Set Approach 
+* Typically, we have a single data set in practice. We usually don't have a separate test data that we can use to estimate prediction accuracy. 
+
+* We can do the following: Divide data set into two parts: training data and validation (or hold-out) data.  
+
+.center[![:scale 60%](img/valid0.PNG)] 
+* The model is estimated using only training data. Then, predictions are computed using only validation data and test error is calculated. (blue training set) 
+
+---
+class: my-small-font
+# Example: Polynomial Regression
+
+.center[![:scale 85%](img/mpgvalid1.PNG)]
+* The data set is split into two parts randomly and MSE is computed using only validation set. 
+
+- Left: A single validation set 
+
+- Right: Validation set approach repeated 10 times. Notice high variability in resulting test MSE values. 
+
+---
+# Validation set approach: advantages and disadvantages 
+
+- Simple and easy to implement
+
+- But test MSE can have high variability (as shown in previous graph)
+
+- Because we split the data into two equal parts randomly and used only training part in the estimation, the performance of the models worsen (as there are fewer observations)
+
+- As a result, the test MSE may be over-estimated
+
+* What are the alternatives?
+  * Leave-one-out Cross-Validation
+  * `\(k\)`-fold Cross-Validation
+  
+---
+name: loocv 
+
+# Leave-one-out Cross Validation (LOOCV)
+
+ 
+.pull-left[
+* LOOCV uses a single observation in validation; the rest `\(n-1\)` observations are used in training
+
+* This is repeated for each observation in the sample `\(n\)` times resulting in `\(MSE_i\)`s for each.
+
+* Test error is the average of all MSEs: 
+`$$\mathrm{CV}_{(n)}=\frac{1}{n} \sum_{i=1}^{n} \mathrm{MSE}_{i}$$`
+]
+.pull-right[
+![:scale 100%](img/cv1.PNG)
+]
+
+---
+name: kfoldcv
+
+# `\(k\)`-Fold Cross Validation
+.pull-left[
+* If `\(n\)` is large, LOOCV can be computationally cumbersome.
+
+* Alternatively, observations can be divided into `\(k\)` groups randomly (called **folds**, such as 5, 10). 
+
+* We use each fold as the validation set and compute test MSE. The remaining part is used in training. We repeat this for each fold.
+
+
+]
+.pull-right[
+![:scale 100%](img/cv2.PNG)
+* This process gives `\(k\)` MSE values. The average of these is the test error: 
+`$$\mathrm{CV}_{(k)}=\frac{1}{k} \sum_{i=1}^{k} \mathrm{MSE}_{i}$$`
+]
+
+---
+class: my-small-font
+# Example 
+![:scale 100%](img/cv3.PNG)
+
+**Left**: MSE values using LOOCV for auto data, **Right**: Test MSE for `\(k=10\)`-fold Cross-Validation (image source: James et al., ISLR Fig-5.4, p.180)
+
+---
+# Bias-Variance Trade-off in `\(k\)`-fold Cross-Validation 
+
+* `\(k\)`-fold CV is computationally more advantageous compared to LOOCV 
+
+- LOOCV has less bias than `\(k\)`-fold CV, but it also has high variance. 
+
+- Compared to LOOCV, `\(k\)`-fold CV has lower variance. 
+
+- This is because in LOOCV training sets are almost identical (remember we use n-1 observations to estimate the model). As a result, test MSEs are highly correlated resulting in higher variability. 
+
+- In contrast `\(k\)`-fold CV produces tend to have less correlation resulting in lower variance
+
+- Studies show that using `\(k=5\)` or `\(k=10\)` would suffice in practice. 
+
+---
+# Cross-Validation in Classification Problems
+
+* CV approach can also be used classification problems where the outcome is qualitative.
+
+* But in this case we need to use classification error 
+`$$Err_i = I(y_i\neq \hat{y}_i)$$`
+.pull-left[
+- LOOCV: 
+`$$\mathrm{CV}_{(n)}=\frac{1}{n} \sum_{i=1}^{n} Err_i$$`
+]
+.pull-right[
+* `\(k\)`-fold CV: 
+`$$\mathrm{CV}_{(k)}=\frac{1}{k} \sum_{i=1}^{n} Err_i$$`
+]
+
+---
+name: tscv 
+
+# Cross-Validation using Time Series Data 
+
+* We are interested in forming out-of-sample forecasts from a time series model.
+
+* Typicall, time series are not distributed identically and independently (iid). Because the date is chronologically order, cross-validation with random sampling cannot be applied. 
+
+- We can split the data into two parts and compute forecasts using only the test data: 
+
+![](Cross-validation_files/figure-html/traintest2-1.png)&lt;!-- --&gt;
+ 
+
+---
+# Cross-Validation using Time Series Data  
+
+.pull-left[**Time Series Cross-Validation**  
+![](Cross-validation_files/figure-html/cv1-1.png)&lt;!-- --&gt;
+For details see Hyndman, R.J., &amp; Athanasopoulos, G. (2019) Forecasting: principles and practice, 3rd edition, OTexts: Melbourne, Australia. 
+[https://otexts.com/fpp3/](https://otexts.com/fpp3/)
+]
+.pull-right[
+* As in LOOVC, forecasts are computed using only test data.
+
+* In the next step, observation is added to training set and estimation is repeated. This gives an new forecast. 
+
+* This is repeated for all observations in the test data. Then, forecasts errors and accuracy measures can be computed. 
+]
+
+---
+name: bootstrap 
+
+# Bootstrap 
+
+- Bootstrap is a general resampling technique that can be used to assess the properties of statistical estimators.
+
+- It's based on creating new data sets by repeated sampling from an existing data set 
+
+- Random sampling with replacement: some values may be repeated 
+
+- The estimator that we wish to assess is estimated for each bootstrap sample
+
+- At the end we can approximate the sampling distribution of the estimator. 
+
+---
+# Bootstrap 
+
+- We assume that we have an identically and independently distributed (iid) data set from a well-defined population. 
+
+- In practice, we only have a one sample from the population. 
+
+- The usual approach in statistics is  that inference can be based the concept of sampling distribution for an estimator. 
+
+- Theoretically, sampling distribution is the distribution of all estimates that could be computed from all possible samples from the population
+
+- In large samples, and under certain conditions, it is normally distributed. 
+
+---
+# Bootstrap 
+
+- In small samples, however, it may not be normally distributed.
+
+- Bootstrap can especially useful in small sample sizes. Also it relies on fewer assumptions (normality is not required). 
+
+- Bootstrap practically treats the existing sample as if it is the population and resamples from it with replacement. 
+
+- It is widely used to estimate standard errors and confidence intervals. 
+
+---
+# Numerical Example 
+
+
+```r
+set.seed(12345)
+n &lt;- 10
+x &lt;- rnorm(n, mean=0, sd=1)
+xbar &lt;- mean(x)
+se_xbar &lt;- 1/sqrt(n)  # theoretical std error 
+se_xbar_est &lt;- sqrt(var(x)/n) # sample std error
+# find bootstrap std error 
+# let's do this for a single bootstrap sample 
+x_boot1 &lt;- sample(x, n, replace = TRUE) # sample with replacement
+x_boot1
+```
+
+```
+##  [1] -0.2761841  0.6300986 -1.8179560  0.5855288 -0.4534972 -0.2761841
+##  [7] -0.9193220 -0.1093033 -0.2841597 -0.4534972
+```
+
+```r
+# calculate sample mean for boot1
+xbar_boot1 &lt;- mean(x_boot1) 
+xbar_boot1
+```
+
+```
+## [1] -0.3374476
+```
+
+---
+class: my-small-font
+# Numerical Example
+
+.pull-left[
+
+```r
+B &lt;- 500 # number of bootstrap samples  
+xbar_boot &lt;- numeric(B)
+for (i in 1:B) { 
+  xbar_boot[i] &lt;- mean(sample(x, n, replace = TRUE))
+} 
+sd(xbar_boot) # bootstrap std error
+```
+
+```
+## [1] 0.2321545
+```
+
+```r
+1/sqrt(n) # theoretical std error (sigma/sqrt(n)) 
+```
+
+```
+## [1] 0.3162278
+```
+
+```r
+sqrt(var(x)/n) # sample std error 
+```
+
+```
+## [1] 0.2573004
+```
+
+]
+.pull-right[
+
+```r
+hist(xbar_boot)
+```
+
+![](Cross-validation_files/figure-html/unnamed-chunk-4-1.png)&lt;!-- --&gt;
+]
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script src="macros.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false,
+"ratio": "16:9"
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

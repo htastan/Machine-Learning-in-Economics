@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Linear Model Selection and Regularization</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Hüseyin Taştan" />
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/metropolis.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Linear Model Selection and Regularization
+## Machine Learning in Economics
+### Hüseyin Taştan
+### Yildiz Technical University
+
+---
+
+
+&lt;style type="text/css"&gt;
+.remark-slide-content {
+    font-size: 28px;
+    padding: 1em 4em 1em 4em;
+}
+.my-large-font {
+  font-size: 40px;
+}
+.my-small-font {
+  font-size: 20px;
+}
+.my-medium-font {
+  font-size: 25px;
+}
+&lt;/style&gt;
+
+
+
+# Lecture Outline
+
+- [Linear model selection](#linear) 
+
+- [Subset selection](#subset)
+
+- [The concept of Regularization (shrinkage)](#regular)
+
+- [Ridge regression](#ridge)
+
+- [LASSO](#lasso) 
+
+- [Elastic Net](#elasticnet)
+
+- [Dimension reduction](#dimreduction)
+
+---
+name: linear 
+
+# Linear Model Selection 
+
+- Linear model can be improved in a variety of ways. 
+
+- One way to improve its performance is to consider non-linear relationships but keeping its additive structure (still linear in parameters)
+
+- Linear model can also be improved by removing irrelevant features (predictors) especially in the case of large `\(p\)`
+  - Subset selection 
+  - Shrinkage (or regularization): consider all `\(p\)` variables but shrink some coefficients toward zero. 
+  - Dimension reduction
+
+---
+name: subset 
+
+# Subset Selection 
+
+- The purpose is to select the most useful predictors in the linear model. 
+
+- Best subset selection, stepwise selection (forward and backward selection)
+
+- **Best subset selection**: may not be practical for large `\(p\)`
+
+- **Forward stepwise selection**: starting with the null model (no predictors), variables are added one-by-one. At each step the variable that gives the
+greatest additional improvement to the fit is added to the
+model. 
+
+- **Backward stepwise selection**: starting with the full model containing all `\(p\)` predictors, remove the least useful predictor one at a time. We must have `\(n&gt;p\)` to be able to fit the full model. 
+
+
+---
+# Indirectly Estimating Test Error 
+
+
+- We know that as the model gets larger SSR gets smaller and `\(R^2\)` gets bigger. These are not suitable metrics to compare models. 
+
+- Obtain the training error and account for the bias due to over-fitting. The resulting metric can be used to compare models. The following are most widely used: 
+- Mellow's `\(C_p\)` 
+`$$C_{p}=\frac{1}{n}\left(\mathrm{RSS}+2 d \hat{\sigma}^{2}\right)$$`
+where `\(d\)` is the total number of parameters used and `\(\hat{\sigma}^{2}\)` is an estimate of the error variance. 
+
+---
+# Indirectly Estimating Test Error 
+
+- Akaike's Information Criterion (AIC): 
+`$$\mathrm{AIC}=-2 \log L+2 \cdot d$$`
+where `\(L\)` is the maximized value of the loglikelihood function. 
+
+- Bayesion Information Criterion (BIC): 
+`$$\mathrm{BIC}=\frac{1}{n}\left(\mathrm{RSS}+\log (n) d \hat{\sigma}^{2}\right)$$`
+
+- It can be shown that `\(C_p\)` and `\(AIC\)` are equivalent in the case of linear model with normal errors.  
+
+- These measures tend to take on a small value for a model with a low test error. Thus, we select a model with a smaller `\(C_p\)`, AIC, or BIC values. 
+
+- Because BIC puts a larger penalty it tends to select smaller models than AIC. 
+
+---
+# Indirectly Estimating Test Error 
+
+- Adjusted `\(R^2\)` 
+`$$\text { Adjusted } R^{2}=1-\frac{\operatorname{RSS} /(n-d-1)}{\operatorname{TSS} /(n-1)}$$`
+where RSS is the residual sum of squares and TSS is the total sum of squares. 
+
+- Note that Adjusted `\(R^2\)` may go up or down as the model gets more complex. Unlike `\(R^2\)` which always increases as the number of parameters increases, Adjusted `\(R^2\)` pays a price for the inclusion of unnecessary variables in the model.  
+
+- A large value of Adjusted `\(R^2\)` indicates a model with a small test error. Thus, we prefer models with larger Adjusted `\(R^2\)`. 
+
+---
+# Directly estimating test error 
+
+- Test error can be estimated directly using validation and cross-validation methods. 
+
+- As usual, we separate data into training, validation and test sets, and estimate models using only training data. 
+
+- For a set of models `\(\mathcal{M}_{k}\)` indexed by model size `\(k=0,1,2,\ldots\)`, we estimate validation or cross-validation error for each model. 
+
+- Then we select the model with the smallest test error. 
+
+- This procedure does not require the estimation of `\(\sigma^2\)`, the error variance. 
+
+---
+name: regular 
+
+# Regularization (Shrinkage)
+
+* Under Gauss-Markov assumptions, Ordinary Least Squares (OLS) estimator is unbiased and the most efficient (minimum variance) 
+
+* It is assumed that the sample size, `\(n\)`, is significantly larger than the number of variables, `\(p\)`, that is,  `\(n&gt;&gt; p\)`
+
+* When `\(n = p\)`, OLS results in **perfect fit**. 
+
+* If `\(p&gt;n\)` then there are infinite solutions. We can't use OLS. 
+
+* Regularization: attempt to reduce variance by restricting coefficients (shrinkage) 
+
+---
+# Perfect fit: simple example
+
+
+.pull-left[
+`\(n=21\)`, `\(p=1\)`, `\(R^2=0.94\)`
+![](Regularization_files/figure-html/unnamed-chunk-2-1.png)&lt;!-- --&gt;
+]
+
+.pull-right[
+`\(n=2\)`, `\(p=1\)`, `\(R^2=1\)`
+![](Regularization_files/figure-html/unnamed-chunk-3-1.png)&lt;!-- --&gt;
+]
+
+---
+name: ridge 
+
+# Ridge Regression
+
+OLS objective function
+`$$SSR = \sum_{i=1}^n (y_i -  \beta_0 - \beta_1 x_{i1}-\ldots-\beta_p x_{ip})^2$$`
+Ridge regression is similar to OLS. It adds a penalty term to the objective function: 
+`$$SSR_R = \sum_{i=1}^n (y_i -  \beta_0 - \beta_1 x_{i1}-\ldots-\beta_p x_{ip})^2 + \lambda \sum_{j=1}^p \beta_j^2 = SSR + \lambda \sum_{j=1}^p \beta_j^2$$`
+`\(\lambda \geq 0\)` is the tuning parameter
+
+`\(\lambda \sum_{j=1}^p \beta_j^2\)`: shrinkage penalty. When `\(\lambda = 0\)` OLS=Ridge
+
+As `\(\lambda\rightarrow \infty\)`, ridge coefficients, `\(\hat{\beta}_{\lambda}^R\rightarrow 0\)`.  
+
+---
+class: my-medium-font
+# Example 
+.center[![](img/creditdata.png)]
+* `\(p=10\)` variables, Response variable = Balance. The purpose is to find the best model to predict balance. 
+* OLS coefficients depend on the  `\(X\)`'s unit of measurement. For example, if `\(X=Income\)` is measured in TL and we create another variable `\(income2 = income/1000\)` the coefficient estimate will be `\(1000\times \hat{\beta}\)`. Prediction remains the same `\(X\times \hat{\beta}\)`. 
+* This does not apply to the ridge regression. We need to standardize all predictors: 
+`$$\tilde{x}_{i j}=\frac{x_{i j}}{\sqrt{\frac{1}{n} \sum_{i=1}^{n}\left(x_{i j}-\bar{x}_{j}\right)^{2}}}$$`
+
+---
+# Example: Credit data 
+
+.pull-left[
+.center[![:scale 100%](img/ridge1.PNG)]
+]
+
+.pull-right[
+* This graph shows how coefficient estimates change as `\(\lambda\)` changes 
+* Vertical axis: standardize ridge coefficient estimates 
+* Horizontal axis: `\(\lambda\)` tuning parameter
+* `\(\lambda=0\)`: gives OLS solution
+* As `\(\lambda\)` gets bigger, coefficients become smaller; in the limit they are zeros. 
+]
+
+(ISLR Fig-6.4, p.216)
+
+---
+# Bias-Variance Trade-off in Ridge Regression 
+.pull-left[
+.center[![:scale 100%](img/ridge2.PNG)]
+]
+
+.pull-right[
+* This graph uses simulated to data to illustrate the relationship between `\(\lambda\)` mean squared error (MSE). 
+* MSE (purple) = Squared Bias (black) + Variance (green) + irreducible error variance (horizontal dashed line)
+* When `\(\lambda=0\)` then bias is very small but variance is high. 
+* Until `\(\lambda\approx 10\)`, MSE declines rapidly, there is also slight increase in bias.
+* MSE is the minimum at around `\(\lambda = 30\)`.
+]
+
+(ISLR Fig-6.5, p.218)
+
+---
+name: lasso 
+
+# LASSO 
+
+* In the ridge regression all variables remain in the model (however small their coefficients are). Coefficients are not exactly `\(\beta=0\)` (unless `\(\lambda=\infty\)`).
+
+* This property may be a disadvantage: if our purpose is variable selection then the ridge regression may not be an appropriate tool.
+
+* For example, in the credit data set, the linear model for Balance will include all 10 variables. But some of these vairables may be more important (such as income, limit, rating, student). 
+
+---
+# LASSO
+
+* Alternative: LASSO (Least Absolute Shrinkage and Selection Operator)
+
+* As in the ridge regression, the LASSO adds a penalty term to the OLS objective function: 
+`$$\sum_{i=1}^{n}\left(y_{i}-\beta_{0}-\sum_{j=1}^{p} \beta_{j} x_{i j}\right)^{2}+\lambda \sum_{j=1}^{p}\left|\beta_{j}\right|=\mathrm{SSR}+\lambda \sum_{j=1}^{p}\left|\beta_{j}\right|$$` 
+
+* Unlike the ridge regression, LASSO can perform **variable selection** by setting some coefficients to zero.
+
+---
+# Geometrical Interpretation of Ridge and Lasso  
+
+- LASSO optimization problem can be written as 
+`$$\underset{\beta}{\operatorname{minimize}} \sum_{i=1}^{n}\left(y_{i}-\beta_{0}-\sum_{j=1}^{p} \beta_{j} x_{i j}\right)^{2} \quad \text { subject to } \quad \sum_{j=1}^{p}\left|\beta_{j}\right| \leq s$$`
+
+- Ridge regression optimization problem can be written as 
+`$$\underset{\beta}{\operatorname{minimize}} \sum_{i=1}^{n}\left(y_{i}-\beta_{0}-\sum_{j=1}^{p} \beta_{j} x_{i j}\right)^{2} \quad \text { subject to } \quad \sum_{j=1}^{p} \beta_{j}^{2} \leq s$$`
+where `\(s\)` is user defined tuning parameter. 
+
+- The constrained optimization problem can be visualized in the following graph for the case of two parameters. 
+
+
+
+---
+# Geometrical Interpretation of Ridge and Lasso 
+.pull-left[
+![](img/ridge_lasso1.PNG) 
+- Ridge constraint set: `\(\beta_{1}^2+\beta_{2}^2\leq s\)`
+- The LASSO constraint set: `\(\left|\beta_{1}\right|+\left|\beta_{2}\right|\leq s\)`
+]
+.pull-right[
+- Elliptical lines (red) are residual sum of squares contours
+- Blue lines represent ridge and LASSO constraints. 
+- Note that the ridge regression constraint set results in a circle and it will not set any coefficients to zero. 
+- On the other hand, the LASSO constraint set is diamond shaped which implies that some of the coefficients may be set to zero exactly. 
+]
+
+
+---
+# LASSO Example: Credit data 
+
+.pull-left[
+.center[![:scale 100%](img/lasso1.PNG)]
+]
+.pull-right[
+* `\(\lambda=0\rightarrow\)` OLS
+* `\(\lambda \rightarrow \infty\)` all coefficients are 0 (null model)
+* For intermediate values, some coefficients are 0. 
+* Can perform variable selection.
+* Resulting model depends on `\(\lambda\)`
+* How to choose the tuning parameter `\(\lambda\)`?
+]
+
+(ISLR Fig-6.6, p.220)
+
+---
+# Choosing the tuning parameter
+
+* `\(\lambda\)` can be chosen by cross-validation 
+* First, we specify a set of discrete values (grid) for `\(\lambda\)` 
+* Then for each `\(\lambda_j\)` we calculate test MSE using cross-validation 
+* The `\(\lambda\)` parameter that gives the minimum cross-validation is chosen.
+* The model is re-estimated using the final `\(\lambda\)` parameter. 
+
+![:scale 80%](img/ridge3.PNG)
+
+---
+name: elasticnet
+
+# Elastic Net 
+
+* [Zou ve Hastie (2005)](https://rss.onlinelibrary.wiley.com/doi/full/10.1111/j.1467-9868.2005.00503.x) suggest the elastic net method that uses the following objective function:
+
+`$$\sum_{i=1}^{n}\left(y_{i}-\beta_{0}-\sum_{j=1}^{p} \beta_{j} x_{i j}\right)^{2}+ \lambda_1  \sum_{j=1}^p \beta_j^2+\lambda_2 \sum_{j=1}^{p}\left|\beta_{j}\right|=\mathrm{SSR}+\lambda_1  \sum_{j=1}^p \beta_j^2+\lambda_2 \sum_{j=1}^{p}\left|\beta_{j}\right|$$`
+
+* Note that ridge regression and LASSO are special cases. 
+* There are two tuning parameters. Naive approach: uses two-step estimation. In the first step, estimate ridge regression given a value for  `\(\lambda_2\)` ; in the second step, apply LASSO. 
+* Because the naive approach applies shrinkage twice, its prediction performance is not succcessful. Zou and Hastie suggest an alternative estimation strategy that gives better predictions. 
+
+---
+name: dimreduction
+
+# Dimension Reduction Methods 
+
+- These methods transform the predictors and then fit a linear regression using the transformed variables. 
+
+- Let `\(Z_1,Z_2,\ldots,Z_M\)` represent `\(M&lt;p\)` linear combinations of `\(p\)` predictors, i.e., 
+`$$Z_{m}=\sum_{j=1}^{p} \phi_{m j} X_{j}$$`
+for some constants `\(\phi_{m 1},\ldots,\phi_{m p}\)`. 
+
+- We can then fit the linear regression using OLS: 
+`$$y_{i}=\theta_{0}+\sum_{m=1}^{M} \theta_{m} z_{i m}+\epsilon_{i}, \quad i=1, \ldots, n$$`
+
+---
+# Principal Components Regression (PCR)
+
+- How to find the linear combinations of `\(p\)` predictors? 
+
+- Principal Components Analysis (PCA) may be useful to find orthogonal linear combinations of variables. (PCA will be discussed later when we cover unsupervised learning methods)
+
+- The first few principal components that explain a sizable portion of the variance in variables can be used in the regression. 
+
+- Another dimension reduction method is Partial Least Squares (PLS) (see the text for further details).
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script src="macros.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false,
+"ratio": "16:9"
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Nonlinear Models</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Hüseyin Taştan" />
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/metropolis.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Nonlinear Models
+## Machine Learning in Economics
+### Hüseyin Taştan
+### Yildiz Technical University
+
+---
+
+
+&lt;style type="text/css"&gt;
+.remark-slide-content {
+    font-size: 28px;
+    padding: 1em 4em 1em 4em;
+}
+.my-large-font {
+  font-size: 40px;
+}
+.my-small-font {
+  font-size: 20px;
+}
+.my-medium-font {
+  font-size: 25px;
+}
+&lt;/style&gt;
+
+
+
+# Lecture Outline
+
+- [Linear vs Nonlinear models](#linvsnonlin)
+- [Polynomial regression](#poly) 
+- [Step functions](#step) 
+- [Basis Functions](#basis) 
+- [Regression Splines](#splines)
+- [Natural Splines](#natural) 
+- [Smoothing Splines](#smoothing)
+- [Local regression](#local) 
+- [Generalized Additive Models (GAMs)](#gams)
+
+---
+class: my-medium-font
+name: linvsnonlin
+
+# Linear vs Nonlinear Models 
+Model: `\(y = f(x) + u\)`, the form of `\(f(x)\)` determines the nature of the relationship
+.pull-left[
+Linear Models
+- `\(f(x) = \beta_0 + \beta_1 x\)`
+- Linear in parameters and variables
+- Starting point, usually good approximations to reality
+- But may be improved significantly
+] 
+.pull-right[
+Nonlinear Models
+- `\(f(x)\)` can be any function of `\(x\)`
+- Polynomial regression 
+- Step function
+- Regression splines 
+- Smoothing splines 
+- Local regression 
+- Generalized Additive Models (GAMs)
+- ... and others (neural nets, support vector machines, trees, etc.)
+]
+
+---
+name: poly
+
+# Polynomial Regression
+
+- For simplicity assume that there is a single predictor `\(x\)`. A polynomial of order `\(d\)` can be written as 
+`$$y = \beta_0 + \beta_1 x + \beta_2 x^2 + \ldots + \beta_d x^d + \epsilon$$`
+
+- We added `\(d\)` powers of a single predictor in an additive manner. 
+
+- Because the model is still linear in parameters, we can still use OLS. 
+
+- The order of the polynomial, `\(d\)`, may be thought of as a tuning parameter that controls the complexity of the model. 
+- In practice, `\(d\)` can be chosen by validation methods. 
+
+---
+# Ex.: Degree-4 polynomial regression of wage on age
+
+`$$\widehat{wage} = \hat{\beta}_0 + \hat{\beta}_1 ~age + \hat{\beta}_2~age^2 + \hat{\beta}_3~age^3 + \hat{\beta}_4~ age^4$$`
+.pull-left[
+![](img/nonlin1.PNG)
+]
+.pull-right[
+- Solid blue line represents the fitted curve surrounded by 95% confidence interval.
+- There is a distinct high-earners group (those earning more than $250.000)
+- How can we model high-earners category?
+]
+
+
+---
+# Logistic Regression with Polynomial Terms
+
+- Similar to the polynomial regression, we can modify the logistic regression with polynomial terms. 
+- For example, for high-earners group we have 
+`$$\operatorname{Pr}\left(y_{i}&gt;250 \mid x_{i}\right)=\frac{\exp \left(\beta_{0}+\beta_{1} x_{i}+\beta_{2} x_{i}^{2}+\ldots+\beta_{d} x_{i}^{d}\right)}{1+\exp \left(\beta_{0}+\beta_{1} x_{i}+\beta_{2} x_{i}^{2}+\ldots+\beta_{d} x_{i}^{d}\right)}$$`
+where we treated wage as a binary variable by splitting it into two groups: those earning more than 250 thousand dollars, and those earning less. 
+
+- The next graph shows the predicted probabilities and 95% confidence interval. 
+
+---
+# Example: Logistic Regression with Polynomial Terms
+
+![](img/nonlin2.PNG)
+
+There are only 79 high-earners in the data set. Because the sample size is fairly small, the variances of coefficients are large resulting in wide confidence intervals. 
+
+---
+name: step
+
+# Step Functions 
+
+.pull-left[
+Indicator function: We create cutpoints `\(c_1,c_2,\ldots,c_k\)` in the range of `\(X\)` and then construct `\(K+1\)` new variables: 
+`$$\begin{array}{ll}
+C_{0}(X) &amp; =I\left(X&lt;c_{1}\right) \\
+C_{1}(X) &amp; =I\left(c_{1} \leq X&lt;c_{2}\right) \\
+C_{2}(X) &amp; =I\left(c_{2} \leq X&lt;c_{3}\right) \\
+&amp; \vdots \\
+C_{K-1}(X) &amp; =I\left(c_{K-1} \leq X&lt;c_{K}\right) \\
+C_{K}(X) &amp; =I\left(c_{K} \leq X\right)
+\end{array}$$`
+]
+.pull-right[
+- The indicator function, `\(I(\cdot)\)`, takes the value of 1 if the event inside the parenthesis is true, and 0 otherwise. It creates dummy variables based on the cutoff values `\(c\)`. 
+- E.g. Consider: `\(c_1=35\)`, `\(c_2=50\)`, `\(c_3=65\)`
+- Thus, `\(I(age&lt;35)=1\)` for those younger than 35 and 0 otherwise. 
+Note that, each observation **must** fall into one of the categories `\(C_0,C_1,…,C_K\)`.
+]
+
+---
+# Step Functions 
+
+- Notice that for any value of `\(X\)` we have 
+`$$C_0(X) + C_1(X) + \ldots + C_K(X) = 1$$`
+because `\(X\)` must be in one of `\(K+1\)` groups. 
+- Next, we simply fit an OLS regression using `\(C_1(X), C_2(X),\ldots, C_K(X)\)` as predictors
+`$$y_{i}=\beta_{0}+\beta_{1} C_{1}\left(x_{i}\right)+\beta_{2} C_{2}\left(x_{i}\right)+\ldots+\beta_{K} C_{K}\left(x_{i}\right)+\epsilon_{i}$$`
+- `\(\beta_0\)` can be interpreted as the mean value of `\(Y\)` when `\(X&lt;c_1\)`
+- `\(\beta_j\)` represents average increase in response for `\(X\)` in `\(c_j\leq X&lt;c_{j+1}\)` relative to `\(X&lt;c_1\)`. 
+- The next graph shows regression and logistic regression of wage on step functions of age (using cutpoints 35, 50 and 65)
+
+---
+class: my-small-font
+# Example: Regression and Logistic regression   
+
+![](img/nonlin3.PNG)
+
+(source: ISLR Fig. 7.2, p.269)
+
+---
+name: basis
+
+# Basis Functions 
+
+- Polynomials and piecewise-constant regression models are special cases of basis functions
+- We have a family of functions, `\(b_1(X), b_2(X),\ldots,b_K(X)\)` that can applied to each predictor. 
+- Then we simply use the basis function values instead of the original `\(X\)` values: 
+`$$y_{i}=\beta_{0}+\beta_{1} b_{1}\left(x_{i}\right)+\beta_{2} b_{2}\left(x_{i}\right)+\beta_{3} b_{3}\left(x_{i}\right)+\ldots+\beta_{K} b_{K}\left(x_{i}\right)+\epsilon_{i} .$$`
+- For polynomial regression we have `\(b_j(x_i) = x_i^j\)`
+- For piece-wise constant functions we have `\(b_j(x_i) =I(c_j\leq x_i &lt;c_{j+1})\)`
+- Many alternatives exist: wavelets, Fourier series, splines
+
+- Next, we will consider regression splines. 
+
+---
+# Piecewise Polynomials 
+- An alternative to fitting a high-degree polynomial over the entire range of `\(X\)` is to fit separate low-degree polynomials over different regions of `\(X\)`.
+- The range of `\(X\)` values are cut into sub-intervals as in the step function approach. The cut points are called **knots**
+- For example, we may fit a piece-wise cubic model using the knot `\(c\)`
+`$$y_{i}=\left\{\begin{array}{ll}
+\beta_{01}+\beta_{11} x_{i}+\beta_{21} x_{i}^{2}+\beta_{31} x_{i}^{3}+\epsilon_{i} &amp; \text { if } x_{i}&lt;c \\
+\beta_{02}+\beta_{12} x_{i}+\beta_{22} x_{i}^{2}+\beta_{32} x_{i}^{3}+\epsilon_{i} &amp; \text { if } x_{i} \geq c
+\end{array}\right.$$`
+
+- It can be fitted using OLS. 
+- We can change the degree of the polynomial or use any number of knots. 
+
+---
+# Example: Unconstrained piecewise cubic polynomial
+.pull-left[
+![](img/nonlin4.PNG)
+]
+.pull-right[
+- Piecewise cubic polynomial regression of wage on age with a single knot at age=50. 
+- Notice that there is a huge discontinuity at age=50. 
+- We can constrain the polynomial such that it is continuous at the knot. 
+- In addition to continuity we may impose the smoothness condition where all the `\(d-1\)` derivatives of the degree `\(d\)` polynomial are continuous as well. 
+]
+
+---
+# Example: Constrained piecewise cubic polynomial
+.pull-left[
+![](img/nonlin5.PNG)
+]
+.pull-right[
+- This graph shows the same piecewise cubic polynomial constrained to be continuous at age=50. 
+
+- Note that there is still very small but visible jump at the knot. 
+- Splines provide a smoother alternative that have the highest amount of continuity. This is shown in the next graph. 
+]
+
+---
+name: splines
+
+# Example: Splines 
+![](img/nonlin6.PNG)
+Cubic splines are constrained to be continuous and have continuous first and second derivatives. 
+&lt;small&gt;(Source: ISLR Fig. 7.3, p.272)&lt;small&gt;
+
+---
+# Linear Splines 
+
+- A linear spline with `\(K\)` knots, `\(\xi_k\)`, `\(k=1,2,\ldots,K\)`, can be written as 
+`$$y_{i}=\beta_{0}+\beta_{1} x_{i}+\beta_{2} (x_i-\xi_1)_{+} + \beta_{3} (x_i-\xi_2)_{+} +\ldots + \beta_{1+K} (x_i-\xi_K)_{+} + \epsilon_{i}$$`
+&lt;!-- where `\(b_k\)` are basis functions --&gt;
+&lt;!-- $$\begin{aligned} --&gt;
+&lt;!-- b_{1}\left(x_{i}\right) &amp;=x_{i} \\ --&gt;
+&lt;!-- b_{k+1}\left(x_{i}\right) &amp;=\left(x_{i}-\xi_{k}\right)_{+}, \quad k=1, \ldots, K --&gt;
+&lt;!-- \end{aligned}$$ --&gt;
+where `\((\cdot)_+\)` means the positive part:
+`$$(x-\xi)_{+} = \left\{\begin{array}{cl}
+(x-\xi) &amp; \text { if } x&gt;\xi \\
+0 &amp; \text { otherwise }
+\end{array}\right.$$`
+
+- For example, a linear spline regression with knots at age=25, 40 , and 60 can be written as 
+`$$wage = \beta_0 + \beta_1 age + \beta_2 (age-25)_+ + \beta_3 (age-40)_+ + \beta_4 (age-60)_+ + \epsilon$$`
+There are `\(K=3\)` knots and 5 parameters to estimate. 
+
+---
+# Linear Splines: An illustration 
+.pull-left[
+![](img/nonlin7.PNG)
+]
+.pull-right[
+- Global linear function `\(f(x) = \beta_0 + \beta_1 x\)` shown in blue. 
+- Linear spline using a single knot at 0.6: `\(f(x) = \beta_0 + \beta_1 x + \beta_2 (x-0.6)_+\)`
+- The basis function is `\(b(x) =(x-0.6)_+\)` (shown in orange). 
+]
+
+- Note that the basis function starts at zero and maintains continuity at the knot=0.6. 
+- Global function now changes slope at the knot. 
+
+---
+# Cubic Splines
+
+- Spline functions of degree `\(d\)` are piecewise polynomial functions of degree `\(d\)` but have continuous derivatives up to order `\(d-1\)` at knots.
+- A cubic spline with `\(K\)` knots can be written as 
+`$$y_{i}=\beta_{0}+\beta_{1} b_{1}\left(x_{i}\right)+\beta_{2} b_{2}\left(x_{i}\right)+\cdots+\beta_{K+3} b_{K+3}\left(x_{i}\right)+\epsilon_{i}$$`
+
+- Cubic spline basis: start with `\(x,x^2, x^3\)` and add one truncated power basis function per knot `\(\xi\)`: 
+`$$h(x, \xi)=(x-\xi)_{+}^{3}=\left\{\begin{array}{cl}
+(x-\xi)^{3} &amp; \text { if } x&gt;\xi \\
+0 &amp; \text { otherwise }
+\end{array}\right.$$`
+where `\((\cdot)_+\)` means the positive part. 
+
+---
+# Cubic Splines
+
+- Let's say there are `\(K\)` knots. In order to fit a cubic spline to this data set we may just fit an OLS regression using `\(X,X^2,X^3\)` and `\(h(x, \xi_1)\)`, `\(h(x, \xi_2)\)`, `\(\ldots\)`, `\(h(x, \xi_K)\)` as predictors. 
+- A cubic spline with `\(K\)` knots will use `\(4+K\)` degrees of freedom (number of parameters to estimate)
+- For example, for the wage regression on age with knots at 25, 40 , 60 
+`$$\begin{array}{ll}
+wage &amp; = &amp; \beta_0 + \beta_1 age + \beta_2 age^2 +  \beta_3 age^3 + \\
+       &amp; &amp; \beta_4 (age-25)_+^3  + \beta_5 (age-40)_+^3 + \beta_6 (age-60)_+^3 + \epsilon 
+\end{array}$$`
+Since `\(K=3\)` there are 7 parameters to estimate. 
+
+---
+# Cubic Spline: an illustration 
+
+.pull-left[
+![](img/nonlin8.PNG)
+]
+.pull-right[
+- Cubic spline basis (orange) is continuous at the knot=0.6. 
+- Global function now smoothly changes shape at the knot. 
+]
+- A cubic spline with a  single knot at 0.6
+`$$f(x) = \beta_0 + \beta_1 x + \beta_2 x^2 + \beta_3 x^3+\beta_4 (x-0.6)_+^3$$`
+---
+name: natural 
+
+# Natural Splines 
+.pull-left[
+![](img/nonlin9.PNG)
+]
+.pull-right[
+- Splines tend to have high variability at the very small and very large values of X
+- Note high variations in the figure where confidence bands at the extreme values are very large.
+- A natural cubic spline extrapolates linearly beyond the boundary knots. 
+]
+- Boundary constraints: function is forced to be linear for age&lt;25 and age&gt;60
+- This adds 4 = 2x2 extra constraints, and allows us to put more internal knots for the same degrees of freedom as a regular cubic spline.
+- Note that the confidence band for the natural cubic spline is narrower. 
+
+---
+# Choosing the number and location of knots 
+
+- In practice we need to answer: How many knots should we use? Where should we place the knots?
+- We can place more knots where the function changes more rapidly and fewer knots where the function seems to be more stable. 
+- Another option, which is applied widely, is to set the number of knots and then let the software place the knots uniformly using quantiles of X (e.g. 25th, 50th, and 75th percentiles).  
+- We can use cross-validation methods to choose the number of knots. 
+
+---
+# Comparing Polynomial Regression and Splines 
+.pull-left[
+![](img/nonlin10.PNG)
+]
+.pull-right[
+- Degree-15 polynomial (blue) vs Natural cubic spline (red) 
+- Polynomial regression tends to have wild boundary behavior
+- In contrast splines are more stable compared to high degree polynomials. 
+- Splines introduce flexibility by increasing the number of knots but keeping the degree fixed. 
+]
+
+&lt;small&gt;(Source: ISLR Fig. 7.7, p.277)&lt;small&gt;
+
+---
+name: smoothing
+
+# Smoothing Splines 
+- In regression splines, we basically defined a set of basis functions and applied OLS to fit the model. 
+- A related approach tries to find a function `\(g(x)\)` that fits the data well. That is it minimizes `\(RSS = \sum_{i=1}^{n}\left(y_{i}-g\left(x_{i}\right)\right)^{2}\)`
+- But if don't put some restrictions on this, we may end up with severely over-fitting the data. We certainly don't want that. We want the fitted function to be smooth. 
+- One way to achieve this is to consider a penalty term: 
+`$$\sum_{i=1}^{n}\left(y_{i}-g\left(x_{i}\right)\right)^{2}+\lambda \int g^{\prime \prime}(t)^{2} d t$$`
+where `\(\lambda\)` is a nonnegative tuning parameter and `\(g^{\prime \prime}(t)\)` is the second derivative of `\(g(x)\)`
+
+---
+# Smoothing Splines 
+
+- Notice that the problem has the familiar Loss+Penalty structure: 
+`$$\underbrace{\sum_{i=1}^{n}\left(y_{i}-g\left(x_{i}\right)\right)^{2}}_{Loss}+ \underbrace{\lambda \int g^{\prime \prime}(t)^{2} d t}_{Penalty}$$`
+- Recall that the first derivative, `\(g^{\prime}(t)\)`, measures the slope of a function at `\(t\)`. 
+- The second derivative, `\(g^{\prime \prime}(t)\)`, shows how much slope changes at `\(t\)`. 
+- The second derivative is a measure of roughness, it is large if the function is changing rapidly near `\(t\)` and it is close to zero otherwise. 
+- By taking the integral of the squared second derivative, `\(\int g^{\prime \prime}(t)^{2} d t\)` measures the total change in the function `\(g^{\prime}(t)\)` over the entire range. 
+
+---
+# Smoothing Splines 
+
+- Notice that the problem has the familiar Loss+Penalty structure: 
+`$$\underbrace{\sum_{i=1}^{n}\left(y_{i}-g\left(x_{i}\right)\right)^{2}}_{Loss}+ \underbrace{\lambda \int g^{\prime \prime}(t)^{2} d t}_{Penalty}$$`
+- `\(\int g^{\prime \prime}(t)^{2} d t\)` will take on a small value if `\(g()\)` is very smooth and  `\(g^{\prime}(t)\)` will be close to constant. 
+- On the other hand if `\(g()\)` is wiggly and jumpy then `\(g^{\prime}(t)\)` will vary significantly and `\(\int g^{\prime \prime}(t)^{2} d t\)` will take on a large value. 
+- The penalty term, `\(\lambda \int g^{\prime \prime}(t)^{2} d t\)`, pushes the function to be smooth. The larger the `\(\lambda\)` parameter, the smoother the function. 
+- When `\(\lambda=0\)`, the penalty term has no effect so perfect interpolation will result. 
+- When `\(\lambda \rightarrow \infty\)`, `\(g()\)` will be perfectly smooth and linear in the limit. 
+
+---
+# Choosing the smoothing parameter 
+
+- As `\(\lambda\)` increases, the function becomes linear (i.e., least squares line). (second derivative of a linear function is zero)
+- For an intermediate value of `\(\lambda\)`, the function `\(g(\cdot)\)`  will smoothly approximate the training observations. 
+- The tuning parameter `\(\lambda\)` controls the roughness of the smoothing spline and hence the effective degrees of freedom. 
+- As `\(\lambda\)` increases from 0 to `\(\infty\)` the effective degrees of freedom decreases from `\(n\)` to 2. 
+- Smoothing splines avoid the knot selection issue, instead we must choose `\(\lambda\)` (or the effective degrees of freedom). 
+- We can use Cross-validation or LOOCV in order to choose the tuning parameter. 
+
+---
+# Smoothing spline example 
+![](img/nonlin11.PNG)
+
+&lt;small&gt;(Source: ISLR Fig. 7.8, p.280)&lt;small&gt;
+
+---
+name: local 
+
+# Local Regression
+
+- Local regression involves computing the fit at a target point `\(x_0\)` using only the nearby training observations. 
+- Using a weight function, we put more weights on the observations around the target point. 
+- The weight function is sometimes called the kernel function: 
+`$$K_{i 0}=\frac{1}{h} k\left(\frac{x_{i}-x_{0}}{h}\right)$$`
+- Local regression minimizes the following objective function 
+`$$\sum_{i=1}^{n} K_{i 0}\left(y_{i}-\beta_{0}-\beta_{1}\left(x_{i}-x_{0}\right)\right)^{2}$$`
+
+---
+# Local Regression Illustrated 
+![](img/nonlin12.PNG)
+
+&lt;small&gt;(Orange colored points are local to the target value represented by orange vertical line. Blue curve is the actual function, light orange is the local regression fit. Source: ISLR Fig. 7.9, p.281)&lt;small&gt;
+
+---
+# Local regression 
+
+- To perform local regression in practice, we need to decide the fraction of observations to use, say `\(s=k/n\)`, around the target point ( `\(k\)` is the number of obs. within the local window). This is called the span `\(s\)`. 
+- The role of span is similar to the tuning parameter `\(\lambda\)` in smoothing splines. It controls the flexibility of non-linear fit. 
+- The smaller the value of `\(s\)`, the more wiggly the function. 
+- Conversely, a large value of `\(s\)` will result in fitting a regression line using all observations. 
+- The span `\(s\)` can be specified directly or chosen by cross-validation. 
+- The next graph displays Local regression of wage on age using two values for the span, `\(s=0.2\)`  and `\(s=0.7\)`
+- The fit with the higher span is smoother as expected. 
+
+---
+class: my-small-font
+
+# Local Regression: Example 
+
+![](img/nonlin13.PNG) &lt;small&gt;(Source: ISLR Fig. 7.10, p.283)&lt;small&gt;
+
+
+---
+name: gams 
+
+# Generalized Additive Models (GAMs)
+
+- GAMs allow modeling nonlinear relationships in multiple variables in a flexible way while keeping the additive structure of the model: 
+`$$\begin{aligned}
+y_{i} &amp;=\beta_{0}+\sum_{j=1}^{p} f_{j}\left(x_{i j}\right)+\epsilon_{i} \\
+&amp;=\beta_{0}+f_{1}\left(x_{i 1}\right)+f_{2}\left(x_{i 2}\right)+\cdots+f_{p}\left(x_{i p}\right)+\epsilon_{i}
+\end{aligned}$$`
+
+where `\(f_{j}\left(x_{i j}\right)\)` is a smooth non-linear function. 
+- The model is **additive** because we calculate separate nonlinear functions for our predictors and then add them up. For example, 
+`$$\text { wage }=\beta_{0}+f_{1}(\text { year })+f_{2}(\text { age })+f_{3}(\text { education })+\epsilon$$`
+
+(see the next graph)
+
+---
+# GAMs: Example 
+
+![](img/nonlin14.PNG) &lt;small&gt;Natural splines in year and age with 4 and 5 degrees of freedom, respectively, and a  step function in the qualitative variable education (Source: ISLR Fig. 7.11, p.284)&lt;small&gt;
+
+---
+# GAMs: Example 
+
+![](img/nonlin15.PNG) &lt;small&gt;Smoothing splines in year and age with 4 and 5 degrees of freedom, respectively, and a  step function in the qualitative variable education (Source: ISLR Fig. 7.12, p.285)&lt;small&gt;
+
+---
+class: my-medium-font
+
+# GAMS for Classification 
+
+- GAMs can also be used when the response variable is qualitative. 
+- The logit function is linear in predictors: 
+`$$\log \left(\frac{p(X)}{1-p(X)}\right)=\beta_{0}+\beta_{1} X_{1}+\beta_{2} X_{2}+\cdots+\beta_{p} X_{p}$$`
+- Using GAM the logit model can be written as 
+`$$\log \left(\frac{p(X)}{1-p(X)}\right)=\beta_{0}+f_{1}\left(X_{1}\right)+f_{2}\left(X_{2}\right)+\cdots+f_{p}\left(X_{p}\right)$$`
+- For example 
+`$$\log \left(\frac{p(X)}{1-p(X)}\right)=\beta_{0}+\beta_{1} \times \text { year }+f_{2}(\text { age })+f_{3}(\text { education })$$`
+where `\(p(X)=\operatorname{Pr}(\text { wage }&gt;250 \mid \text { year, age }, \text { education })\)`
+
+
+---
+# Classification GAMs: Example I(wage&gt;250)
+
+![](img/nonlin16.PNG) &lt;small&gt; f1 is linear in year, f2 is a smoothing spline with 5 degrees of freedom, and f3 is a step function in education. (Source: ISLR Fig. 7.13, p.287)&lt;small&gt;
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script src="macros.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false,
+"ratio": "16:9"
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

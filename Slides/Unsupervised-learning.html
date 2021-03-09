@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Unsupervised Learning</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Hüseyin Taştan" />
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/metropolis.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Unsupervised Learning
+## Machine Learning in Economics
+### Hüseyin Taştan
+### Yildiz Technical University
+
+---
+
+class: my-large-font, inverse, middle, center, clear 
+&lt;style type="text/css"&gt;
+.remark-slide-content {
+    font-size: 28px;
+    padding: 1em 4em 1em 4em;
+}
+.my-large-font {
+  font-size: 40px;
+}
+.my-small-font {
+  font-size: 25px;
+}
+.my-medium-font {
+  font-size: 30px;
+}
+.red { 
+  color: red; 
+}
+&lt;/style&gt;
+
+
+# Lecture Plan 
+
+[Supervised vs Unsupervised Learning](#unsup)
+
+[Principal Components Analysis](#pca)
+
+[Clustering with K-Means Algorithm](#kmeans) 
+
+[Hierarchical Clustering](#hc)
+
+---
+name: unsup
+
+# Unsupervised Learning
+
+.pull-left[
+![](img/unsuper1.PNG)
+* So far in this course, we only focused on supervised learning methods. In supervised learning, both response variable `\(Y\)` features `\(X\)` are observed together 
+]
+--
+.pull-right[
+* In unsupervised learning, the output variable `\(Y\)` (or sometimes called labels) are not available. We only observe  `\(X\)` variables. 
+* Because we don't have a response variable, the purpose is not to make predictions.  
+
+* Instead, we aim to discover hidden subgroups and relationships among a set of variables and visualizing the data in an informative way. 
+]
+
+---
+# Unsupervised Learning 
+
+* Unsupervised Learning methods can be used as part of an Exploratory Data Analysis (EDA) 
+
+* EDA involves summarizing and analyzing data sets by numerical and graphical tools in order to gather insights and better understand the relationships among variables. 
+
+* In practice, the most widely used unsupervised learning methods are 
+  1. **Principal Components Analysis (PCA)**
+  1. **Clustering**
+
+---
+# Unsupervised Learning
+
+1. **Principal Components Analysis (PCA)**: 
+  - Useful to visualize high-dimensinoal data sets, to reduce dimensions, and to pre-process data before supervised learning (e.g., PCA regression) 
+  
+1. **Clustering**: 
+  - Uncover homogenous subgroups especially  in large data sets
+  - For example, grouping online customers based on personal characteristics and shopping habits
+  - Clustering products based on consumer reviews and comments
+  - Clustering patients based on genetic traits
+
+---
+class: my-large-font, inverse, middle, center, clear
+
+Principal Components Analysis
+
+---
+name: pca 
+
+# Principal Components Analysis (PCA)
+
+* What are principal components? 
+--
+
+* Let's assume that we have a set of `\(p\)` features, `\((X_1, X_2,\ldots,X_p)\)`, and we wish to draw  scattor plots for each pairs 
+
+* How many scatter plots do we have? 
+--
+
+* Answer = `\(p(p-1)/2\)`. For example, when `\(p=10\)` we have 45, when `\(p=20\)` we have  190!
+
+* Alternatively, we can find a two dimensional representation of data that contain the most variation in the data. 
+
+* PCA: a low-dimensional representation of data that contains most of the variability in the data set 
+
+
+---
+class: clear
+
+Province data in Turkey (first 10 features)
+![:scale 90%](img/scatter1.PNG)
+
+
+---
+# Calculating Principal Components 
+
+* **The first principal component**, `\(Z_1\)`, is the normalized linear combination of the features that has the largest variance:
+`$$Z_{1}=\phi_{11} X_{1}+\phi_{21} X_{2}+\ldots+\phi_{p 1} X_{p}$$`
+
+* Normalization means that squared weights, `\(\phi\)` (**factor loadings**), sum to unity: 
+`$$\sum_{j=1}^{p} \phi_{j1}^2 = 1,~~~~\underbrace{\phi_{11},\phi_{21},\ldots,\phi_{p1}}_{\mbox{weights of first PC}}$$`
+
+* The vector of weights for the first principal components:  
+`$$\phi_1 = (\phi_{11},\phi_{21},\ldots,\phi_{p1})^T$$`
+
+---
+# Calculating Principal Components 
+
+The first principal component can be found by solving the following optimization problem (after standardizing each variable) 
+`$$\max_{\phi_{11}, \ldots, \phi_{p 1}}\left\{\frac{1}{n} \sum_{i=1}^{n}\left(\sum_{j=1}^{p} \phi_{j 1} x_{i j}\right)^{2}\right\} \text { subject to } \sum_{j=1}^{p} \phi_{j 1}^{2}=1$$`
+
+.pull-left[
+![:scale 90%](img/pca10.PNG)
+]
+.pull-right[
+First PC: is the direction at which data have the highest variation. In this example, `\(\phi_{11}=0.839\)`, `\(\phi_{21} = 0.544\)` 
+
+`$$z_{i1} = 0.839~ \mbox{Population}_i + 0.544~ \mbox{Ad Spending}_i$$` 
+]
+
+---
+# Calculating Principal Components
+
+.pull-left[
+![:scale 90%](img/pca10.PNG)
+]
+.pull-right[
+- **Second Principal Component**: is the linear combination of variables that has maximal variance among all linear combinations that are uncorrelated with the first principal component. In the example: `\(\phi_{12}=0.544\)`, `\(\phi_{22} = -0.839\)` 
+]
+
+`$$z_{i2} = 0.544~ \mbox{Population}_i - 0.839~ \mbox{Ad Spending}_i$$`
+- The second principal component is orthogonal to the first principal component. 
+- This means their correlation is 0, in other words, the angle between them is 90 degrees.
+
+---
+# Proportion of Variance Explained (PVE)
+
+* How much of the total variation in data can be explained by principal components?
+* The total variance in a data set that is centered to have mean zero is 
+`$$\sum_{j=1}^{p} \mbox{Var}(X_j)=\sum_{j=1}^{p} \frac{1}{n} \sum_{i=1}^{n} x_{ij}^2$$`
+
+- The variance explained by the `\(m\)`th principal component is 
+`$$\frac{1}{n} \sum_{i=1}^{n} z_{i m}^{2}=\frac{1}{n} \sum_{i=1}^{n}\left(\sum_{j=1}^{p} \phi_{j m} x_{i j}\right)^{2}$$`
+
+---
+# Proportion of Variance Explained (PVE)
+
+Proportion of Variance Explained (PVE) is defined as
+`$$PVE_m=\frac{\sum_{i=1}^{n}\left(\sum_{j=1}^{p} \phi_{j m} x_{i j}\right)^{2}}{\sum_{j=1}^{p} \sum_{i=1}^{n} x_{i j}^{2}}$$`
+
+- The PVE of each principal component is a positive quantity
+
+- We can also compute the cumulative PVE over the first few principal components
+
+- The PVEs sum to 1. 
+
+- Using the scree plot we can decide how many principal components to use in order to explain the most of the variation in the data. 
+
+---
+# Scree (PVE plot) 
+![:scale 90%](img/pca2.PNG)
+The plot of the PVEs with respect principal components is called the PVE plot or the scree plot. In the graph above, the first two principal components explain about 87% of the variance.  
+
+---
+# Clustering Methods
+
+* The purpose of clustering methods is to find subgroups or clusters that contain homogenous observations. 
+
+* In a good clustering, observations in a subgroup are similar to each other but very different across subgroups.  
+
+* Example: market segmentation. Suppose we have access to a large number of measurements (e.g. median household income, occupation, distance from nearest urban area, and so forth) for a large number of people.
+
+- Our goal is to perform market segmentation by identifying subgroups of people who might be more receptive to a particular form of advertising, or more likely to purchase a particular product.
+
+---
+# Clustering Methods
+
+- The task of performing market segmentation amounts to clustering the people in the data set.
+
+- There are many different types of clustering methods
+
+* The most widely used methods in practice: 
+ * K-Means Clustering
+ * Hierarchical Clustering
+ 
+---
+class: my-large-font, inverse, middle, center, clear
+name: kmeans 
+
+K-Means Clustering 
+
+---
+# K-Means Clustering 
+
+* Purpose: identify `\(K\)` distinct, non-overlapping clusters in a data set. 
+
+![:scale 90%](img/kmeans1.PNG)
+
+---
+# K-Means Clustering
+
+- Partition data into `\(K\)` clusters: `\(C_1, C_2,\ldots,C_K\)`
+  - Each observation belongs to at least one of the `\(K\)` clusters; that is, `\(C_{1} \cup C_{2} \cup \ldots \cup C_{K}=\{1, \ldots, n\}\)`
+  - Clusters are non-overlapping; that is, `\(C_{k} \cap C_{k^{\prime}}=\emptyset\)`, for all `\(k\neq k^{\prime}\)`. 
+
+- K-Means Clustering: make within-cluster variation as small as possible. The optimization problem is 
+`$$\min_{C_{1}, \ldots, C_{K}}\left\{\sum_{k=1}^{K} \frac{1}{\left|C_{k}\right|} \sum_{i, i^{\prime} \in C_{k}} \sum_{j=1}^{p}\left(x_{i j}-x_{i^{\prime} j}\right)^{2}\right\}$$`
+where `\(\left|C_{k}\right|\)` = the number of obs. in cluster `\(k\)`. We minimize the sum of all pair-wise squared Euclidean distances between the observations in each cluster.  
+
+---
+class: my-small-font
+# K-Means Clustering
+
+.pull-left[
+![](img/kmeans2.PNG) 
+]
+.pull-right[
+Steps:  
+1. Randomly assign each observation to one of `\(K\)` clusters.
+
+2. Iterate the following steps until convergence:
+
+ 2a. For each of the `\(K\)` clusters, compute the cluster centroid. The
+`\(k\)`th cluster centroid is the vector of the `\(p\)` feature means for the
+observations in the `\(k\)`th cluster.
+
+ 2b. Assign each observation to the cluster whose centroid is closest (where “closest” is defined using Euclidean distance.
+]
+
+---
+# K-Means Clustering: Illustration
+
+.pull-left[
+![](img/kmeans3.PNG) 
+]
+.pull-right[
+- Step 1 
+  - Randomly assign each observation to one of `\(K\)` clusters. 
+]
+
+---
+# K-Means Clustering: Illustration
+
+.pull-left[
+![](img/kmeans4.PNG) 
+]
+.pull-right[
+- Iteration 1, Step 2-a 
+  - compute the cluster centroids (shown in colored circles) 
+
+- In the first iteration, the centroids are almost completely overlapping because the initial cluster assignments were chosen at random. 
+]
+
+---
+# K-Means Clustering: Illustration
+
+.pull-left[
+![](img/kmeans5.PNG) 
+]
+.pull-right[ 
+- Iteration 1, Step 2-b 
+  - Assign each observation to the closest centroid  
+]
+
+---
+# K-Means Clustering: Illustration
+
+.pull-left[
+![](img/kmeans6.PNG) 
+]
+.pull-right[
+- Iteration 2, Step 2-a 
+  - Compute new cluster centroids  
+
+* Step 2-b 
+  - Repeat cluster assignment  
+  
+* Go back and repeat 
+]
+
+---
+# K-Means Clustering: Illustration
+
+.pull-left[
+![](img/kmeans7.PNG) 
+]
+.pull-right[ 
+After 10 iterations
+* No further improvement  
+
+* But the solution to K-means algorithm is the local optimum and it may not be the best solution
+
+* This means that if we run the algorithm with different initial conditions the solution may be different
+]
+
+---
+# K-Means Clustering: Illustration
+
+.pull-left[ 
+
+![](img/kmeans8.PNG) 
+(ISLR, Fig-10.7, p.390)
+]
+.pull-right[ 
+* This graph displays 6 solutions with different initial conditions. 
+
+* The objective function values are shown on top of the plots.   
+
+* We see that the best solution is the one with the objective function value 235.8 (Note: the solutions 2-3-4-5 are the same despite different colors) 
+]
+
+---
+class: my-large-font, inverse, middle, center, clear
+name: hc 
+
+Hierarchical Clustering
+
+---
+# Hierarchical Clustering
+
+* K-Means clustering requires choosing the number of clusters. The solution may be sensitive to `\(K\)`
+
+- If `\(K\)` is unknown or we don't want to specify it we may apply Hierarchical Clustering as an alternative.  
+
+* We don't need to specify `\(K\)` in hierarchical clustering. Also, we can visualize the clustering structure using a tree diagram known as **dendrogram**. 
+
+- The most common type of hierarchical clustering is the bottom-up or agglomerative clustering.
+
+- In this approach a dendrogram is built starting from the leaves and combining clusters up to the trunk. 
+
+---
+# Bottom-Up Approach
+
+.pull-left[ 
+![](img/hier1.png) 
+]
+.pull-right[ 
+* Builds a clustering hierarchy in a bottom-up fashion (from leaves -observations- to branches) 
+
+]
+
+---
+# Bottom-Up Approach
+
+.pull-left[ 
+![](img/hier2.png) 
+]
+.pull-right[ 
+* Builds a clustering hierarchy in a bottom-up fashion (from leaves -observations- to branches) 
+
+* Finds closest observations and merges them into a cluster. 
+]
+
+---
+# Bottom-Up Approach
+
+.pull-left[ 
+![](img/hier3.PNG) 
+]
+.pull-right[ 
+* Builds a clustering hierarchy in a bottom-up fashion (from leaves -observations- to branches) 
+
+* Finds closest observations and merges them into a cluster. 
+]
+
+---
+# Bottom-Up Approach
+
+.pull-left[ 
+![](img/hier4.PNG) 
+]
+.pull-right[ 
+* Builds a clustering hierarchy in a bottom-up fashion (from leaves -observations- to branches) 
+
+* Finds closest observations and merges them into a cluster.
+
+* Finds and merges closest clusters together. 
+]
+
+---
+# Bottom-Up Approach
+
+.pull-left[ 
+![](img/hier5.PNG) 
+]
+.pull-right[ 
+* Builds a clustering hierarchy in a bottom-up fashion (from leaves -observations- to branches) 
+
+* Finds closest observations and merges them into a cluster.
+
+* Finds and merges closest clusters together. 
+
+* At the end we obtain a single cluster consisting of all observations. 
+]
+
+---
+# Bottom-Up Approach: Dendrogram
+
+.pull-left[ 
+![](img/hier6.PNG) 
+* The height of the dendrogram shows how different two observations are.  
+
+* Observations that fuse earlier are relatively more similar to each other.
+]
+.pull-right[ 
+* Dendrogram is like an upside-down tree. Leaves (observations) are at the bottom.
+
+* We go from bottom to top by clustering closer observations and groups together. 
+
+- Note that the number of clusters decreases as we move from bottom to top. 
+
+
+
+]
+
+---
+# Example
+
+.pull-left[ 
+![](img/hier7.PNG) 
+]
+.pull-right[ 
+* This graph shows simulated data with two features 
+
+- `\(n=45\)`, `\(p=2\)`, `\(K=3\)`, and we know which cluster each observation belongs  (see ISLR, p.391). 
+
+* Let's assume that we don't know the group labels and apply hierarchical clustering and draw the dendrogram.
+]
+
+---
+# Dendrogram 
+
+.left-column[
+* Left: observations (green)
+
+* Middle: 2 clusters
+
+* Right: 3 clusters
+]
+.right-column[
+![:scale 100%](img/hier8.PNG)
+Note that the number of clusters is determined by the break point (dashed vertical line)
+]
+
+---
+# Dendrogram Example 
+.pull-left[ 
+![:scale 70%](img/hier9.PNG)
+![:scale 70%](img/hier10.PNG)
+]
+.pull-right[ 
+- Observations (5,7) and (1,6) are fused together at the bottom because they are closer to each other.  
+
+- In the dendrogram, observations (2,9) seem to be close to each other. Are they? 
+
+- No. From the scatter plot we see that obs. 9 is far from 2.  
+
+- Use vertical axis to assess similarity of observations not the horizontal axis.  
+]
+
+
+---
+class: my-small-font 
+
+# Hierarchical Clustering Algorithm
+
+.pull-left[ 
+![](img/hier12.PNG) 
+]
+.pull-right[ 
+- Start with each point as a separate cluster ( `\(n\)` clusters)
+
+- Define a dissimilarity measure (e.g., Euclidean distance) 
+
+- Fuse two clusters that are most similar so that there are now `\(n-1\)` clusters. 
+
+- Next fuse again the two clusters that are most similar so that there now are `\(n-2\)` clusters. 
+
+- Proceed iteratively until all of the observations belong to one single cluster.
+]
+
+---
+# Hierarchical Clustering Algorithm: Illustration
+
+.pull-left[ 
+![](img/hier11.PNG) 
+]
+.pull-right[
+* Initially there are 9 distinct clusters. 
+* Using the dissimilarity measure, fuse (5,7) together into a cluster. 
+]
+
+---
+# Hierarchical Clustering Algorithm: Illustration
+
+.pull-left[ 
+![](img/hier13.PNG) 
+]
+.pull-right[ 
+* Initially there are 9 distinct clusters. 
+* Using the dissimilarity measure, fuse (5,7) together into a cluster. 
+* Next fuse together observations (6,1) 
+]
+
+---
+# Hierarchical Clustering Algorithm: Illustration
+
+.pull-left[ 
+![](img/hier14.PNG) 
+]
+.pull-right[ 
+* Initially there are 9 distinct clusters. 
+* Using the dissimilarity measure, fuse (5,7) together into a cluster. 
+* Next fuse together observations (6,1) 
+* Next, fuse together cluster (5,7) with cluster 8. 
+* Iterate until a single cluster
+* How do we know that we need to fuse cluster (5,7) with cluster 8? 
+]
+
+---
+# Hierarchical Clustering Algorithm 
+
+.pull-left[ 
+![](img/hier9.PNG) 
+]
+.pull-right[ 
+* We need to extend the dissimilarity measure to the case where we can compare clusters that contain multiple observations.  
+
+* The notion of **linkage** can be used for this purpose. It defines the dissimilarity between two groups of observations.
+
+* In practice the following linkage types are used: complete, average, single, centroid.
+] 
+
+---
+class: my-small-font 
+
+# Linkage Types (Table 10.2, p. 395)
+
+1. **Complete linkage**: Maximal intercluster dissimilarity. Compute all pairwise dissimilarities between the observations in cluster A and the observations in cluster B, and record the largest of these dissimilarities.
+
+1. **Single linkage**: Minimal intercluster dissimilarity. Compute all pairwise dissimilarities between the observations in cluster A and the observations in cluster B, and record the smallest of these dissimilarities. Single linkage can result in extended, trailing clusters in which single observations are fused one-at-a-time.
+
+1. **Average linkage**: Mean intercluster dissimilarity. Compute all pairwise dissimilarities between the observations in cluster A and the observations in cluster B, and record the average of these dissimilarities.
+
+1. **Centroid linkage**: Dissimilarity between the centroid for cluster A (a mean
+vector of length p) and the centroid for cluster B. Centroid linkage can result in undesirable inversions.
+
+---
+# Types of Linkage: Illustration
+
+![:scale 75%](img/linkages0.PNG) 
+
+&lt;small&gt;(Source: ISLR Fig-10.12, p.397)&lt;small&gt;
+
+---
+class: my-small-font
+
+# Choice of Dissimilarity Measure
+
+.pull-left[
+![:scale 100%](img/hier15.PNG)
+]
+
+.pull-right[
+* The choice of the dissimilarity measure affects the shape of the dendrogram. 
+* So far we used Euclidean distance as a measure of dissimilarity.
+* In some cases, correlation-based distance measures may be more useful. 
+* `\(n=3\)` observations on `\(p=20\)` variables are shown in the graph. (Source: ISLR Fig-10.13, p.398)
+] 
+
+- In terms of Euclidean distance, observations 1 and 3 are similar
+
+- However, observations 1 and 2 are highly correlated so they would be considered similar in terms of a correlation-based dissimilarity measure
+
+
+---
+# Summary and Practical Issues in Clustering 
+
+* Clustering algorithms are the most important tools used in unsupervised learning.  
+* To apply these algorithms, we have to make the following decisions:
+ * In both K-means and hierarchical clustering, the results may be sensitive to the units of measurement. Should the variables be standardized (to have zero mean and unit variance, say)? (for an example see ISLR, p. 398-9)
+ 
+- In the case of hierarchical clustering:
+ - What dissimilarity measure should be used? What type of linkage should be used? Where should we cut the dendrogram in order to obtain clusters?
+  
+- In the case of K-means clustering:
+  - How many clusters should we look for the data?
+
+---
+# Summary and Practical Issues in Clustering 
+
+* In practice, we can try several different choices, and look for the one with the most useful or interpretable solution.
+
+- We need to be careful about reporting the results from clustering analysis 
+
+- These results should not be taken as the absolute truth about a data set. 
+
+- Often clustering algorithms are sensitive (not robust) to random perturbations of data. (can obtain completely different results after removing a random portion of the data set)
+
+- Rather, these results should be used as a starting point for the development of a scientific hypothesis and further study, preferably on an independent data set. (ISLR, p. 401)
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script src="macros.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false,
+"ratio": "16:9"
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

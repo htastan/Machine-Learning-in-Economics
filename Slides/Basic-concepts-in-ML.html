@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Basic Machine Learning Concepts</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Hüseyin Taştan" />
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/metropolis.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Basic Machine Learning Concepts
+## Machine Learning in Economics
+### Hüseyin Taştan
+### Yildiz Technical University
+
+---
+
+class: my-medium-font
+
+&lt;style type="text/css"&gt;
+.remark-slide-content {
+    font-size: 28px;
+    padding: 1em 4em 1em 4em;
+}
+.my-large-font {
+  font-size: 40px;
+}
+.my-small-font {
+  font-size: 20px;
+}
+.my-medium-font {
+  font-size: 30px;
+}
+&lt;/style&gt;
+
+
+# Lecture Outline
+
+- [Machine Learning Problem](#problem)
+
+- [Types of learning: Supervised vs. Unsupervised](#types)
+
+- [Supervised Learning: Regression problems](#regression)
+
+- [Over-fitting](#overfit)
+
+- [Measuring Prediction Accuracy](#accuracy)
+
+- [Bias-Variance Trade-off](#biasvariance) 
+
+- [Supervised Learning: Classification problems](#classification)
+
+
+---
+name: problem 
+
+# Machine Learning Problem 
+Machine Learning (ML) develops statistical models and algorithms to predict an outcome based on a set of input variables. 
+
+**General Framework**: 
+
+
+* `\(Y_i\)`: outcome variable (or output)
+* `\(\mathbf{X}_i = \{X_{i1}, X_{i2},\ldots, X_{ip}\}\)`: input variables or features (also called predictors)
+
+* Prediction model: 
+$$ Y_i = f(\mathbf{X}_i) + \epsilon_i, ~~~i=1,2,\ldots,n$$
+
+
+where  `\(f(\mathbf{X}_i)\)` is an unknown function and `\(\epsilon\)` is an unobserved random error term with mean zero. 
+
+---
+name: types
+
+# Types of learning models
+
+- In supervised learning the outcome, `\(Y_i\)`, is observed. 
+
+- If `\(Y_i\)` is continuous then we have a **regression** problem. For example, predicting house value from a set of features 
+
+- If `\(Y_i\)` is categorical (or discrete) we have a  **classification** problem. For example, classifying a mortgage applicant into default or no-default categories. 
+
+- Unsupervised Learning: there are no `\(Y_i\)` in the data (no labels). The purpose is to cluster observations based on observed features or reduce the dimensionality of the data set. For example, market segmentation based on a set of customer characteristics. 
+
+---
+name: regression 
+
+# Regression Problem Example: Income and education level
+.center[![:scale 70%](img/model1a.PNG)]
+
+`$$Income = \underbrace{\beta_0 + \beta_1 Education}_{f(x)}+\epsilon$$`
+
+
+---
+# Income as a function of education and age 
+$$ income = f(education, seniority) + \epsilon$$
+.pull-left[
+![:scale 100%](img/model2.PNG)
+]
+
+
+.pull-right[
+- Red dots: Observed income 
+- Blue surface: `\(f(\cdot)\)` function (generally unknown in practice)
+
+- But in this example the data is simulated so we know the `\(f\)` function exactly. 
+]
+---
+
+# Reducible vs. Irreducible Error
+
+* `\(f(X)\)` = unknown function; `\(\hat{f}(X)\)` = prediction and `\(\hat{Y} = \hat{f}(X)\)` 
+
+* `\(\epsilon = Y - f(X)\)`: is the **irreducible error**. It cannot be estimated using `\(X\)` variables. 
+
+* The error that arises in estimating `\(\hat{f}(X)\)` is called **reducible error**. The distinction is similar to residual vs. error term in the econometric analysis. 
+
+* `\(f(X)\)` is unknown in practice. But even if we knew it, `\(\hat{Y} = f(X)\)`,  there will always be error in our predictions. 
+ 
+* Total variability can be separated into two parts: 
+`$$E[(Y-\hat{f}(X))^2|X=x] = ( f(x)-\hat{f}(x))^2 + Var(\epsilon)$$`
+
+where `\(Var(\epsilon)\)` is the variance of the irreducible error. 
+
+---
+# Estimating the prediction model 
+
+- Assume that we have a training data with `\(n\)` observations that can be used in estimation. 
+
+- Predictors or features: `\(\mathbf{X}_i = \{X_{i1}, X_{i2},\ldots, X_{ip}\}\)`, `\(i=1,2,\ldots,n\)`
+- Outputs: `\(Y_1, Y_2, \ldots, Y_n\)` 
+
+- The purpose is to estimate `\(f(X)\)` (black box?) 
+
+- Types of models: 
+  - **Parametric Methods**: need to specify the functional form (linear, quadratic, etc.)
+  - **Nonparametric Methods**: No explicit assumptions on the functional form of `\(f\)` 
+  
+---
+# Parametric Methods 
+
+**Step 1**:  Make an assumption on form of `\(f(\cdot)\)` 
+
+Example: Linear form
+`$$f_L(X) = \beta_0 + \beta_1 X+\epsilon$$`
+Quadratic form: 
+`$$f_Q(X) = \beta_0 + \beta_1 X+ \beta_2 X^2 + \epsilon$$`
+
+
+**Step 2**:  Apply a statistical estimation technique to train the model. For example we can apply Ordinary Least Squares (OLS) for models that are linear in parameters.
+
+---
+# Example: Linear and Quadratic Models 
+
+.pull-left[
+$$\hat{f}_L(X) = \hat{\beta}_0 + \hat{\beta}_1 X $$
+![:scale 90%](img/linfit.png)
+]
+
+.pull-right[
+`$$\hat{f}_Q(X) = \hat{\beta}_0 + \hat{\beta}_1 X + \hat{\beta}_2 X^2$$`
+![:scale 90%](img/qfit.png)
+]
+
+Which one looks more successful?
+
+---
+# Example: Linear Regression Estimation
+$$\hat{f}_L(education, seniority) = \hat{\beta}_0 + \hat{\beta}_1 education + \hat{\beta}_2 seniority $$
+
+.pull-left[
+Prediction:
+![:scale 100%](img/linfit3d.PNG) 
+]
+
+
+.pull-right[
+True relationship:
+![:scale 100%](img/model2.PNG)
+]
+
+---
+# Non-parametric models 
+Advantages: more flexibility; Disadvantages: the danger of over-fitting; not easily interpretable 
+
+.pull-left[
+Prediction:
+![:scale 100%](img/nonpar1.PNG) 
+]
+
+
+.pull-right[
+True relationship:
+![:scale 100%](img/model2.PNG)
+]
+
+
+---
+name: overfit 
+
+# Over-fitting 
+.pull-left[
+Prediction:
+![:scale 100%](img/overfit1.PNG) 
+]
+
+
+.pull-right[
+True form:
+![:scale 100%](img/model2.PNG)
+]
+
+We have a perfect fit!. But this does not guarantee good predictions. Over-fitting = modeling the noise in the data. 
+
+---
+# Over-fitting: Two-dimensional illustration
+Left: linear fit, Middle: 4th degree polynomial, Right: 15th degree polynomial
+
+![:scale 120%](img/overfit2.png)
+
+---
+
+# Over-fitting
+
+.center[![:scale 80%](img/overfitexplain.png)]
+
+&lt;!-- --- --&gt;
+&lt;!-- background-image: url("img/overfitexplain.png") --&gt;
+&lt;!-- background-size: cover  --&gt;
+&lt;!-- background-position: top  --&gt;
+
+---
+# Trade-off Between Prediction Accuracy and Model Interpretability
+
+- In practice, why not estimate a flexible model?
+
+- Reasons:  
+
+  1. Ease of interpretation: it's much easier to interpret and make inferences in simpler models such as linear regression (remember ceteris paribus notion). 
+
+  1. Even if interpretation is not the main focus, restrictive models may still provide accurate predictions compared to more complicated models. There is always the possibility of over-fitting in flexible models.  
+
+---
+# Trade-off between interpretability and flexibility
+
+.center[![:scale 70%](img/fig2-7.PNG)] 
+
+(Source: James et al., An Introduction to Statistical Learning, Figure 2.7, p. 25)
+
+---
+name: accuracy
+
+# Measuring Quality of Fit
+
+- The prediction accuracy is typically measured using the Mean Squared Error (MSE) 
+
+- Suppose that the model is `\(y = f(x) + \epsilon\)` and the prediction is `\(\hat{f}(x)\)`  
+
+- MSE is defined as 
+`$$MSE = \frac{1}{n}\sum_{i=1}^{n}(y_i - \hat{f}(x_i))^2$$`
+Note that the predictions are calculated using a **training** data set with `\(n\)` observations.  
+
+---
+
+# MSE 
+
+- In a supervised learning problem typically the estimation is carried out to make MSE as small as possible using the training data. For example, OLS minimizes the sum of squared residuals to find the parameter estimates.   
+
+- However, in a machine learning problem, the main purpose is not just to improve the prediction performance in the training data but to evaluate its performance in a new data set which is not used in the estimation.  
+
+- The part of the data set that is not used in the estimation (training) of the model but only used to evaluate its performance is called **test data**. 
+
+- If training MSE is minimum does this imply the test MSE is also minimum? Answer is **NO**. 
+
+---
+
+# Training and Test MSE 
+
+- As model's flexibility increases its MSE decreases 
+
+- Training data: `\(\{Y_i, \mathbf{X}_i\}_{i=1}^n\)`
+
+- Test data: `\(\{Y_{0i}, \mathbf{X}_{0i}\}_{i=1}^m\)`
+
+- Test MSE: 
+
+`$$MSE_{test} = \frac{1}{m}\sum_{i=1}^{m}(y_{0i} - \hat{f}(x_{0i}))^2$$`
+
+- After obtaining estimates based on the training data we can easily calculate test MSE using only test data. 
+
+- Where do we get test data? 
+
+---
+class: center, middle 
+
+# Comparing training and test MSE
+
+![:scale 82%](img/MSE1.PNG)
+
+Black: truth; Estimated models: linear model (orange), smoothing spline (blue), a more flexible smoothing spline (green)
+(Source: James et al., Figure 2.9, s.31)
+
+
+---
+name: biasvariance
+
+# The Bias-Variance Trade-off 
+
+- The expected value of the test MSE can be written as: 
+`$$E(MSE_{test})=E\left(y_{0}-\hat{f}\left(x_{0}\right)\right)^{2}=\operatorname{Var}\left(\hat{f}\left(x_{0}\right)\right)+\left[\operatorname{Bias}\left(\hat{f}\left(x_{0}\right)\right)\right]^{2}+\operatorname{Var}(\epsilon)$$`
+
+- Bias = `\(\hat{f}\left(x_{0}\right) = E[\hat{f}\left(x_{0}\right)]-f\left(x_{0}\right)\)`
+
+- To minimize `\(E(MSE_{test})\)` we need to take into account both the variance and the bias simultaneously (both must be minimized)
+
+- As the flexibility increases the bias decreases but the variance increases. 
+
+---
+
+# Expected value of test MSE
+
+Test MSE (red) = Model's variance (orange) + Bias squared (blue) + irreducible error variance (horizontal dotted line)
+
+
+.center[![:scale 75%](img/MSE2.PNG)]
+
+Vertical dotted line: shows the level of complexity that gives the minimum test MSE (degrees of freedom) (Source: James et al., Figure 2.12, p.36)
+
+
+---
+name: classification
+
+# Classification problems
+
+- Output variable: categorical (binary or multiple categories)
+
+- All definitions we made so far equally apply to classification problems. But we make a few changes. 
+
+- For example, to measure the model's success we will use **error rate** instead of MSE. 
+
+- The error rate in the training data is the proportion of incorrectly classified observations: 
+`$$\frac{1}{n} \sum_{i=1}^{n} I\left(y_{i} \neq \hat{y}_{i}\right)$$`
+where the indicator function `\(I\left(\cdot\right)\)` `\(y_{i} \neq \hat{y}_{i}\)` equals 1, and 0 otherwise. 
+
+- The same formula can be used to compute test error rate using the test data `\((y_0, x_0)\)`. 
+
+---
+
+# The Bayes Classifier 
+
+- We prefer a classifier that gives the minimum test error rate. 
+
+- Bayes classifier: assigns each observation to the most likely class given the predictors. 
+
+- This implies that given test data `\(x_0\)`, we assign a test observation to class `\(j\)` for which the conditional probability  
+`$$\operatorname{Pr}\left(Y=j \mid X=x_{0}\right)$$`
+is largest. 
+
+- For example, in a binary classification problem (groups 1 and 2), we assign test observation into group 1 if  `\(\operatorname{Pr}\left(Y=1 \mid X=x_{0}\right)&gt;0.5\)` and into group 2, otherwise. 
+
+---
+
+# Bayes decision boundary
+
+
+.pull-left[
+![:scale 100%](img/class1.PNG)
+]
+
+.pull-right[
+- purple dashed line: Bayes classification boundary
+- If the probabilitiy is larger than 0.5 we classify into orange group, otherwise into blue group. 
+]
+
+
+---
+
+
+# Bayes Error Rate
+
+- The Bayes classifier gives the smallest error rate. 
+
+- Bayes Error Rate: 
+
+`$$1-E\left(\max _{j} \operatorname{Pr}(Y=j \mid X)\right)$$`
+
+- We can think of the Bayes error rate as the irreducible error. In practice, we cannot know the Bayes error rate as we do not know the true conditional distribution.   
+
+---
+
+# K-Nearest Neighbors (KNN) Classifier 
+
+
+- In order to use the Bayes classifier, we need to estimate the conditional distribution of each group using training data. After that we can classify observations using the class with highest probability. 
+
+- K-Nearest Neighbor (KNN) is a simple model that can be used to estimate the conditional probabilities. 
+
+- Given a test observation `\(x_0\)`, KNN finds the nearest `\(K\)` points in the training set. Then, the test observation is classified into the group with highest number of points. 
+
+- KNN becomes more flexible as `\(K\)` gets smaller. 
+
+---
+
+# KNN Example 
+
+.center[![:scale 75%](img/KNN1.PNG)]
+
+Notes: `\(K=3\)` (left) blue group has the higher frequency. KNN decision boundary (right). (Source: James et al., Figure 2.14, p.40)
+
+---
+
+# Over-fitting revisited
+
+- In KNN classifier, the parameter `\(K\)` determines the model's performance. 
+
+- As `\(K\)` increases the number of observations in the neighborhood also increases and the model becomes **less flexible**. 
+
+- As `\(K\)` gets smaller, the model's flexibility increases.  
+
+- As two extremes, let's compare `\(K=1\)` and `\(K=100\)`
+
+---
+
+# Over-fitting in KNN 
+
+.center[![:scale 88%](img/KNN3.PNG)]
+
+(Source: James et al., Figure 2.16, p.41)
+
+---
+
+# Training and Test Error Rates in KNN
+
+.center[![:scale 55%](img/KNN4.PNG)]
+
+Note: Dashed black line is the Bayes error rate (this is known because the data is simulated) (Source: James et al., Figure 2.17, p.42)
+
+
+---
+
+# Prediction Error in Machine Learning 
+
+
+.pull-left[
+![:scale 100%](img/funpic.png)
+]
+
+.pull-right[
+- In traning data, prediction error keeps decreasing as the model becomes more flexible.   
+
+- However, the prediction error in test data decreases upto a point and then increases. Even if the bias is smaller the variance becomes higher (over-fitting) 
+
+- We choose the complexity where test prediction error is minimum. 
+]
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script src="macros.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false,
+"ratio": "16:9"
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Classification Problems</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Hüseyin Taştan" />
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/metropolis.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Classification Problems
+## Machine Learning in Economics
+### Hüseyin Taştan
+### Yildiz Technical University
+
+---
+
+class: my-medium-font
+
+&lt;style type="text/css"&gt;
+.remark-slide-content {
+    font-size: 28px;
+    padding: 1em 4em 1em 4em;
+}
+.my-large-font {
+  font-size: 40px;
+}
+.my-small-font {
+  font-size: 20px;
+}
+.my-medium-font {
+  font-size: 30px;
+}
+&lt;/style&gt;
+
+
+
+# Lecture Outline
+
+- [Classification problems](#classprobs)
+
+- [Logistic regression](#logistic) 
+
+- [Linear Discriminant Analysis (LDA)](#lda)
+
+- [Measuring classification performance](#classperformance)
+
+- [ROC curve and AUC](#roc)
+
+- [Quadratic Discriminant Analysis (QDA)](#qda)
+
+
+---
+name: classprobs
+
+# Classification problems
+
+* In regression problems, the response variable `\(Y\)` is quantitative 
+
+* If `\(Y\)` is categorical (qualitative) then we have classification problem
+
+* Classifier: a model that can be used to classify the category of `\(Y\)` given a set of `\(X\)` variables. 
+
+* Example: a bank wants to estimate the probability of default for a credit applicant and then classify into default (reject) vs. no-default (accept) groups. 
+
+* Data set: default (Yes/No), `\(X\)` variables: credit card balance (balance), income level of applicant (income), student dummy (student)
+
+---
+# Classification: Example 
+
+![:scale 100%](img/default1.PNG)
+Blue: Default=NO, Orange: Default=YES (ISLR Fig-4.1, p.129)
+
+---
+# Can we use linear regression? 
+
+* Can we classify observations using the standard regression analysis? Suppose that there are two response categories: 
+`$$default = \beta_0 + \beta_1 income + \beta_2 balance + \epsilon$$`
+where default has binary (0/1) values. 
+
+* Classification rule: If the OLS prediction is larger than `\(0.5\)` then assign default=YES (1) group, otherwise assign default=NO (0) group. 
+
+* But there is no guarantee that predicted values lie between 0 and 1. They can be any value, even negative or larger than one. 
+
+* Also the error term will not have constant variance. And it cannot be applied to multiple categories. 
+
+---
+name: logistic
+
+# Logistic regression
+
+* Instead of directly modeling the response variable, we may try to model the classification probability, that is,  
+`$$p(X) = \beta_0 + \beta_1 X$$`
+where `\(p(X)=Pr(Y=1|X)\)` is the probability of classifying the response variable into group =1, conditional on `\(X\)`. 
+
+* By definition `\(0\leq p(X)\leq 1\)`. For example, the logistic function is defined as
+`$$p(X)=\frac{e^{\beta_{0}+\beta_{1} X}}{1+e^{\beta_{0}+\beta_{1} X}}$$`
+
+* The Logit model can be written as `\(\log \left(\frac{p(X)}{1-p(X)}\right)=\beta_{0}+\beta_{1} X\)`
+
+---
+# Logistic Regression vs Linear Probability Model (LPM)
+
+![:scale 110%](img/default2.PNG)
+
+**Left**: conditional probabilities from LPM, **Right**: conditional probabilities from logistic regression (ISLR Fig-4.2, p.131)
+
+---
+# Estimation of Logistic Regression 
+
+* We cannot use OLS to estimate the logistic regression
+
+* Maximum Likelihood estimation method gives consistent and efficient estimators. It finds the coefficients by maximizing the likelihood:  
+`$$\ell\left(\beta_{0}, \beta_{1}\right)=\prod_{i: y_{i}=1} p\left(x_{i}\right) \prod_{i^{\prime}: y_{i^{\prime}}=0}\left(1-p\left(x_{i^{\prime}}\right)\right)$$`
+
+* After estimating the coefficients of the logistic regression we can compute conditional probabilities.  
+
+* The classification is based on the conditional probabilities.
+
+---
+# Multiple Logistic Regression
+
+* The model can easily be extended to include quantitative or qualitative predictors: 
+`$$p(X)=\frac{e^{\beta_{0}+\beta_{1} X_1 + \ldots +\beta_{p} X_p}}{1+e^{\beta_{0}+\beta_{1} X_1 + \ldots +\beta_{p} X_p}}$$` 
+
+* Because the model is nonlinear, the coefficients cannot be interpreted as changes in conditional probabilities. But we can interpret their signs. 
+
+* After finding `\(\hat{\beta}_j\)`s we can calculate conditional probabilities by plugging `\(X_j\)` values in the equation above.
+
+---
+name: lda 
+
+# Linear Discriminant Analysis
+
+* Linear Discriminant Analysis (LDA) attempts to model the distribution of `\(X\)` variables for each category.
+
+* Then, using the Bayes Theorem we can estimate the conditional probability `\(Pr(Y=k|X=x)\)`. 
+
+* If the classes are well-separated, the logistic regression can be unstable. LDA does not suffer from that problem. 
+
+* Even if `\(n\)` is small, LDA is more stable if the `\(X\)` variables are approximatley normal. 
+
+* Unlike the logistic regression, LDA can be applied to cases where there are more than two esponse categories.
+
+---
+# Using the Bayes Theorem in Classification
+
+* We want classify observations into `\(K\geq 2\)` groups. The response variable is `\(Y_i =k,~k=1,2,\ldots,K\)` (order is not important) 
+
+* Prior = `\(\pi_k\)`, probability that randomly drawn observation comes from class `\(k\)` 
+
+- The density of `\(X\)` for an observation that comes from the `\(k\)`th class: `\(f_k(x)\equiv Pr(X=x|Y=k)\)` (For simplicity assume `\(X\)` is discrete). `\(f_k(x)\)` takes larger values as the probability of `\(X\)` from class `\(k\)` increases. 
+
+* Now we can apply the Bayes Theorem to obtain the posterior probability: 
+`$$p_k(X)\equiv \operatorname{Pr}(Y=k \mid X=x)=\frac{\pi_{k} f_{k}(x)}{\sum_{l=1}^{K} \pi_{l} f_{l}(x)}$$`
+
+* Instead of directly estimating `\(p_k(X)\)`, we can estimate its components. 
+
+---
+# Using the Bayes Theorem in Classification
+
+Posterior probability function: 
+`$$p_k(X)\equiv \operatorname{Pr}(Y=k \mid X=x)=\frac{\pi_{k} f_{k}(x)}{\sum_{l=1}^{K} \pi_{l} f_{l}(x)}$$`
+* `\(\pi_{k}\)` can easily be estimated from data. We just need to calculate the proportion of observations in class `\(k\)`.
+
+* But estimating `\(f_{k}(x)\)` is more difficult. We need to make some distributional assumptions. 
+
+* LDA: assumes normal distribution. For example, for `\(p=1\)` 
+`$$f_{k}(x)=\frac{1}{\sqrt{2 \pi} \sigma_{k}} \exp \left(-\frac{1}{2 \sigma_{k}^{2}}\left(x-\mu_{k}\right)^{2}\right)$$`
+
+---
+# Normal Distribution
+
+.pull-left[
+Different means, same variance
+
+![](img/norm1.PNG)
+]
+.pull-right[
+Different variances, same mean
+
+![](img/norm2.PNG)
+]
+
+---
+# LDA, conditional probabilities for p=1
+
+* For a single predictor, `\(p=1\)`, and same variance across groups ( `\(\sigma^2\)` ) the normality implies that 
+`$$p_{k}(x)=\frac{\pi_{k} \frac{1}{\sqrt{2 \pi} \sigma} \exp \left(-\frac{1}{2 \sigma^{2}}\left(x-\mu_{k}\right)^{2}\right)}{\sum_{l=1}^{K} \pi_{l} \frac{1}{\sqrt{2 \pi} \sigma} \exp \left(-\frac{1}{2 \sigma^{2}}\left(x-\mu_{l}\right)^{2}\right)}$$`
+
+* Bayes classifier assigns an observation `\(X=x\)` into the class for which `\(p_k(x)\)` is the largest. 
+
+* Taking the natural logarithm of `\(p_k(x)\)`, we obtain the  **diskriminant** function: 
+`$$\delta_{k}(x)=x \cdot \frac{\mu_{k}}{\sigma^{2}}-\frac{\mu_{k}^{2}}{2 \sigma^{2}}+\log \left(\pi_{k}\right)$$`
+
+* Observations can be assigned to groups for which `\(\delta_{k}(x)\)` is the largest. 
+
+---
+# Estimating LDA coefficients
+
+`$$\hat{\mu}_{k}=\frac{1}{n_{k}} \sum_{i: y_{i}=k} x_{i}$$`
+
+`$$\hat{\sigma}^{2}=\frac{1}{n-K} \sum_{k=1}^{K} \sum_{i: y_{i}=k}\left(x_{i}-\hat{\mu}_{k}\right)^{2}$$`
+
+`$$\hat{\pi}_k = n_k/n$$`
+Substituting these estimates into the discriminant function we obtain 
+
+`$$\hat{\delta}_{k}(x)=x \cdot \frac{\hat{\mu}_{k}}{\hat{\sigma}^{2}}-\frac{\hat{\mu}_{k}^{2}}{2 \hat{\sigma}^{2}}+\log \left(\hat{\pi}_{k}\right)$$`
+
+---
+# LDA: Example 
+ 
+.center[![:scale 110%](img/lda1.PNG)]
+
+Note: (Left) vertical dashed line is the Bayes boundary (known because the data is simulated), (Right) vertical line is the LDA decision boundary. (ISLR, Fig. 4.4, p.140)
+
+---
+# LDA with multiple predictors 
+
+* Predictors: `\(\mathbf{X} = (X_1,X_2,\ldots,X_p)\)`
+* Distributional assumption (Multivariate Normal - or Gaussian - distribution): `\(\mathbf{X}\sim~N(\mathbf{\mu},~\mathbf{\Sigma})\)` 
+![:scale 90%](img/mnorm1.PNG)
+
+Left: `\(X_1\)` and `\(X_2\)` uncorrelated,         Right: correlated with covariance = 0.7
+
+---
+# Multiple LDA
+Multivariate Gaussian density function: 
+`$$f(x)=\frac{1}{(2 \pi)^{p / 2}|\mathbf{\Sigma}|^{1 / 2}} \exp \left(-\frac{1}{2}(x-\mu)^{T} \mathbf{\Sigma}^{-1}(x-\mu)\right)$$`
+Following similar steps to the case `\(p=1\)` we can obtain the discriminant function: 
+`$$\delta_{k}(x)=x^{T} \mathbf{\Sigma}^{-1} \mu_{k}-\frac{1}{2} \mu_{k}^{T} \mathbf{\Sigma}^{-1} \mu_{k}+\log \pi_{k}$$`
+An observation is classified into the group for which `\(\delta_k(x)\)` is the largest. 
+
+---
+# Illustration
+
+.pull-left[
+![:scale 100%](img/mlda1.PNG)
+]
+.pull-right[
+* 2 predictors  `\(X_1,X_2\)`
+* Number of groups is `\(K=3\)`
+* Number of observations in each group is 20
+* Dashed lines are LDA decision boundaries
+* Smooth lines are Bayes boundaries
+* LDA error rate = 0.0770
+* Bayes error rate = 0.0746
+]
+
+---
+# Example: Default data
+
+.pull-left[
+![:scale 100%](img/defaultdata.PNG)
+]
+.pull-right[
+* n=10000
+* Balance = credit card balance
+* income = credit applicant's income level
+* Student = dummy =1 for students 
+* default = default status
+(Yes=1, No=0)
+]
+
+---
+# Example: Default data
+
+* LDA estimation with balance and student dummy gives a training error rate of 2.75%. This seems to be a very small error rate. 
+
+* In the training data, the proportion of default=YES is 3.33%. If an observation is classified as default=NO regardless of balance and student status, the error rate will be 3.33% (this is called **null classifier**). 
+
+* Now the LDA does not seem to be successful. 
+
+---
+class: my-small-font
+name: classperformance 
+
+# Measuring Classification Performance
+
+Confusion Matrix
+
+.pull-left[
+|        |        | Truth  | Truth         |         |
+|--------|:------:|--------|-----|---------|
+|        |        |    `\(-\)` |  +  |  Total |
+| Prediction |    `\(-\)` |    A   |  B  |   A + B   |
+| Prediction |    +   |    C   |  D  |   C + D   |
+|        | Total |   A + C  | B + D | A + B + C + D |
+ ]
+
+.pull-right[
+* Number of observations in cells
+* A = Number of negatives predicted correctly 
+* D = Number of positives predicted correctly 
+* C = Number of false positives
+* B = Number of false negatives
+]
+
+* False positive rate: `\(FP=C/(A+C)\)`
+* True positive rate (sensitivity): `\(TP=D/(B+D)\)` 
+* True negative rate (specificity): `\(NP=A/(A+C)\)` 
+* Positive Predictive value: PP = D/(C+D)
+* Negative predictive value: NP = A/(A+B) 
+
+---
+# Measuring Classification Performance
+
+Confusion Matrix
+.pull-left[
+![:scale 100%](img/confusion1.PNG)
+]
+.pull-right[
+* Default = YES (Positive group)
+* Default = NO (Negative group)
+]
+
+* Number of obs. classified correctly = 9644+81=9725 with rate 97.25%. 
+* Incorrectly classified number of obs. = 252+23=275. (2.75%)
+* The proportion that are classified incorrectly in default=YES group is 23/9667 = 0.00238, or 0.238%, a very small error. 
+* But those who default are incorrectly classified into NO-default with the proportion of 75.7% (=252/333)
+
+---
+# Measuring Classification Performance
+
+Confusion Matrix
+.pull-left[
+![:scale 100%](img/confusion1.PNG)
+]
+.pull-right[
+* Default = YES (+)
+* Default = NO (-)
+]
+
+
+* Specificity = `\((1-23/9667)\times 100\)` = 99.8% 
+* TP rate or Sensitivity = 24.3% =  `\((=100\times 81/333)\)` 
+* False negative rate `\(=75.7\% =100\times 252/333=1-Sensitivity\)`. For a bank that wants to identify high-risk individuals, this is too high   
+* In the classification above, we used the threshold 0.5. That is we classified an observation as default=YES if the posterior probability is larger than 0.5.
+
+---
+# Different threshold values
+
+A bank may use 0.2 instead of 0.5 in order to identify high-risk customers 
+`$$Pr(default=YES|X)&gt;0.2$$`
+.pull-left[
+![:scale 100%](img/confusion2.PNG)
+]
+.pull-right[
+* Sensitivity `\(=100\times 195/333 = 58.6\%\)`
+* False negative rate `\(41.44\% = 100\times 138/333\)` (=1-Sensitivity)
+]
+* As expected, sensitivity increased but the rate of false positives also increased: `\(2.43\% = 100\times 235/9667\)`. Overall error rate is 3.73%
+* There is a trade-off between error rate and threshold  
+
+---
+# Threshold and error rate
+.pull-left[
+![:scale 100%](img/lda2.PNG)
+]
+.pull-right[ 
+* Black: overall error rate, orange dashed: false positives
+* Blue dashed line: false negative rate (defaulters misclassified as default=NO)
+]
+
+* When threshold = 0.5, error rate is minimum. But false negative rate is the highest. 
+* As threshold decreases, false negative rate also decreases 
+* At the same time, false positive rate also increases. 
+* How to choose the appropriate threshold value? Field knowledge is important. Also ROC curve may be helpful.  
+
+---
+name: roc
+
+# ROC curve  
+ROC (Receiver Operating Characteristics) curve shows true and false positive rates for all threshold values: 
+.pull-left[
+![:scale 90%](img/roc1.PNG)
+]
+.pull-right[ 
+* Overall performance measure = AUC
+* AUC = Area Under the Curve  
+* Maximum AUC = 1, high AUC is preferred
+* Random classification: AUC = 0.5
+* For the default example LDA gives AUC = 0.95. The same as the logistic regression.
+]
+
+---
+class: my-medium-font
+name: qda 
+
+# Quadratic Discriminant Analysis (QDA)
+
+* LDA assumes the variances are the same in each group 
+* If this assumption fails LDA performance worsens 
+* QDA (quadratic discriminant analysis) is similar to LDA but assumes different covariance matrices in each group instead of common covariance matrix in the multivariate normal distribution. 
+* The resulting discriminant function is not linear but quadratic. 
+* If the variances are different QDA performs better than LDA. But there must be sufficient number of observations in each group. 
+* If the group variances are the same we may prefer LDA.  
+
+---
+# LDA vs. QDA 
+
+.center[![](img/qda1.PNG)]
+**Left**:common covariance matrix. LDA (black dashed) is more successful than QDA (green) (purple dashed line is Bayes boundary); **Right**: Different group variance, QDA performs better (source: James et al., ISLR, Fig-4.9, p.150)
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script src="macros.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false,
+"ratio": "16:9"
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

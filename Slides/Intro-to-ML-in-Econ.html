@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Introduction</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Hüseyin Taştan" />
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/metropolis.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Introduction
+## Machine Learning in Economics
+### Hüseyin Taştan
+### Yildiz Technical University
+
+---
+
+class: my-medium-font
+
+&lt;style type="text/css"&gt;
+.remark-slide-content {
+    font-size: 28px;
+    padding: 1em 4em 1em 4em;
+}
+.my-large-font {
+  font-size: 40px;
+}
+.my-small-font {
+  font-size: 20px;
+}
+.my-medium-font {
+  font-size: 30px;
+}
+&lt;/style&gt;
+
+
+
+
+# Outline
+
+- [Introduction](#intro)
+
+- [What is machine learning?](#whatsml)
+
+- [Artifical Intelligence, Data Science, Data Mining](#buzzwords) 
+
+- [Supervised vs. Unsupervised Learning, Reinforcement learning, Deep learning](#sl) 
+
+- [Econometrics vs machine learning](#econometrics)
+
+- [Prediction policy problems](#policy) 
+
+- [References](#references)
+
+---
+name: intro
+
+# Introduction
+
+- The purpose of this course is to introduce you to fundamental methods, concepts, and algorithms that are widely used in machine learning applications. Our focus will be potential application areas in social sciences especially in economics.
+
+* Textbook: James, Gareth, D. Witten, T. Hastie, R. Tibshirani (2017), An Introduction to Statistical Learning with Applications in R, Springer. Freely available at: [https://statlearning.com/](https://statlearning.com/)
+
+* Github link to class materials: [https://github.com/htastan/](https://github.com/htastan/)
+
+* Software platform: R and RStudio 
+
+- Please enroll in the class email list. 
+
+---
+name: whatsml
+
+# What is machine learning?
+
+- There are several definitions of machine learning. In the following, I am going to cover a few of these that I find particularly useful. 
+
+- One of the pioneers in artificial intelligence [Arthur Samuel](https://en.wikipedia.org/wiki/Arthur_Samuel) defines machine learning as follows: 
+
+&gt; “Machine Learning is a field of study that gives computers the ability to learn without being explicitly programmed.” - Arthur Samuel  
+
+
+- He developed a computer checkers program in which computer played a large number of games against itself and learned about which moves were best. 
+
+---
+# Learning Problem
+
+- Tom Mitchell, in his textbook Machine Learning, describes machine learning in terms of a **well-defined learning problem**:
+
+
+&gt; "A computer program is said to learn from experience **E** with respect to some task **T** and some performance measure **P**, if its performance on **T**, as measured by **P**, improves with experience **E**." 
+
+
+- A computer “learns” by improving its performance at some task through experience (i.e., data)
+
+&gt; “For example, a computer program that learns to play checkers might improve its performance as measured by its ability to win at the class of tasks involving playing checkers games, through experience obtained by playing games against itself” (Mitchell, 1997, p. 2).
+
+
+
+---
+# Checkers learning problem
+
+&gt; “A computer program is said to learn from experience E with respect to some task T and some performance measure P, if its performance on T, as measured by P, improves with experience E”.
+
+- **T**ask: playing checkers
+
+- **E**xperience: computer playing practice games against itself  
+
+- **P**erformance measure: percent of games won against opponents.
+
+---
+# Learning Problem: Spam Email 
+
+Imagine an email program that follows your interactions, which emails you answer, which you mark as spam. Following you over time it can learn which emails to classify as important and which ones as unwanted spam. 
+
+In this problem: 
+
+- **T**ask: classifying emails as spam or not spam
+
+- **E**xperience: watching the user classifying as spam or not 
+
+- **P**erformance: the proportion of emails classified correctly as spam
+
+---
+# What is machine learning?
+
+&gt; “Machine learning is programming computers to optimize a performance criterion using example data or past experience”. Alpaydın (2018, s.3) 
+
+- Machine Learning uses statistical theory to develop descriptive or predictive models (algorithms) using training data or past experience
+
+
+- Example (Alpaydın, 2018):  a retail-marketer (a supermarket chain, say) may be interested in finding associations between products bought by customers: 
+
+- If people who buy X typically also buy Y, and if there is a customer who buys X and does not buy Y, he or she is a potential Y customer. Once we find such customers, we can target them for cross-selling.
+
+---
+# Example: Marketing problem
+
+- The task is to estimate the conditional probability of the form `\(P(Y|X)\)` where `\(Y\)` is the product conditional on `\(X\)`, where `\(X\)` is the product the customer has already purchased. 
+
+- This problem requires a training data set at the customer level where we observe their individual characteristics and shopping behavior.
+
+- After we obtain a good estimate of `\(P(Y|X)\)` based on the past customer data, we can design targeted marketing and advertising campaigns. 
+
+---
+# What is machine learning? 
+
+&gt; “...Machine learning is a field that develops algorithms designed to be applied to datasets, with the main areas of focus being prediction (regression), classification, and clustering or grouping tasks” Susan Athey (2018). 
+
+- This definition is more specific in terms of the tasks. 
+
+- The focal point is still “prediction”
+  
+
+---
+# Statistical Learning
+
+&gt; “Statistical learning refers to a set of tools for modeling and understanding complex datasets. It is a recently developed area in statistics and blends with parallel developments in computer science and, in particular, machine learning.” James, Witten, Hastie ve Tibshirani (2017). 
+
+- This is close to S. Athey’s definition.
+
+- Although there are subtle differences between machine learning and statistical learning, they generally refer to the same set of algorithms designed to understand (learn from) data.
+
+- In this course we will use machine learning (ML) and statistical learning (SL) interchangeably. The point is that "learning" is based on a random data set using a rule (or an algorithm) that optimizes a criterion function.
+
+---
+name: buzzwords
+
+# Related concepts and buzzwords
+
+- **Artificial Intelligence**: a field of study that aims to develop tools for making machines (computers) to behave intelligently and autonomously.  
+
+  + Currently, we see a widespread use of a narrow definition of artificial intelligence where a certain task is completed successfully rather than an artificial intelligence that behaves like humans.   
+
+  + For example: autonomus vehicles, Siri, Alexa and similar devices, Google search, Dianosing certain diseases etc.
+  
+---
+# Related concepts and buzzwords
+
+- **Data Science**: a multidisciplinary area of study at the intersection of statistics, computer science, mathematics and related field of study that aims to develop algorithms to turn data into useful knowledge.  
+
+- **Data Mining**: A field of study that aims to discover useful patterns and relationships in large data sets.  
+---
+class: clear
+background-image: url("img/bigpic.PNG")
+background-size: cover
+
+---
+name: sl
+
+# Supervised Learning 
+
+- ML algorithms can be classified into two broad types: supervised ML and unsupervised ML. 
+
+- In supervised learning, we have a set of inputs (predictors or features) and an observed outcome. 
+
+- The goal is to find the best model to predict the outcome based on a data set. 
+
+- As an example, consider predicting the probability of default based on a set of features of mortgage applicant. 
+  - A bank may develop a statistical model of default probability from past applications and then use it to predict new applicants (out-of-sample prediction). 
+  
+- Two types: Regression and classification problems 
+
+---
+# Unsupervised Learning
+
+- In unsupervised learning, on the other hand, there is no outcome variable or “label” that are attached to inputs or predictors. 
+
+- Unsupervised learning consists of two general problems: clustering, and dimensionality reduction. 
+
+- In clustering, we try to identify homogenous groups in the data based on a set of features (for example, clusters of similar consumers, types of patients, voters of a political party, etc.)
+ 
+---
+# Reinforcement Learning 
+
+- In some cases, supervised learning is not possible. 
+
+- Output is not a single action but a sequence of actions. A single action by itself may not be important but applying the correct sequence of actions is.
+
+- The sequence of correct actions to reach the goal is called “policy”. 
+There is no single best action. But an action is good if it is a part of good policy.
+
+- Example: game playing (eg, chess) where a single move by itself is not that important; it is the sequence of right moves that is good. A move is good if it is part of a good game playing policy. 
+
+- Example: A robot navigating in an environment in search of a goal location is another application area of reinforcement learning. For details, see Alpaydın (2018, p. 10 and p. 383)
+
+---
+# Deep Learning
+
+* Deep learning is a subfield in machine learning that focuses on developing artificial neural networks (ANN) algorithms based on the functioning of the brain.  
+* An artificial neural network consists of neurons and their connections just like in the brain.  
+
+* A typical ANN problem consists of multiple layers such as input layer, intermediate layers and output layer. (see the graph below)
+
+* Application areas: image recognition, natural language processing, voice recognition, etc.  
+
+.center[![:scale 50%](img/ann1.PNG)] 
+
+---
+name: econometrics
+
+# Econometrics vs Machine Learning
+
+- A typical supervised machine learning problem can be written as follows:  
+`$$y = f(x_1, x_2, \ldots, x_p) + \epsilon$$`
+where `\(y\)` is the outcome variable (or labels), and `\(\{x_1, x_2, \ldots, x_p\}\)` are a set of features (characteristics). `\(\epsilon\)` is a random error term. 
+
+- `\(f(\cdot)\)` represents unknown functional form. 
+
+- The model's prediction can be written as  
+`$$\hat{y} = f(x_1, x_2, \ldots, x_p)$$`
+- The purpose in machine learning is to minimize the prediction error `\(y-\hat{y}\)`, as much as possible. This is very similar to the framework that we use in econometrics.  
+
+---
+# Econometrics vs Machine Learning
+
+- Let's assume that `\(f(\cdot)\)` is linear in parameters: 
+`$$y = \beta_0 + \beta_1 x_1 + \beta_2 x_2 +\ldots+ \beta_p x_p + \epsilon$$`
+We obtained the linear regression model that we frequently use in econometric applications. 
+
+- We can represent the model in a more compact way using matrix algebra: 
+
+`$$\underbrace{\mathbf{y}}_{n\times 1} = \underbrace{\mathbf{X}}_{n\times (p+1)} \underbrace{\mathbf{\beta}}_{(p+1)\times 1} + \underbrace{\mathbf{u}}_{n\times 1}$$`
+There ae `\(p+1\)` unknown `\(\beta\)` parameters (including the intercept) in this model.  
+
+---
+# Econometrics vs Machine Learning
+
+* The focus of **econometrics** is to estimate the parameter vector, `\(\mathbf{\beta}\)`, in an unbiased or consistent and efficient manner. 
+
+* Econometricians particularly focus on the economic interpretation of the model.
+
+* Estimation: Under certain assumptions Ordinary Least Squares (OLS) will be the best linear unbiased estimator (BLUE) according to the Gauss-Markov theorem. 
+
+* Estimation is possible if the number of observations, `\(n\)`, is significantly larger than the number of variables in `\(\mathbf{X}\)`, i.e., `\(p\)`. This requirement is sometimes written as: `\(n&gt;&gt;p\)` 
+
+* OLS will not work if `\(p&gt;n\)`
+
+* What about `\(p=n\)`?
+
+---
+# Econometrics vs Machine Learning
+
+* The difference between Machine Learning (ML) and econometrics can be summarized as follows:  
+
+&gt; Machine learning focuses on the prediction of the outcome variable, that is `\(\hat{y}\)`. On the other hand, the focus of econometrics is `\(\hat{\beta}_j\)`, `\(j=1,2,\ldots,p\)`. (Mullainathan ve Spiess, 2017)
+
+* Econometrics: What is the causal impact of `\(x_j\)` on `\(y\)` (economic measurement problem)
+
+* Econometrics: using economic theory as the guide, aims to estimate the causal effects in an unbiased/consistent and efficient manner. 
+
+* **ML**: focuses on finding the most successful models in predicting `\(y\)` 
+
+---
+# ML and econometrics 
+
+- We note that the lines between ML and econometrics cannot be drawn strictly.  
+
+* Prediction problems may  be useful for causal inference. Also, an econometric model (or an economic model) may provide valuable information for predictive modeling.
+
+- Therefore, this distinction is somewhat blurred; machine learning tools can be useful for econometric analysis that focuses on causal (ceteris paribus) analysis.
+  
+- Recent literature focuses on combining ML and econometrics methods to identify causal relationships in large data sets (for details, refer to Athey and Imbens (2019)). 
+
+---
+# ML and econometrics 
+
+- Unlike econometric methods, ML algorithms can be used is the number of features (variables) larger than the number of observations.
+
+- Empirical problems can be decomposed into two parts: prediction and causality
+
+- ML is very good at data-driven model selection that gives the best prediction
+
+- Data set is divided into two parts: training and test.
+
+- Training data is used to estimate the model whereas test data is used to evaluate the performance
+
+- We will learn the details of this approach in this course. 
+
+---
+background-image: url("img/ML-workflow.PNG")
+background-size: contain
+
+# A Typical Machine Learning Workflow
+
+---
+name: policy 
+
+# Prediction Policy Problems
+
+- Econometrics puts great emphasis on causal inference because policy research often requires an understanding of what would happen if the policy is not implemented (so-called the counterfactual).
+
+- As argued by Kleinberg et al. (2015), the causal inference may not be necessary for some policy applications. 
+
+- Instead of a careful elaboration of the counterfactual and a detailed discussion of identification (of the parameters of a structural model), some policy problems may only need good predictions.
+
+- They argue that machine learning can be useful in providing these predictions. 
+
+---
+#  Prediction Policy Problems: Examples
+
+(Kleinberg et al. 2015)
+
+* health policy: predicting which surgeries will be futile using data available at the time of surgery. 
+
+
+* criminal justice: predicting the arrestee's probability of committing a crime. 
+
+
+* education: predicting which teacher will have the greatest value-added. 
+
+
+* labor market policy: predicting unemployment spell length to help workers to decide on savings rates and job search strategies. 
+
+
+* social policy: predicting highest risk youth for targeting interventions. 
+
+
+* finance: lenders identifying the underlying credit-worthiness of potential borrowers. 
+
+
+---
+name: references
+class: my-small-font
+# References
+
+Alpaydın, Ethem (2018), *Yapay Öğrenme*, 4. Baskı (Ethem Alpaydın, *Introduction to Machine Learning*, 2. baskıdan çeviri), Boğaziçi Üniversitesi Yayınevi, İstanbul. 
+
+Athey, S. (2018), ''The Impact of Machine Learning on Economics'', Stanford University, unpublished paper. (https://projects.iq.harvard.edu/files/pegroup/files/athey2018.pdf), 
+printed as: (https://www.nber.org/chapters/c14009). 
+
+Athey, S. ve Imbens, G.W. (2019), ''Machine Learning Methods That Economists Should Know About'', *Annual Review of Economics*, 11: 685-725. 
+
+James, Gareth, Witten D., Hastie T. ve Tibshirani R, (2017), *Introduction to Statistical Learning*, corrected 8th printing, Springer, New York.
+
+Kleinberg, J., Ludwig, J., Mullainathan, J., ve Obermeyer, Z. (2015), "Prediction Policy Problems", *American Economic Review, Papers and Proceedings*, 105(5): 491-495. (http://dx.doi.org/10.1257/aer.p20151023)
+
+Mullainathan, S. ve Spiess, J. (2017) ''Machine Learning: An Applied Econometric Approach'', *Journal of Economic Perspectives*, 31(2), 87-106.
+
+Samuel,  A. L. (1959), ''Some studies in machine learning using the game of checkers'', *IBM Journal*, 3: 210–229. 
+
+Varian, H.R. (2014), ''Big Data: New Tricks for Econometrics'', *Journal of Economic Perspectives*, 28 (2): 3–28.
+
+
+nocite: '@*'
+
+
+
+&lt;!-- --- --&gt;
+&lt;!-- # Videolar  --&gt;
+
+&lt;!-- [S. Mullainathan, Machine Learning and Prediction in Economics and Finance](https://www.youtube.com/watch?v=xl3yQBhI6vY) --&gt;
+
+&lt;!-- [S. Mullainathan, Machine Intelligence and Public Policy](https://www.youtube.com/watch?v=W7izsrYGhdU) --&gt;
+
+&lt;!-- [Susan Athey, Machine Learning and Causal Inference for Policy Evaluation](https://www.youtube.com/watch?v=Yx6qXM_rfKQ) --&gt;
+
+&lt;!-- [T. Hastie, Statistical learning with big data. A talk by Trevor Hastie](https://www.youtube.com/watch?v=0EWJZIC4JxA) --&gt;
+
+&lt;!-- [Artificial Intelligence, the History and Future - with Chris Bishop](https://www.youtube.com/watch?v=8FHBh_OmdsM) --&gt;
+
+&lt;!-- [İstatistiksel Öğrenme Dersleri YouTube Oynatma Listesi: Introduction to Statistical Learning by Robert Tibshirani, Trevor Hastie, and Daniela Witten.](https://www.youtube.com/playlist?list=PLOg0ngHtcqbPTlZzRHA2ocQZqB1D_qZ5V) --&gt;
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script src="macros.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false,
+"ratio": "16:9"
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
