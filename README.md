@@ -16,7 +16,7 @@ Instructor: Prof. Dr. Hüseyin Taştan
     * Slides: [html](https://raw.githack.com/htastan/Machine-Learning-in-Economics/main/Slides/Basic-concepts-in-ML.html) 
     * Lab: [Introduction to R programming](https://raw.githack.com/htastan/Machine-Learning-in-Economics/main/Labs/Lab-02-Intro-to-R-and-RStudio-Part-2.html)
     
-2. **Introduction to the Tidyverse** 
+3. **Introduction to the Tidyverse** 
     * Slides: No slides, see the lab notes.  
     * Lab: [html](https://raw.githack.com/htastan/Machine-Learning-in-Economics/main/Labs/Lab-03-Intro-to-R-Tidyverse.html)
     
