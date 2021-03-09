@@ -37,3 +37,8 @@ vignettes/*.pdf
 
 # R Environment Variables
 .Renviron
+
+# ignore Rmd files in Slides
+Slides/*.Rmd
+
+
