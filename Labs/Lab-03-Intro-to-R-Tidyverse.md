@@ -8,7 +8,7 @@ date: "2021 Spring"
 output:
   html_document: 
     number_sections: true
-    theme: readable
+    theme: lumen
     highlight: haddock 
     # code_folding: show
     toc: yes
@@ -16,7 +16,16 @@ output:
     toc_float: yes
     keep_md: true 
 ---
-
+<style type="text/css"> 
+body{
+  background-color: #FAFAFA;
+  font-size: 18px;
+  line-height: 1.8; 
+}
+code.r{
+  font-size: 12pt;
+}
+</style>
 
 
 
@@ -123,11 +132,11 @@ df
 ## # A tibble: 5 x 2
 ##   xvariable depvariable
 ##       <dbl>       <dbl>
-## 1     0.116        2.21
-## 2     0.756        5.87
-## 3     0.543        4.71
-## 4     0.365        2.55
-## 5     0.227        4.52
+## 1     0.804        3.91
+## 2     0.561        6.91
+## 3     0.386        5.65
+## 4     0.549        5.92
+## 5     0.387        2.55
 ```
 
 As in the base `R`'s `data.frame()` function, we can access variables in a  `tibble` using:  
@@ -138,7 +147,7 @@ df$xvariable
 ```
 
 ```
-## [1] 0.1164890 0.7562799 0.5427605 0.3650020 0.2267047
+## [1] 0.8036256 0.5608520 0.3861037 0.5493604 0.3874514
 ```
 
 ```r
@@ -147,7 +156,7 @@ df[["xvariable"]]
 ```
 
 ```
-## [1] 0.1164890 0.7562799 0.5427605 0.3650020 0.2267047
+## [1] 0.8036256 0.5608520 0.3861037 0.5493604 0.3874514
 ```
 
 ```r
@@ -156,7 +165,7 @@ df[[1]]
 ```
 
 ```
-## [1] 0.1164890 0.7562799 0.5427605 0.3650020 0.2267047
+## [1] 0.8036256 0.5608520 0.3861037 0.5493604 0.3874514
 ```
 
 But there are easier ways of accomplishing these as I will show below. 

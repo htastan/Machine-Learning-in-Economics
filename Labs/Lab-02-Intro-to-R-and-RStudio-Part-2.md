@@ -4,12 +4,12 @@ subtitle: Machine Learning in Economics
 author: 
   name: "Prof. Dr. Hüseyin Taştan"
   affiliation: "Yildiz Technical University"
-# date: "09 Mart 2021"
-date: 2021 Spring
+# date: "16 Mart 2021"
+date: "Spring 2021"
 output: 
   html_document:
     number_sections: true
-    theme: readable
+    theme: lumen
     highlight: haddock 
     # code_folding: show
     toc: yes
@@ -19,7 +19,9 @@ output:
 ---
 <style type="text/css"> 
 body{
-  font-size: 12pt;
+  background-color: #FAFAFA;
+  font-size: 18px;
+  line-height: 1.8;
 }
 code.r{
   font-size: 12pt;

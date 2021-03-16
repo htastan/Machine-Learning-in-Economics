@@ -8,7 +8,7 @@ date: "2021 Spring"
 output:
   html_document: 
     number_sections: true
-    theme: readable
+    theme: lumen
     highlight: haddock 
     # code_folding: show
     toc: yes
@@ -16,7 +16,16 @@ output:
     toc_float: yes
     keep_md: true 
 ---
-
+<style type="text/css"> 
+body{
+  background-color: #FAFAFA;
+  font-size: 18px;
+  line-height: 1.8; 
+}
+code.r{
+  font-size: 12pt;
+}
+</style>
 
 
 
@@ -297,7 +306,7 @@ boot(data = data, statistic = corboot, R=1000)
 
 ```r
 boot.fn=function(data,index)
-  return(coef(lm(mpg~horsepower,data=data,subset=index)))
+  return(coef(lm(mpg ~ horsepower, data=data, subset=index)))
 boot.fn(Auto,1:392)
 ```
 
@@ -347,7 +356,7 @@ boot(Auto,boot.fn,1000)
 ```
 
 ```r
-summary(lm(mpg~horsepower,data=Auto))$coef
+summary(lm(mpg ~ horsepower, data=Auto))$coef
 ```
 
 ```
@@ -359,7 +368,7 @@ summary(lm(mpg~horsepower,data=Auto))$coef
 
 ```r
 boot.fn=function(data,index)
-  coefficients(lm(mpg~horsepower+I(horsepower^2),data=data,subset=index))
+  coefficients(lm(mpg ~ horsepower + I(horsepower^2), data=data, subset=index))
 set.seed(1)
 boot(Auto,boot.fn,1000)
 ```
@@ -381,7 +390,7 @@ boot(Auto,boot.fn,1000)
 ```
 
 ```r
-summary(lm(mpg~horsepower+I(horsepower^2),data=Auto))$coef
+summary(lm(mpg ~ horsepower + I(horsepower^2), data=Auto))$coef
 ```
 
 ```

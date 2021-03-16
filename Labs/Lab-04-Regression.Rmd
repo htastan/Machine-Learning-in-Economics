@@ -8,7 +8,7 @@ date: "2021 Spring"
 output:
   html_document: 
     number_sections: true
-    theme: readable
+    theme: lumen
     highlight: haddock 
     # code_folding: show
     toc: yes
@@ -16,7 +16,16 @@ output:
     toc_float: yes
     keep_md: true 
 ---
-
+<style type="text/css"> 
+body{
+  background-color: #FAFAFA;
+  font-size: 18px;
+  line-height: 1.8; 
+}
+code.r{
+  font-size: 12pt;
+}
+</style>
 
 ```{r setup, include=FALSE}
 # knitr::opts_chunk$set(echo = TRUE, results = 'asis', fig.show = 'asis')

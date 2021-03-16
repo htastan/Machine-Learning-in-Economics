@@ -311,7 +311,20 @@ name: elasticnet
 
 * Note that ridge regression and LASSO are special cases. 
 * There are two tuning parameters. Naive approach: uses two-step estimation. In the first step, estimate ridge regression given a value for  `\(\lambda_2\)` ; in the second step, apply LASSO. 
-* Because the naive approach applies shrinkage twice, its prediction performance is not succcessful. Zou and Hastie suggest an alternative estimation strategy that gives better predictions. 
+* Because the naive approach applies shrinkage twice, its prediction performance is not succcessful. Zou and Hastie suggest an alternative estimation strategy that gives better predictions.
+
+---
+# Elastic Net 
+
+- The objective function to be minimized can be written as 
+`$$\mathrm{SSR}+\lambda \left[ (1-\alpha) \sum_{j=1}^p \beta_j^2+\alpha \sum_{j=1}^{p}\left|\beta_{j}\right| \right]$$`
+for some `\(0\leq \alpha \leq 1\)`. 
+- Note that when `\(\alpha=0\)` we obtain the ridge penalty, and when `\(\alpha=1\)` we obtain the LASSO penalty. 
+- The Elastic net penalty is a compromise between the two. For an `\(\alpha\)` close to 1, the elastic net is similar to the LASSO but may be more stable (especially when there are high correlations among predictors).
+
+- The `R` package `glmnet` allows users to set `\(\alpha\)` manually. See [An Introduction to glmnet](https://cran.r-project.org/web/packages/glmnet/vignettes/glmnet.pdf)
+
+
 
 ---
 name: dimreduction

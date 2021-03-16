@@ -8,19 +8,21 @@ date: "Spring 2021"
 output:
   html_document: 
     number_sections: true
-    theme: readable
+    theme: lumen
     highlight: haddock 
     # code_folding: show
     toc: yes
     toc_depth: 3
-    toc_float: yes
+    toc_float: true
     keep_md: false
 
 
 ---
 <style type="text/css"> 
 body{
-  font-size: 12pt;
+  background-color: #FAFAFA;
+  font-size: 18px;
+  line-height: 1.8;
 }
 code.r{
   font-size: 12pt;
@@ -358,7 +360,7 @@ rm(list=ls())
 
 # Shrinkage Methods: Ridge Regression and LASSO
 
-We will use `glmnet` package to perform the ridge regression and the LASSO. The main function is  `glmnet()` which only accepts vectors and matrices. We will not use `y ~ x` syntax. The missing values in the data set must be removed before proceeding. 
+We will use `glmnet` package to perform the ridge regression and the LASSO. The main function is  `glmnet()` which only accepts vectors and matrices. We will not use `y ~ x` syntax. The missing values in the data set must be removed before proceeding. For more detailed information, see [An Introduction to glmnet](https://cran.r-project.org/web/packages/glmnet/vignettes/glmnet.pdf).
 
 We first create a vector y containing response variable, and a matrix X containing 
 variables. 
@@ -670,7 +672,7 @@ mean((lasso.pred - y.test)^2)
 ```
 The variables x4-x10 are all zeros: 
 ```{r}
-out <- glmnet(x,y,alpha=1)
+out <- glmnet(x, y, alpha=1)
 lasso.coef <- predict(out, type="coefficients", s=bestlam)[1:11,]
 lasso.coef 
 ```
@@ -679,6 +681,53 @@ lasso.coef
 # sprintf("%.5f",lasso.coef[lasso.coef!=0])
 lasso.coef[abs(lasso.coef)>0.0001]
 ```
+
+## Elastic Net 
+
+Set the mixing parameter $\alpha=0.5$ and use `glmnet`: 
+```{r}
+set.seed(1)
+cv.out <- cv.glmnet(x[train,], y[train], alpha=0.5)
+plot(cv.out)
+bestlam <- cv.out$lambda.min
+bestlam
+elnet.mod <- glmnet(x[train,], y[train], alpha=0.5)
+plot(elnet.mod)
+```
+
+
+```{r}
+elnet.pred <- predict(lasso.mod, s=bestlam, newx=x[test,])
+mean((elnet.pred - y.test)^2) 
+```
+
+Which coefficients are set to zero? 
+```{r}
+out <- glmnet(x, y, alpha=1)
+lasso.coef <- predict(out, type="coefficients", s=bestlam)[1:11,]
+lasso.coef 
+```
+
+```{r}
+MSE <- numeric(11)
+lambda <- rep(NA, 11)
+alpha <-  (0:10)/10
+set.seed(1)
+for (i in 1:11) {
+  fit <- cv.glmnet(x[train,], y[train], type.measure="mse", 
+                                              alpha=alpha[i], family="gaussian")
+  yhat <- predict(fit, s=fit$lambda.1se, newx=x[test,])
+  lambda[i] <- fit$lambda.1se
+  MSE[i] <- mean((y[test] - yhat)^2) 
+}
+```
+
+For each $\alpha$ value we have chosen $\lambda$ using cross validation. Here is the result: 
+```{r}
+cbind(alpha, lambda, MSE)
+```
+
+The minimum MSE is achieved when alpha=1 which corresponds to the LASSO. 
 
 # Application: Predictors of Economic Growth
 
@@ -705,6 +754,7 @@ where $Y_{i,T}$ is the growth rate of GDP per capita over the periods 1965-1975 
 # standard lasso using glmnet
 y <- GrowthData$Outcome
 x <- model.matrix(Outcome ~ . -intercept, data=GrowthData)[,-1]
+library(glmnet)
 lasso_fit1 <- glmnet(x, y, alpha=1)
 plot(lasso_fit1)
 cv.out <- cv.glmnet(x, y, alpha=1)
