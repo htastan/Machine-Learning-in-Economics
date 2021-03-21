@@ -9,24 +9,23 @@ date: "Spring 2021"
 output: 
   html_document:
     number_sections: true
-    theme: lumen
-    highlight: haddock 
-    # code_folding: show
+    theme: flatly
+    highlight: default  
     toc: yes
     toc_depth: 3
     toc_float: yes
     keep_md: true
 ---
-<style type="text/css"> 
+```{css, echo=FALSE}
 body{
   background-color: #FAFAFA;
-  font-size: 18px;
-  line-height: 1.8; 
+    font-size: 18px;
+  line-height: 1.8;
 }
 code.r{
-  font-size: 12pt;
+  font-size: 16px;
 }
-</style>
+```
 
 ```{r setup, include=FALSE}
 # knitr::opts_chunk$set(echo = TRUE, results = 'asis', fig.show = 'asis')
@@ -524,6 +523,8 @@ plot(fun1, -2, 2)
 
 
 # Resources 
+
+[An Introduction to R](https://cran.r-project.org/doc/manuals/r-release/R-intro.pdf)
 
 Basic R: [Swirl](https://swirlstats.com/students.html)
 

@@ -4,27 +4,26 @@ subtitle: Machine Learning in Economics
 author: 
   name: "Prof. Dr. Hüseyin Taştan"
   affiliation: "Yildiz Technical University"
-# date: "16 Mart 2021"
+# date: "21 Mart 2021"
 date: "Spring 2021"
 output: 
   html_document:
     number_sections: true
-    theme: lumen
-    highlight: haddock 
-    # code_folding: show
+    theme: flatly
+    highlight: default  
     toc: yes
     toc_depth: 3
     toc_float: yes
     keep_md: true
 ---
-<style type="text/css"> 
+<style type="text/css">
 body{
   background-color: #FAFAFA;
-  font-size: 18px;
-  line-height: 1.8; 
+    font-size: 18px;
+  line-height: 1.8;
 }
 code.r{
-  font-size: 12pt;
+  font-size: 16px;
 }
 </style>
 
@@ -887,7 +886,7 @@ str(mydata)
 ```
 ## 'data.frame':	10 obs. of  2 variables:
 ##  $ score : num  80 65 78 94 100 NA 55 85 88 75
-##  $ gender: Factor w/ 2 levels "Female","Male": 1 2 1 1 2 1 2 2 1 1
+##  $ gender: chr  "Female" "Male" "Female" "Female" ...
 ```
 
 ```r
@@ -895,13 +894,13 @@ summary(mydata)
 ```
 
 ```
-##      score        gender 
-##  Min.   : 55   Female:6  
-##  1st Qu.: 75   Male  :4  
-##  Median : 80             
-##  Mean   : 80             
-##  3rd Qu.: 88             
-##  Max.   :100             
+##      score        gender         
+##  Min.   : 55   Length:10         
+##  1st Qu.: 75   Class :character  
+##  Median : 80   Mode  :character  
+##  Mean   : 80                     
+##  3rd Qu.: 88                     
+##  Max.   :100                     
 ##  NA's   :1
 ```
 
@@ -1050,7 +1049,7 @@ curve(1+2*x-2*x^2, add = TRUE, col = "red" )
 curve(1+2*x-2*x^2+3*x^3, add = TRUE, col = "blue" )
 ```
 
-![](Lab-01-Intro-to-R-and-RStudio-Part-1_files/figure-html/unnamed-chunk-58-1.png)<!-- -->
+![](Lab-01-Intro-to-R-and-RStudio-Part-1_files/figure-html/unnamed-chunk-59-1.png)<!-- -->
 
 Another way of visualizing an algebraic function is to use `function()` and `curve()` or `plot()` together. 
 
@@ -1060,18 +1059,20 @@ fun1 <- function(x) 2*sin(x)+cos(x)
 curve(fun1, -pi, pi, n = 100) 
 ```
 
-![](Lab-01-Intro-to-R-and-RStudio-Part-1_files/figure-html/unnamed-chunk-59-1.png)<!-- -->
+![](Lab-01-Intro-to-R-and-RStudio-Part-1_files/figure-html/unnamed-chunk-60-1.png)<!-- -->
 
 ```r
 # focus on the interval -2 < x < 2
 plot(fun1, -2, 2)
 ```
 
-![](Lab-01-Intro-to-R-and-RStudio-Part-1_files/figure-html/unnamed-chunk-60-1.png)<!-- -->
+![](Lab-01-Intro-to-R-and-RStudio-Part-1_files/figure-html/unnamed-chunk-61-1.png)<!-- -->
 
 
 
 # Resources 
+
+[An Introduction to R](https://cran.r-project.org/doc/manuals/r-release/R-intro.pdf)
 
 Basic R: [Swirl](https://swirlstats.com/students.html)
 
