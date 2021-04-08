@@ -143,12 +143,12 @@ name: lda
 
 * Even if `\(n\)` is small, LDA is more stable if the `\(X\)` variables are approximatley normal. 
 
-* Unlike the logistic regression, LDA can be applied to cases where there are more than two esponse categories.
+* Unlike the logistic regression, LDA can be applied to cases where there are more than two response categories.
 
 ---
 # Using the Bayes Theorem in Classification
 
-* We want classify observations into `\(K\geq 2\)` groups. The response variable is `\(Y_i =k,~k=1,2,\ldots,K\)` (order is not important) 
+* We want to classify observations into `\(K\geq 2\)` groups. The response variable is `\(Y_i =k,~k=1,2,\ldots,K\)` (order is not important) 
 
 * Prior = `\(\pi_k\)`, probability that randomly drawn observation comes from class `\(k\)` 
 
@@ -193,7 +193,7 @@ Different variances, same mean
 
 * Bayes classifier assigns an observation `\(X=x\)` into the class for which `\(p_k(x)\)` is the largest. 
 
-* Taking the natural logarithm of `\(p_k(x)\)`, we obtain the  **diskriminant** function: 
+* Taking the natural logarithm of `\(p_k(x)\)`, we obtain the  **discriminant** function: 
 `$$\delta_{k}(x)=x \cdot \frac{\mu_{k}}{\sigma^{2}}-\frac{\mu_{k}^{2}}{2 \sigma^{2}}+\log \left(\pi_{k}\right)$$`
 
 * Observations can be assigned to groups for which `\(\delta_{k}(x)\)` is the largest. 
@@ -337,7 +337,7 @@ Confusion Matrix
 
 * Specificity = `\((1-23/9667)\times 100\)` = 99.8% 
 * TP rate or Sensitivity = 24.3% =  `\((=100\times 81/333)\)` 
-* False negative rate `\(=75.7\% =100\times 252/333=1-Sensitivity\)`. For a bank that wants to identify high-risk individuals, this is too high   
+* False negative rate $ =75.7\% =100\times 252/333=1-Sensitivity $. For a bank that wants to identify high-risk individuals, this is too high   
 * In the classification above, we used the threshold 0.5. That is we classified an observation as default=YES if the posterior probability is larger than 0.5.
 
 ---
@@ -349,8 +349,8 @@ A bank may use 0.2 instead of 0.5 in order to identify high-risk customers
 ![:scale 100%](img/confusion2.PNG)
 ]
 .pull-right[
-* Sensitivity `\(=100\times 195/333 = 58.6\%\)`
-* False negative rate `\(41.44\% = 100\times 138/333\)` (=1-Sensitivity)
+* Sensitivity `$$=100\times 195/333 = 58.6\%$$`
+* False negative rate `$$41.44\% = 100\times 138/333$$`
 ]
 * As expected, sensitivity increased but the rate of false positives also increased: `\(2.43\% = 100\times 235/9667\)`. Overall error rate is 3.73%
 * There is a trade-off between error rate and threshold  
@@ -453,6 +453,32 @@ if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
     deleted = true;
   });
 })();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
 // adds .remark-code-has-line-highlighted class to <pre> parent elements
 // of code chunks containing highlighted lines with class .remark-code-line-highlighted
 (function(d) {
@@ -470,17 +496,6 @@ if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
   }
   preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
 })(document);</script>
-
-<script>
-(function() {
-  var links = document.getElementsByTagName('a');
-  for (var i = 0; i < links.length; i++) {
-    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
-      links[i].target = '_blank';
-    }
-  }
-})();
-</script>
 
 <script>
 slideshow._releaseMath = function(el) {

@@ -4,6 +4,7 @@
     <title>Linear Model Selection and Regularization</title>
     <meta charset="utf-8" />
     <meta name="author" content="Hüseyin Taştan" />
+    <script src="libs/header-attrs-2.7/header-attrs.js"></script>
     <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
     <link href="libs/remark-css-0.0.1/metropolis.css" rel="stylesheet" />
   </head>
@@ -50,6 +51,8 @@ class: center, middle, inverse, title-slide
 - [LASSO](#lasso) 
 
 - [Elastic Net](#elasticnet)
+
+- [Double-selection LASSO](#dlasso)
 
 - [Dimension reduction](#dimreduction)
 
@@ -325,6 +328,46 @@ for some `\(0\leq \alpha \leq 1\)`.
 - The `R` package `glmnet` allows users to set `\(\alpha\)` manually. See [An Introduction to glmnet](https://cran.r-project.org/web/packages/glmnet/vignettes/glmnet.pdf)
 
 
+---
+name: dlasso
+
+# Post-double selection LASSO
+
+- Consider the problem of variable selection in a theoretically motivated model 
+`$$y = \alpha\ d + X\beta + \epsilon$$`
+where `\(y\)` is the response variable, `\(d\)` is a potentially endogenous treatment variable and `\(X\)` is a matrix of `\(p\)` control variables. Potentially `\(p\)` may even be larger than the sample size. 
+
+- How to choose `\(x\)` variables? Post single-selection procedure typically works as follows: include `\(x_j\)` if it is significant as judged by LASSO or t-test and refit the model with after selection with standard confidence intervals. 
+
+- Belloni, Chernozukov and Hansen (2014) showed that this procedure may fail if coefficients are close to zero (but not exactly zero). 
+
+---
+# Inference and Variable Selection
+
+- An example is from Acemoglu, Johnson, and Robinson (2001) focusing on the effect of institution quality on growth performance: 
+
+`$$log(GDPpc) = \alpha~ Q + X\beta+\epsilon$$`
+where `\(Q\)` is the quality of institutions. The control variables include geographical variables and other country characteristics. 
+
+- Because `\(Q\)` is endogenous, Acemoglu et al. (2001) uses the early settler mortality as an instrumental variable. 
+
+- How to choose which `\(X\)` variables to include in the model in such a way that the standard errors are still valid under heteroskedasticity? 
+
+---
+# Double-Selection LASSO
+
+- The Post-Double Selection LASSO procedure by Belloni, Chernozhukov, and Hansen
+attempts to solve this problem. 
+
+- The algorithm works as follows (for further details see [How to do model selection with inference in mind](https://stuff.mit.edu/~vchern/papers/Chernozhukov-Saloniki.pdf))
+
+Step 1: Use LASSO (or other shrinkage methods) to select `\(x_j\)` for predicting `\(y\)`. 
+
+Step 2: Use LASSO (or other shrinkage methods) to select `\(x_j\)` for predicting `\(d\)`. 
+
+Step 3: Refit the model by OLS after selection (use either `\(x_j\)` selected in both steps)
+
+- Note that variable selection is conducted twice: in step 1 with `\(y\)` as the response, and in step 2 with `\(d\)` as the response. The goal is to reduce omitted variable bias
 
 ---
 name: dimreduction
@@ -349,7 +392,13 @@ for some constants `\(\phi_{m 1},\ldots,\phi_{m p}\)`.
 
 - The first few principal components that explain a sizable portion of the variance in variables can be used in the regression. 
 
-- Another dimension reduction method is Partial Least Squares (PLS) (see the text for further details).
+- Another dimension reduction method is Partial Least Squares (PLS) (see the text for further details). 
+
+
+
+
+
+
     </textarea>
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
@@ -399,6 +448,32 @@ if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
     deleted = true;
   });
 })();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
 // adds .remark-code-has-line-highlighted class to <pre> parent elements
 // of code chunks containing highlighted lines with class .remark-code-line-highlighted
 (function(d) {
@@ -416,17 +491,6 @@ if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
   }
   preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
 })(document);</script>
-
-<script>
-(function() {
-  var links = document.getElementsByTagName('a');
-  for (var i = 0; i < links.length; i++) {
-    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
-      links[i].target = '_blank';
-    }
-  }
-})();
-</script>
 
 <script>
 slideshow._releaseMath = function(el) {

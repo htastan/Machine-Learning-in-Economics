@@ -765,8 +765,42 @@ out <- glmnet(x, y, alpha=1, lambda=bestlam)
 coefficients(out)
 ```
 
-**Exercise**: Interpret the output. Compare results to the standard OLS. 
+From the output we see  that the initial income is not included in the final model. We want to keep it in the model but also want to apply variable selection. 
 
+The Post-Double Selection LASSO procedure by Belloni, Chernozhukov, and Hansen
+attempts to solve this problem. The algorithm works as follows (for further details see [How to do model selection with inference in mind](https://stuff.mit.edu/~vchern/papers/Chernozhukov-Saloniki.pdf))
+
+Step 1: Use LASSO (or other shrinkage methods) to select $x_j$ for predicting $y_T$. 
+
+Step 2: Use LASSO (or other shrinkage methods) to select $x_j$ for predicting $y_0$. 
+
+Step 3: Refit the model by OLS after selection (use either $x_j$ selected in both steps)
+
+```{r}
+# prepare data
+library(hdm)
+yT <- GrowthData$Outcome
+y0 <- GrowthData$gdpsh465
+x <- model.matrix(Outcome ~ . -intercept -gdpsh465 , data=GrowthData)[,-1]
+```
+
+```{r}
+double_lasso_fit <- rlassoEffect(x = x, y = yT, d = y0,
+                      method = "double selection")
+summary(double_lasso_fit)
+```
+
+```{r}
+# Selected coefficients
+ double_lasso_fit$coefficients.reg
+```
+
+Now the coefficient estimate on the initial income $Y_0$ is $\hat{\beta}_1=-0.5$ with heteroskedasticity-robust standard error 0.016. This result supports the neoclassical convergence argument. 
+
+
+**References**
+
+[A. Belloni, V. Chernozhukov, C. Hansen (2014). Inference on treatment effects after selection among high-dimensional controls. The Review of Economic Studies 81(2), 608-650. ](https://www.jstor.org/stable/pdf/43551575.pdf?refreqid=excelsior%3A2d94601a4e1a0bc9e93644a411795bb8)
 
 
 <br>
