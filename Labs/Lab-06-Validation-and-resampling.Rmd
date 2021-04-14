@@ -459,6 +459,7 @@ lm_last_fit %>%
   collect_predictions()
 ```
 
+
 Conducting k-fold cross-validation in the Tidymodels: 
 
 We first create folds. Here I use k=5: 

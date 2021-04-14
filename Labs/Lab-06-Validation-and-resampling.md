@@ -821,6 +821,7 @@ lm_last_fit %>%
 ## # ... with 86 more rows
 ```
 
+
 Conducting k-fold cross-validation in the Tidymodels: 
 
 We first create folds. Here I use k=5: 
