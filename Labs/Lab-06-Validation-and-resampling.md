@@ -400,6 +400,505 @@ summary(lm(mpg ~ horsepower + I(horsepower^2), data=Auto))$coef
 ## I(horsepower^2)  0.001230536 0.0001220759  10.08009  2.196340e-21
 ```
 
+# An Introduction to the Tidymodels
+
+
+[Tidymodels](https://www.tidymodels.org/) is a collection of `R` packages for machine learning modeling. Tidymodels follows the tidy data principles and easily integrates with packages in the Tidyverse. It consists of the following packages: 
+
+- rsample: data resampling 
+
+- recipes: feature engineering 
+
+- parsnip: model fitting 
+
+- tune, dials: model tuning 
+
+- yardstick: model evaluation 
+
+![](img/tidymodels1.PNG) 
+
+Visit the website for a quick introduction to the Tidymodels: [https://www.tidymodels.org/start/](https://www.tidymodels.org/start/)
+
+
+
+```r
+# first install tidymodels 
+# needs to be done once
+# install.packages("tidymodels")
+```
+
+Let's build a model using the Tidymodels. I will use the `Auto` data set. 
+
+The first step is to split the data set into training and testing sets. We can use `initial_split()` function from the `{rsample}` package. 
+We want to predict `mpg` as a function of `horsepower` as we did above. 
+We will use 75% of the data in the training part and 25% in the test part. 
+
+
+```r
+library(tidymodels)
+library(ISLR)
+set.seed(1)
+auto_split <- initial_split(Auto, 
+                           prop = 0.75, 
+                           strata = mpg)
+```
+
+The input `strata` in the `initial_split()` function makes sure that the dependent variable is distributed similarly in both training and testing sets. 
+
+The training data set is
+
+```r
+auto_train <- auto_split %>% training()
+head(auto_train)
+```
+
+```
+##   mpg cylinders displacement horsepower weight acceleration year origin
+## 1  18         8          307        130   3504         12.0   70      1
+## 4  16         8          304        150   3433         12.0   70      1
+## 5  17         8          302        140   3449         10.5   70      1
+## 6  15         8          429        198   4341         10.0   70      1
+## 7  14         8          454        220   4354          9.0   70      1
+## 8  14         8          440        215   4312          8.5   70      1
+##                        name
+## 1 chevrolet chevelle malibu
+## 4             amc rebel sst
+## 5               ford torino
+## 6          ford galaxie 500
+## 7          chevrolet impala
+## 8         plymouth fury iii
+```
+
+And the test data set is 
+
+```r
+auto_test <- auto_split %>% testing()
+head(auto_test)
+```
+
+```
+##    mpg cylinders displacement horsepower weight acceleration year origin
+## 2   15         8          350        165   3693         11.5   70      1
+## 3   18         8          318        150   3436         11.0   70      1
+## 9   14         8          455        225   4425         10.0   70      1
+## 25  21         6          199         90   2648         15.0   70      1
+## 27  10         8          307        200   4376         15.0   70      1
+## 41  14         8          351        153   4154         13.5   71      1
+##                  name
+## 2   buick skylark 320
+## 3  plymouth satellite
+## 9    pontiac catalina
+## 25        amc gremlin
+## 27          chevy c20
+## 41   ford galaxie 500
+```
+The `auto_test` data set will only be used in the model evaluation. 
+
+Now let's run the regression of `mpg` on `horsepower`. We will use `{parsnip}` package for this purpose and follow these steps: 
+
+1. Specify the model type. In this example this is regression, `parsnip::linear_reg()`. 
+
+2. Specify the engine. In this example we will use `lm()` function, `parsnip::set_engine('lm')`. 
+
+3. Specify the mode of the supervised learning problem. (regression or classification), `parsnip::set_mode('regression')`. 
+
+Let's call the object `lm_model`
+
+```r
+lm_model <- linear_reg() %>%
+  set_engine('lm') %>%
+  set_mode('regression')
+```
+
+
+```r
+lm_model
+```
+
+```
+## Linear Regression Model Specification (regression)
+## 
+## Computational engine: lm
+```
+
+Now we are ready to estimate the model using `parsnip::fit()` function: 
+
+
+```r
+auto_fit <- lm_model %>%
+  fit(mpg ~ horsepower, data = auto_train)
+```
+
+
+Make a pretty table: 
+
+```r
+tidy(auto_fit)
+```
+
+```
+## # A tibble: 2 x 5
+##   term        estimate std.error statistic   p.value
+##   <chr>          <dbl>     <dbl>     <dbl>     <dbl>
+## 1 (Intercept)   39.9     0.791        50.4 8.38e-147
+## 2 horsepower    -0.157   0.00708     -22.2 6.60e- 65
+```
+
+
+Now we trained our model. Let's compute predictions from the model using new data set (i.e, test data): 
+
+```r
+auto_preds <- auto_fit %>%
+  predict(new_data = auto_test)
+```
+
+Look at the components of `auto_preds` object: 
+
+```r
+head(auto_preds)
+```
+
+```
+## # A tibble: 6 x 1
+##   .pred
+##   <dbl>
+## 1 13.9 
+## 2 16.3 
+## 3  4.51
+## 4 25.7 
+## 5  8.44
+## 6 15.8
+```
+
+It has a single column named `.pred` computed using only the test data. 
+
+
+How can we evaluate model's performance? Let's create a new data set combining predictions and actual values of `mpg` and `horsepower` from the test data set. 
+
+
+```r
+auto_test_results <- auto_test %>%
+  select(mpg, horsepower) %>%
+  bind_cols(auto_preds)
+```
+
+Check out the data set: 
+
+```r
+head(auto_test_results)
+```
+
+```
+##    mpg horsepower     .pred
+## 2   15        165 13.946756
+## 3   18        150 16.305995
+## 9   14        225  4.509801
+## 25  21         90 25.742950
+## 27  10        200  8.441866
+## 41  14        153 15.834147
+```
+
+We can use `{yardstick}` package to compute model evaluation metrics. For example `rmse()` computes the square of the mean squared error: 
+
+```r
+auto_test_results %>% 
+  rmse(truth = mpg, estimate = .pred)
+```
+
+```
+## # A tibble: 1 x 3
+##   .metric .estimator .estimate
+##   <chr>   <chr>          <dbl>
+## 1 rmse    standard        5.43
+```
+
+Note that it requires two inputs, the truth and predictions. 
+
+Another metric we could use is the R-squared between truth and predictions. 
+
+```r
+auto_test_results %>%
+  rsq(truth = mpg, estimate = .pred)  
+```
+
+```
+## # A tibble: 1 x 3
+##   .metric .estimator .estimate
+##   <chr>   <chr>          <dbl>
+## 1 rsq     standard       0.547
+```
+
+We can also plot the predictions and truth: 
+
+```r
+ggplot(auto_test_results, aes(x = mpg, y = .pred)) +
+  geom_point() +
+  geom_abline(color = 'blue', linetype = 2) +
+  coord_obs_pred() +
+  labs(title = 'R-Squared Plot',
+       y = 'Predicted MPG',
+       x = 'Actual MPG')
+```
+
+![](Lab-06-Validation-and-resampling_files/figure-html/unnamed-chunk-35-1.png)<!-- -->
+
+For a good prediction exercise, we'd expect the points to be scattered closely on the 45 degree line. But here in this example we see that this is not the case. 
+
+Let's fit another model by adding the quadratic term. 
+
+
+
+```r
+auto_fit2 <- lm_model %>%
+  fit(mpg ~ horsepower + I(horsepower^2), data = auto_train)
+```
+
+
+Make a pretty table: 
+
+```r
+tidy(auto_fit2)
+```
+
+```
+## # A tibble: 3 x 5
+##   term            estimate std.error statistic  p.value
+##   <chr>              <dbl>     <dbl>     <dbl>    <dbl>
+## 1 (Intercept)     56.7      1.93         29.4  2.16e-89
+## 2 horsepower      -0.463    0.0333      -13.9  4.41e-34
+## 3 I(horsepower^2)  0.00122  0.000131      9.34 2.50e-18
+```
+
+
+Now we trained our model. Let's compute predictions from the model using new data set (i.e, test data): 
+
+```r
+auto_preds2 <- auto_fit2 %>%
+  predict(new_data = auto_test)
+```
+
+Look at the components of `auto_preds` object: 
+
+```r
+auto_preds2
+```
+
+```
+## # A tibble: 96 x 1
+##    .pred
+##    <dbl>
+##  1  13.5
+##  2  14.7
+##  3  14.3
+##  4  24.9
+##  5  12.9
+##  6  14.4
+##  7  30.3
+##  8  33.3
+##  9  35.3
+## 10  24.9
+## # ... with 86 more rows
+```
+
+
+```r
+auto_test_results2 <- auto_test %>%
+  select(mpg, horsepower) %>%
+  bind_cols(auto_preds2)
+```
+
+Check out the data set: 
+
+```r
+head(auto_test_results2)
+```
+
+```
+##    mpg horsepower    .pred
+## 2   15        165 13.51802
+## 3   18        150 14.70113
+## 9   14        225 14.27127
+## 25  21         90 24.91923
+## 27  10        200 12.89076
+## 41  14        153 14.42062
+```
+
+We can use `{yardstick}` package to compute model evaluation metrics. For example `rmse()` computes the square of the mean squared error: 
+
+```r
+auto_test_results2 %>% 
+  rmse(truth = mpg, estimate = .pred)
+```
+
+```
+## # A tibble: 1 x 3
+##   .metric .estimator .estimate
+##   <chr>   <chr>          <dbl>
+## 1 rmse    standard        4.99
+```
+This is better than the linear model without the quadratic term.   
+
+
+```r
+auto_test_results2 %>%
+  rsq(truth = mpg, estimate = .pred)  
+```
+
+```
+## # A tibble: 1 x 3
+##   .metric .estimator .estimate
+##   <chr>   <chr>          <dbl>
+## 1 rsq     standard       0.617
+```
+ 
+
+```r
+ggplot(auto_test_results2, aes(x = mpg, y = .pred)) +
+  geom_point() +
+  geom_abline(color = 'blue', linetype = 2) +
+  coord_obs_pred() +
+  labs(title = 'R-Squared Plot',
+       y = 'Predicted MPG',
+       x = 'Actual MPG')
+```
+
+![](Lab-06-Validation-and-resampling_files/figure-html/unnamed-chunk-44-1.png)<!-- -->
+Also the R-squared is now higher. 
+
+The `last_fit()` function from the `{tune}` package can be used to streamline the model fitting after determining the final model. The `last_fit()` function takes a model specification, model formula, and data split object and performs the following:
+
+1. Creates training and test datasets
+
+2. Fits the model to the training data
+
+3. Calculates metrics and predictions on the test data
+
+4. Returns an object with all results
+
+
+```r
+lm_last_fit <- lm_model %>%
+  last_fit(mpg ~ horsepower + I(horsepower^2), 
+           split = auto_split)
+```
+
+The `tune::collect_metrics()` function computes model evaluation metrics: 
+
+```r
+lm_last_fit %>% 
+  collect_metrics()
+```
+
+```
+## # A tibble: 2 x 4
+##   .metric .estimator .estimate .config             
+##   <chr>   <chr>          <dbl> <chr>               
+## 1 rmse    standard       4.99  Preprocessor1_Model1
+## 2 rsq     standard       0.617 Preprocessor1_Model1
+```
+
+The `tune::collect_predictions()` function creates a tibble containing predictions and actual values: 
+
+```r
+lm_last_fit %>% 
+  collect_predictions()
+```
+
+```
+## # A tibble: 96 x 5
+##    id               .pred  .row   mpg .config             
+##    <chr>            <dbl> <int> <dbl> <chr>               
+##  1 train/test split  13.5     2    15 Preprocessor1_Model1
+##  2 train/test split  14.7     3    18 Preprocessor1_Model1
+##  3 train/test split  14.3     9    14 Preprocessor1_Model1
+##  4 train/test split  24.9    25    21 Preprocessor1_Model1
+##  5 train/test split  12.9    27    10 Preprocessor1_Model1
+##  6 train/test split  14.4    40    14 Preprocessor1_Model1
+##  7 train/test split  30.3    51    30 Preprocessor1_Model1
+##  8 train/test split  33.3    55    27 Preprocessor1_Model1
+##  9 train/test split  35.3    59    23 Preprocessor1_Model1
+## 10 train/test split  24.9    60    20 Preprocessor1_Model1
+## # ... with 86 more rows
+```
+
+Conducting k-fold cross-validation in the Tidymodels: 
+
+We first create folds. Here I use k=5: 
+
+```r
+set.seed(12)
+folds <- vfold_cv(auto_train, v = 5)
+folds
+```
+
+```
+## #  5-fold cross-validation 
+## # A tibble: 5 x 2
+##   splits           id   
+##   <list>           <chr>
+## 1 <split [236/60]> Fold1
+## 2 <split [237/59]> Fold2
+## 3 <split [237/59]> Fold3
+## 4 <split [237/59]> Fold4
+## 5 <split [237/59]> Fold5
+```
+
+Then we create a model or workflow and estimate the model for each fold: 
+
+```r
+auto_wf <- workflow() %>% 
+  add_model(lm_model) %>% 
+  add_formula(mpg ~ horsepower + I(horsepower^2))
+auto_wf
+```
+
+```
+## == Workflow ====================================================================
+## Preprocessor: Formula
+## Model: linear_reg()
+## 
+## -- Preprocessor ----------------------------------------------------------------
+## mpg ~ horsepower + I(horsepower^2)
+## 
+## -- Model -----------------------------------------------------------------------
+## Linear Regression Model Specification (regression)
+## 
+## Computational engine: lm
+```
+
+
+```r
+auto_fit_rs <- auto_wf %>% 
+  fit_resamples(folds)
+auto_fit_rs
+```
+
+```
+## # Resampling results
+## # 5-fold cross-validation 
+## # A tibble: 5 x 4
+##   splits           id    .metrics             .notes              
+##   <list>           <chr> <list>               <list>              
+## 1 <split [236/60]> Fold1 <tibble[,4] [2 x 4]> <tibble[,1] [0 x 1]>
+## 2 <split [237/59]> Fold2 <tibble[,4] [2 x 4]> <tibble[,1] [0 x 1]>
+## 3 <split [237/59]> Fold3 <tibble[,4] [2 x 4]> <tibble[,1] [0 x 1]>
+## 4 <split [237/59]> Fold4 <tibble[,4] [2 x 4]> <tibble[,1] [0 x 1]>
+## 5 <split [237/59]> Fold5 <tibble[,4] [2 x 4]> <tibble[,1] [0 x 1]>
+```
+
+
+```r
+collect_metrics(auto_fit_rs)
+```
+
+```
+## # A tibble: 2 x 6
+##   .metric .estimator  mean     n std_err .config             
+##   <chr>   <chr>      <dbl> <int>   <dbl> <chr>               
+## 1 rmse    standard   4.16      5  0.127  Preprocessor1_Model1
+## 2 rsq     standard   0.714     5  0.0171 Preprocessor1_Model1
+```
+
 
 <div class="tocify-extend-page" data-unique="tocify-extend-page" style="height: 0;"></div>
 
