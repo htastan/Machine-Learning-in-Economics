@@ -899,6 +899,9 @@ collect_metrics(auto_fit_rs)
 ## 1 rmse    standard   4.16      5  0.127  Preprocessor1_Model1
 ## 2 rsq     standard   0.714     5  0.0171 Preprocessor1_Model1
 ```
+These are the average metrics over 5 folds. 
+
+
 
 
 <div class="tocify-extend-page" data-unique="tocify-extend-page" style="height: 0;"></div>

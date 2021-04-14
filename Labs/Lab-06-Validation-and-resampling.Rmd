@@ -486,6 +486,9 @@ auto_fit_rs
 ```{r}
 collect_metrics(auto_fit_rs)
 ```
+These are the average metrics over 5 folds. 
+
+
 
 
 <div class="tocify-extend-page" data-unique="tocify-extend-page" style="height: 0;"></div>
