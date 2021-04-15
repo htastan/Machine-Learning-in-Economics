@@ -824,6 +824,13 @@ lm_last_fit %>%
 
 Conducting k-fold cross-validation in the Tidymodels: 
 
+![](img/cv0-1.png) 
+
+![](img/cv1-1.png)
+
+
+
+
 We first create folds. Here I use k=5: 
 
 ```r
