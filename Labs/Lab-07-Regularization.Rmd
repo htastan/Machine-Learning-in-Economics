@@ -747,7 +747,7 @@ There are $n=90$ countries and $p=60$ predictors in the data set including many 
 
 The standard income convergence model can be written as 
 $$Y_{i,T}=\beta_{0}+\beta_{1} Y_{i,0}+\sum_{j=2}^{p} \beta_{j} X_{i j}+\varepsilon_{i},\quad i=1,\dots,n,$$
-where $Y_{i,T}$ is the growth rate of GDP per capita over the periods 1965-1975 and 1975-1985. $Y_{i,0}$ is the natural logarithm of the initial GDP of country $i$. $X_{i j}$ represent factors that may affect the growth performance of countries. Because there many potentially important variables, the selection becomes especially important. The convergence hypothesis states that  $\beta_1<0$. 
+where $Y_{i,T}$ is the growth rate of GDP per capita over the periods 1965-1975 and 1975-1985. $Y_{i,0}$ is the natural logarithm of the initial GDP of country $i$. $X_{i j}$ represent factors that may affect the growth performance of countries. Because there are many potentially important variables, the selection becomes especially important. The convergence hypothesis states that  $\beta_1<0$. 
 
 
 ```{r}
@@ -795,7 +795,7 @@ summary(double_lasso_fit)
  double_lasso_fit$coefficients.reg
 ```
 
-Now the coefficient estimate on the initial income $Y_0$ is $\hat{\beta}_1=-0.5$ with heteroskedasticity-robust standard error 0.016. This result supports the neoclassical convergence argument. 
+Now the coefficient estimate on the initial income $Y_0$ is $\hat{\beta}_1=-0.05$ with heteroskedasticity-robust standard error 0.016. This result supports the neoclassical convergence argument. 
 
 
 **References**
