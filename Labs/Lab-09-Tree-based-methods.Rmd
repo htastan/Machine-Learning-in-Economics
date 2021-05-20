@@ -44,9 +44,7 @@ We use `tree` package to grow classification and regression trees. This example 
 ```{r}
 library(tree)
 library(ISLR)
-attach(Carseats)
-High <- ifelse(Sales<=8,"No","Yes")
-Carseats <- data.frame(Carseats, High)
+Carseats$High <- factor(ifelse(Carseats$Sales<=8,"No","Yes")) 
 tree.carseats <- tree(High ~ . -Sales, Carseats)
 summary(tree.carseats) 
 ```
@@ -57,6 +55,7 @@ The training error rate is 9%.
 plot(tree.carseats)
 text(tree.carseats,pretty=0)
 ```
+
 The most important indicator of Sales appears to be shelving location, 
 since the first branch differentiates Good locations from Bad and Medium
 locations.
@@ -77,7 +76,7 @@ Computing the test error:
 set.seed(2)
 train <- sample(1:nrow(Carseats), 200)
 Carseats.test <- Carseats[-train,]
-High.test <- High[-train]
+High.test <- Carseats$High[-train]
 tree.carseats <- tree(High ~ . -Sales, Carseats, subset=train)
 tree.pred <- predict(tree.carseats, Carseats.test, type="class")
 table(tree.pred, High.test)
@@ -147,6 +146,7 @@ Note that only 4 variables are used to construct the tree: "rm" "lstat" "crim"  
 plot(tree.boston)
 text(tree.boston,pretty=0)
 ```
+
 The variable `lstat` measures the percentage of individuals with lower
 socioeconomic status. The tree indicates that lower values of `lstat` correspond
 to more expensive houses.
@@ -178,7 +178,8 @@ plot(yhat,boston.test)
 abline(0,1)
 mean((yhat-boston.test)^2)
 ```
-the test set MSE associated with the regression tree is 18.93.
+
+The test set MSE associated with the regression tree is 18.93.
 The square root of the MSE is therefore around 4.351, indicating
 that this model leads to test predictions that are within around $4351 of
 the true median home value for the suburb.
@@ -211,6 +212,7 @@ plot(yhat.bag, boston.test)
 abline(0,1)
 mean((yhat.bag-boston.test)^2)
 ```
+
 Test MSE = 10.13872
 
 We could change
@@ -423,6 +425,7 @@ titanic_rf_data
 ```{r, warning=FALSE}
 # build a random forest with ntree=200
 library(caret)
+library(e1071)
 titanic_rf <- train(Survived ~ ., data = titanic_rf_data,
                     method = "rf",
                     ntree = 200,
