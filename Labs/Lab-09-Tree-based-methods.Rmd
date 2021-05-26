@@ -312,6 +312,236 @@ mean((yhat.boost-boston.test)^2)
 
 The MSE with λ = 0.2 is higher. 
 
+# Using Tidymodels 
+
+We continue using `Boston` data set to illustrate the usage of Tidymodels tools to estimate regression trees. 
+
+First, load the packages and determine train and test sets using `medv` as the stratification variable. 
+```{r}
+library(MASS)
+library(tidyverse)
+library(tidymodels)
+
+# determine training and test sets
+# 75% train, 25% test, with stratified sampling based on medv
+
+set.seed(135)
+boston_split <- initial_split(Boston, prop=0.75, strata=medv)
+
+boston_train <- boston_split %>% training()
+
+boston_test <- boston_split %>% testing()
+```
+
+Then set the engine and the tuning parameters: 
+```{r}
+# train a decision tree 
+dt_model <- decision_tree() %>%
+  set_engine('rpart') %>%
+  set_mode('regression')
+
+# lets do some parameter tuning 
+dt_tune_model <- decision_tree(cost_complexity = tune(),
+                               tree_depth = tune(),
+                               min_n = tune()) %>%
+  set_engine('rpart') %>%
+  set_mode('regression')
+
+dt_tune_model
+```
+
+
+Let's create a grid of hyperparameters:
+```{r}
+# create a grid for hyperparameters
+set.seed(12345)
+dt_grid <- grid_random(parameters(dt_tune_model), size = 5)
+dt_grid
+```
+
+
+Now we can use 5-fold cross-validation to select the best hyperparameters. 
+```{r}
+# determine CV folds
+set.seed(12345)
+boston_folds <- vfold_cv(boston_train,
+                        v = 5,
+                        strata = medv)
+boston_folds
+```
+
+
+Define a recipe for the regression tree: 
+```{r}
+# use all variables without any transformation
+boston_recipe <- recipe(medv ~ ., data = boston_train)
+boston_recipe
+```
+
+
+```{r}
+# create workflow 
+boston_wkfl <- workflow() %>%
+  add_model(dt_tune_model) %>%
+  add_recipe(boston_recipe)
+```
+
+
+```{r}
+# apply decision tree algorithm to all CV folds
+dt_tuning <- boston_wkfl %>%
+  tune_grid(resamples = boston_folds,
+            grid = dt_grid)
+
+dt_tuning %>% collect_metrics()
+```
+
+
+```{r}
+# detailed information on hyperparameters
+dt_tuning %>%
+  collect_metrics(summarize = FALSE) %>%
+  filter(.metric == 'rmse') %>%
+  group_by(id) %>%
+  summarize(min_rmse = min(.estimate),
+            median_rmse = median(.estimate),
+            max_rmse = max(.estimate))
+```
+
+
+```{r}
+# which one is the best?
+dt_tuning %>%
+  show_best(metric = 'rmse', n = 5)
+```
+
+
+```{r}
+dt_tuning %>%
+  show_best(metric = 'rsq', n = 5)
+```
+
+
+```{r}
+best_dt_model <- dt_tuning %>%
+  select_best(metric = 'rmse')
+best_dt_model
+```
+
+
+```{r}
+# finalize the workflow (fixes the hyperparameters)
+final_boston_wkfl <- boston_wkfl %>%
+  finalize_workflow(best_dt_model)
+final_boston_wkfl
+```
+
+Finally, obtain the test RMSE: 
+```{r}
+# train the decision tree 
+boston_final_fit <- final_boston_wkfl %>%
+  last_fit(split = boston_split)
+boston_final_fit %>%
+  collect_metrics()
+```
+
+
+Now, let's fit a **random forest** model using Tidymodels. 
+```{r}
+# determine the number of cores for parallel computing
+cores <- parallel::detectCores()
+```
+
+
+```{r}
+# set the engine and mode, also the tuning parameters
+# mtry and min_n are set to be determined by CV
+rf_model <- rand_forest() %>%
+  set_args(mtry = tune(), min_n = tune(), trees = 1000) %>% 
+  set_engine("ranger", num.threads = cores) %>% 
+  set_mode('regression')
+```
+
+
+```{r}
+# use all variables without any transformation
+boston_recipe <- recipe(medv ~ ., data = boston_train) 
+# create a random forest workflow
+rf_workflow <- workflow() %>% 
+  add_recipe(boston_recipe) %>% 
+  add_model(rf_model)
+```
+
+
+```{r}
+# perform cross-validation on a grid of hyperparameters
+# boston_folds was created above
+set.seed(255)
+rf_tune_results <- rf_workflow %>% 
+  tune_grid(resamples = boston_folds,  # CV folds
+            grid = 25,
+            control = control_grid(save_pred = TRUE),
+            metrics = metric_set(rmse))
+
+rf_tune_results %>% show_best(metric = "rmse")
+# mtry = 7 min_n=3
+# plot hyperparameter values 
+autoplot(rf_tune_results)
+
+rf_tune_results %>% collect_metrics()
+```
+```{r}
+best_rf_model <- rf_tune_results %>%
+  select_best(metric = 'rmse')
+best_rf_model
+```
+```{r}
+final_rf_wkfl <- rf_workflow %>%
+  finalize_workflow(best_rf_model)
+final_rf_wkfl
+
+rf_final_fit <- final_rf_wkfl %>%
+  last_fit(split = boston_split)
+
+rf_final_fit %>%
+  collect_metrics()
+```
+
+
+```{r}
+# last fit 
+last_rf_model <- 
+  rand_forest(mtry = 7, min_n = 3, trees = 1000) %>% 
+  set_engine("ranger", num.threads = cores, importance = "impurity") %>% 
+  set_mode("regression")
+
+last_rf_workflow <- 
+  rf_workflow %>% 
+  update_model(last_rf_model)
+
+set.seed(678)
+last_rf_fit <- 
+  last_rf_workflow %>% 
+  last_fit(boston_split)
+
+last_rf_fit
+
+last_rf_fit %>% collect_metrics()
+```
+
+
+```{r}
+# variable importance measures
+library(vip) # for variable importance measures
+last_rf_fit %>% 
+  pluck(".workflow", 1) %>%   
+  pull_workflow_fit() %>% 
+  vip(num_features = 13)
+```
+
+
+
+
 # Example: Surviving the Titanic 
 
 In this exercise, we will attempt to predict who will survive in the Titanic accident which is one of the worst disasters at sea. On 14 April 1912, the [RMS Titanic](https://en.wikipedia.org/wiki/RMS_Titanic) struck a large iceberg and approximately 1,500 passengers and crew died and 705 survived on 15 April. The Titanic disaster has led to significant improvements in safety regulations to prevent such calamities happening again. 

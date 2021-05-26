@@ -103,6 +103,9 @@ pr.out$x <- -pr.out$x
 biplot(pr.out, scale=0, cex=0.6)
 ```
 
+
+
+
 Importance of principal components: 
 ```{r}
 summary(pr.out)
@@ -128,20 +131,26 @@ plot(cumsum(pve), xlab="Principal Component", ylab="Cumulative Proportion of Var
 
 ## Example: Body Data 
 
-We saw this data set in our previous classes. 
+This data set contains a set of body measurements along with age, height, weight and gender on 507 individuals (247 men 260 women). We expect some of these variables to be highly correlated.  
 
 ```{r}
+# body data from 
+# Journal of Statistics Education Volume 11, Number 2 (2003),
+# www.amstat.org/publications/jse/v11n2/datasets.heinz.html
+
 load("../Data/body.RData") 
 bodydata <- subset(body, select = -c(age, gender, gender_dummy)) 
 str(bodydata)
 ```
 
-Inspecting the correlation matrix we see that these features are highly correlated. 
+Inspecting the correlation matrix we see that these features are in fact highly correlated. 
 ```{r}
 library(ggcorrplot)
 cormat <- round(cor(bodydata), 2)
 ggcorrplot(cormat, hc.order = TRUE, type = "lower", outline.color = "white")
 ```
+
+Find the principal components: 
 ```{r}
 pr.out <- prcomp(bodydata, scale=TRUE)
 summary(pr.out)  
@@ -160,6 +169,59 @@ plot(cumsum(pve), xlab="Principal Component", ylab="Cumulative Proportion of Var
 ```
 
 Approximately 85% of the total variation can be explained by the first 5 principal components. 
+
+## Example: Regional Happiness Indicators
+
+```{r}
+load("../Data/lifedata2015.RData")
+pr_happiness <- prcomp(lifedata2015[,-1], scale=TRUE)
+summary(pr_happiness)  
+# change the signs of factor loadings
+pr_happiness$rotation <- -pr_happiness$rotation
+pr_happiness$x <- -pr_happiness$x
+biplot(pr_happiness, scale=0, cex=0.6)
+```
+
+```{r} 
+pr.var <- pr_happiness$sdev^2 
+pve <- pr.var/sum(pr.var)
+pve
+plot(pve, xlab="Principal Component", ylab="Proportion of Variance Explained", ylim=c(0,1),type='b')
+plot(cumsum(pve), xlab="Principal Component", ylab="Cumulative Proportion of Variance Explained", ylim=c(0,1),type='b')
+```
+
+Approximately 80% of the variation in the data can be explained by the first 10 principal components. 
+
+### Principal Components Regression (PCR)
+
+Let's apply PCR approach to the regional happiness data. We want to predict provincial happiness levels using the first few principal components. 
+
+We can use `pcr()` function in the `{pls}` package for that purpose. 
+
+```{r}
+library(pls)
+set.seed(123)
+
+pcr_fit <- pcr(happiness_level ~ . -province, 
+               data = lifedata2015, 
+               scale=TRUE, 
+               validation="LOO")
+summary(pcr_fit)
+```
+
+
+```{r}
+validationplot(pcr_fit)
+```
+
+The minimum RMSE is achieved when we use 19 components. 
+```{r}
+pcr_fit <- pcr(happiness_level ~ . -province, 
+               data = lifedata2015, 
+               scale = TRUE, 
+               ncomp = 19)
+summary(pcr_fit)
+```
 
 
 # K-Means Clustering 
