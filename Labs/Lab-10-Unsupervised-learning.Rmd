@@ -170,29 +170,66 @@ plot(cumsum(pve), xlab="Principal Component", ylab="Cumulative Proportion of Var
 
 Approximately 85% of the total variation can be explained by the first 5 principal components. 
 
+
 ## Example: Regional Happiness Indicators
 
 ```{r}
+# load the data set
 load("../Data/lifedata2015.RData")
+# exclude the first column and send it to prcomp() function 
 pr_happiness <- prcomp(lifedata2015[,-1], scale=TRUE)
-summary(pr_happiness)  
+summary(pr_happiness)
+```
+
+
+```{r}
 # change the signs of factor loadings
+# and plot the biplot
 pr_happiness$rotation <- -pr_happiness$rotation
 pr_happiness$x <- -pr_happiness$x
+# biplot
 biplot(pr_happiness, scale=0, cex=0.6)
 ```
 
 ```{r} 
+# compute proportion of variance explained
 pr.var <- pr_happiness$sdev^2 
 pve <- pr.var/sum(pr.var)
 pve
+```
+
+
+```{r} 
+# plot PVE
 plot(pve, xlab="Principal Component", ylab="Proportion of Variance Explained", ylim=c(0,1),type='b')
+```
+
+
+```{r} 
+# cumulative proportion of variance explained
 plot(cumsum(pve), xlab="Principal Component", ylab="Cumulative Proportion of Variance Explained", ylim=c(0,1),type='b')
 ```
 
 Approximately 80% of the variation in the data can be explained by the first 10 principal components. 
 
-### Principal Components Regression (PCR)
+An alternative package:
+```{r}
+library(factoextra)
+# PCA using factomineR
+library(FactoMineR)
+res_pca_lifedata <- PCA(lifedata2015[,-1],  graph = FALSE)
+get_eig(res_pca_lifedata)
+```
+
+
+```{r}
+# Scree plot
+fviz_screeplot(res_pca_lifedata, addlabels = TRUE)
+```
+
+
+
+## Principal Components Regression (PCR)
 
 Let's apply PCR approach to the regional happiness data. We want to predict provincial happiness levels using the first few principal components. 
 
@@ -205,12 +242,14 @@ set.seed(123)
 pcr_fit <- pcr(happiness_level ~ . -province, 
                data = lifedata2015, 
                scale=TRUE, 
-               validation="LOO")
+               validation="LOO") # use leave-one-out cross-validation
 summary(pcr_fit)
 ```
 
 
 ```{r}
+# how many principal components should we use? 
+# RMSE as a function of the number of PC as computed using CV
 validationplot(pcr_fit)
 ```
 
@@ -225,18 +264,37 @@ summary(pcr_fit)
 
 
 # K-Means Clustering 
+
 The function `kmeans()` performs K-means clustering in R. We begin with
 a simple simulated example in which there truly are two clusters in the
 data: the first 25 observations have a mean shift relative to the next 25
 observations.
+
 ```{r}
+# create a simulated data set
 set.seed(2)
 x <- matrix(rnorm(50*2), ncol=2)
-x[1:25,1]=x[1:25,1]+3
-x[1:25,2]=x[1:25,2]-4
-km.out <- kmeans(x,2,nstart=20)
+x[1:25,1] <- x[1:25,1]+3
+x[1:25,2] <- x[1:25,2]-4
+```
+
+
+```{r}
+# perfom Kmeans clustering with 2 centers and 20 random starts
+km.out <- kmeans(x, centers = 2, nstart = 20)
+# print cluster information 
 km.out$cluster
-plot(x, col=(km.out$cluster+1), main="K-Means Clustering Results with K=2", xlab="", ylab="", pch=20, cex=2) 
+```
+
+
+```{r}
+# plot clusters
+plot(x, col = (km.out$cluster+1), 
+     main = "K-Means Clustering Results with K=2", 
+     xlab = "", 
+     ylab = "", 
+     pch = 20, 
+     cex = 2) 
 ```
 
 In this example, we knew that there really were two clusters because
@@ -247,16 +305,29 @@ clustering on this example with K = 3.
 
 ```{r}
 set.seed(4)
-km.out <- kmeans(x,3,nstart=20)
+km.out <- kmeans(x, centers = 3, nstart = 20)
 km.out
-plot(x, col=(km.out$cluster+1), main="K-Means Clustering Results with K=3", xlab="", ylab="", pch=20, cex=2)
 ```
+
+
+```{r}
+# plot the results with k=3
+plot(x, col = (km.out$cluster+1), 
+     main = "K-Means Clustering Results with K=3", 
+     xlab = "", 
+     ylab = "", 
+     pch = 20, 
+     cex = 2)
+```
+
+
 When K = 3, K-means clustering splits up the two clusters.
 It is strongly recommended to run K-means clustering with a large
-value of nstart, such as 20 or 50, since otherwise an undesirable local
+value of `nstart`, such as 20 or 50, since otherwise an undesirable local
 optimum may be obtained.
 
 ```{r}
+# compute and print within sum of squares 
 set.seed(3)
 km.out <- kmeans(x,3,nstart=1)
 km.out$tot.withinss
@@ -267,8 +338,9 @@ km.out$tot.withinss
 ## Example: Bodydata 
 
 ```{r}
-km.out <- kmeans(bodydata,2,nstart=20)
-plot(bodydata[,1:3],col=(km.out$cluster),cex=2)
+# the data set was loaded previously
+km.out <- kmeans(bodydata, centers = 2, nstart = 20)
+plot(bodydata[,1:3], col=(km.out$cluster), cex=2)
 ```
 
 Plot clustering based on weight and height and compare to the actual gender factor: 
@@ -286,9 +358,191 @@ ratio <- sum(observed_class == km_cluster)/nrow(bodydata)
 ratio
 ```
 
-84% of observations seem to be clustered correctly. Note that if know the clusters 
-we'd not apply K-Means cluster method. THis was just for demonstration purposes. 
-When we know the labels there are better classification methods which we've discussed in our previous classes. 
+84% of observations seem to be clustered correctly. Note that if we know the clusters 
+we do not need to apply K-Means clustering method. This was just for demonstration purposes. 
+When we know the labels (like gender in the bodydata) there are better classification methods which we've discussed in our previous classes. 
+
+
+## Example: Province-level well-being data 
+
+In this example we will use Turkish province data set and its subset. 
+```{r}
+# load packages 
+library(tidyverse)  # tidy data manipulation
+library(cluster)    # clustering algorithms
+library(factoextra) # clustering visualization 
+```
+
+
+```{r} 
+# load data 
+load("../Data/lifedata2015.RData") 
+# make province names rownames
+lifedata2015 <- column_to_rownames(lifedata2015, var = "province")
+```
+
+
+
+```{r}
+# use only happiness level and some selected variables 
+happiness <- lifedata2015 %>% 
+  select(happiness_level, life_exp, avr_daily_earnings, sat_rate_with_health_status)
+head(happiness)
+```
+
+Display the correlation matrix of the happiness data: 
+```{r}
+library(ggcorrplot)
+cormat <- round(cor(happiness), 2)
+ggcorrplot(cormat, hc.order = TRUE, type = "lower", outline.color = "white")
+```
+
+
+```{r}
+# visualize the distance function 
+# blue: more similar; red: dissimilar 
+# (look at the color legend, low value means more similar)
+distance <- dist(scale(happiness))
+fviz_dist(distance, gradient = list(low = "#00AFBB", mid = "white", high = "#FC4E07"))
+```
+```{r}
+# display few elements of distance matrix
+as.matrix(distance)[1:6, 1:6]
+```
+
+
+Apply K-means clustering: 
+```{r}
+# find cluster 
+happiness_scaled <- scale(happiness)
+kmeans_happy <- kmeans(happiness_scaled, centers = 2, nstart=20)
+# bivariate scatter plots
+plot(happiness[,1:4],col=(kmeans_happy$cluster),cex=2)
+```
+
+
+```{r}
+# cluster plot using principal components
+# use factoextra::fviz_cluster() function to visualize clusters
+# along with the first two principal components
+fviz_cluster(kmeans_happy, data = happiness)
+```
+
+```{r}
+# cluster plot using principal components
+# without ellipses
+fviz_cluster(kmeans_happy, geom = "point", ellipse = FALSE, data = happiness) +
+  ggtitle("K-means cluster of provinces with K=2")
+```
+
+
+
+```{r}
+# PCA using factomineR
+library(FactoMineR)
+res.pca <- PCA(happiness,  graph = FALSE)
+get_eig(res.pca)
+```
+
+
+```{r}
+# Scree plot
+fviz_screeplot(res.pca, addlabels = TRUE, ylim = c(0, 50))
+```
+
+
+```{r}
+# cluster plot using original data 
+happiness %>%
+  mutate(cluster  = kmeans_happy$cluster,
+         province = row.names(happiness)) %>%
+  ggplot(aes(happiness_level, avr_daily_earnings, color = factor(cluster), label = province)) +
+  geom_text()
+```
+
+
+```{r}
+# cluster plot using original data 
+happiness %>%
+  mutate(cluster  = kmeans_happy$cluster,
+         province = row.names(happiness)) %>%
+  ggplot(aes(happiness_level, life_exp, color = factor(cluster), label = province)) +
+  geom_text()
+```
+
+```{r}
+# cluster plot using original data 
+happiness %>%
+  mutate(cluster  = kmeans_happy$cluster,
+         province = row.names(happiness)) %>%
+  ggplot(aes(happiness_level, sat_rate_with_health_status, color = factor(cluster), label = province)) +
+  geom_text()
+```
+
+```{r message=FALSE, warning=FALSE}
+# compare and contrast different number of clusters
+# plot different number of clusters 
+k2 <- kmeans(happiness, centers = 2, nstart = 25)
+k3 <- kmeans(happiness, centers = 3, nstart = 25)
+k4 <- kmeans(happiness, centers = 4, nstart = 25)
+k5 <- kmeans(happiness, centers = 5, nstart = 25)
+
+# plots to compare
+p1 <- fviz_cluster(k2, geom = "point", data = happiness) + ggtitle("k = 2")
+p2 <- fviz_cluster(k3, geom = "point",  data = happiness) + ggtitle("k = 3")
+p3 <- fviz_cluster(k4, geom = "point",  data = happiness) + ggtitle("k = 4")
+p4 <- fviz_cluster(k5, geom = "point",  data = happiness) + ggtitle("k = 5")
+
+library(gridExtra)
+grid.arrange(p1, p2, p3, p4, nrow = 2)
+```
+
+```{r}
+# determine the optimal number of clusters 
+set.seed(123)
+# look for the elbow
+fviz_nbclust(happiness, kmeans, method = "wss")
+```
+
+
+
+```{r}
+# for optimal k=3 compute summary statistics 
+happiness %>%
+  mutate(Cluster = k3$cluster) %>%
+  group_by(Cluster) %>%
+  summarise_all("mean")
+```
+
+```{r}
+# visualize K-means results with 4 clusters
+fviz_cluster(k4, data = happiness,
+             palette = c("#2E9FDF", "#28B463", "#E7B800", "#FC4E07"),
+             ellipse.type = "euclid", # Concentration ellipse
+             star.plot = TRUE,        # Add segments from centroids to items
+             repel = TRUE,            # Avoid label overplotting 
+             ggtheme = theme_minimal()
+)
+```
+```{r}
+# summary results for k = 4 clusters 
+k4$tot.withinss # total sum of sq.
+k4$centers      # centers (means) of clusers
+k4$size         # number of obs. in clusters
+```
+
+```{r}
+# for k=4 add cluster results to the data set 
+# and compute summary statistics 
+happiness_cl <- happiness %>%
+  mutate(cluster_kmeans = k4$cluster) 
+
+happiness_cl %>%
+  group_by(cluster_kmeans) %>%
+  summarise_all("mean")
+```
+
+
 
 # Hierarchical Clustering 
 
@@ -296,17 +550,37 @@ The `hclust()` function implements hierarchical clustering in R.
 
 
 ```{r}
+# use previously created simulated data x (see kmeans clustering)
+# clustering with different linkage functions 
 hc.complete <- hclust(dist(x), method="complete")
 hc.average <- hclust(dist(x), method="average")
 hc.single <- hclust(dist(x), method="single")
-par(mfrow=c(1,3))
-plot(hc.complete,main="Complete Linkage", xlab="", sub="", cex=.9)
-plot(hc.average, main="Average Linkage", xlab="", sub="", cex=.9)
-plot(hc.single, main="Single Linkage", xlab="", sub="", cex=.9)
+hc.ward2 <- hclust(dist(x), method="ward.D2")
 ```
 
+The option `"method="ward.D2"` performs Ward's minimum variance method. In this 
+method the total within-cluster variance is minimized. It merges the pair of clusters 
+with minimum between-cluster distance at each step. (This option corresponds 
+to `cluster::agnes(..., method = "ward")` in the `{cluster}` package. 
+
+Visualize them using base R plot function: 
 ```{r}
-cutree(hc.complete, 2)
+# plot them side-by-side using base R plot function 
+# cex = label size
+labsize = 0.8 
+par(mfrow=c(2,2))
+plot(hc.complete,main="Complete Linkage", xlab="", sub="", cex=labsize)
+plot(hc.average, main="Average Linkage", xlab="", sub="", cex=labsize)
+plot(hc.single, main="Single Linkage", xlab="", sub="", cex=labsize)
+plot(hc.ward2, main="Ward Linkage", xlab="", sub="", cex=labsize)
+```
+ 
+
+
+```{r}
+# cut dendrogram into groups of data 
+# k = 2 groups
+cutree(hc.complete, k= 2)
 ```
 
 ```{r}
@@ -320,15 +594,263 @@ cutree(hc.single, 2)
 
 
 ```{r}
+# 4 clusters using single linkage
 cutree(hc.single, 4)
 ```
 
 To scale the variables before performing hierarchical clustering of the
-observations, we use the scale() function:
+observations, we use the `scale()` function:
 ```{r}
-xsc=scale(x)
+xsc <- scale(x)
 plot(hclust(dist(xsc), method="complete"), main="Hierarchical Clustering with Scaled Features")
 ```
+
+## Example: Province-level Well-being data 
+
+```{r}
+# load packages 
+library(tidyverse)  # data manipulation
+library(cluster)    # clustering algorithms
+library(factoextra) # clustering visualization 
+```
+
+
+```{r}
+# load data 
+load("../Data/lifedata2015.RData") 
+# make province names rownames
+lifedata2015 <- column_to_rownames(lifedata2015, var = "province")
+```
+
+
+```{r}
+# hierarchical clustering 
+# using stats::hclust package
+# scale variables before dist() function
+# can also use pipes, %>%, see example at the end
+hc_complete <- hclust(dist(scale(lifedata2015)), method="complete")
+hc_average <- hclust(dist(scale(lifedata2015)), method="average")
+hc_single <- hclust(dist(scale(lifedata2015)), method="single")
+hc_ward <- hclust(dist(scale(lifedata2015)), method="ward.D2")
+```
+
+
+```{r}
+labsize = 0.7
+plot(hc_complete, main = "Complete Linkage", xlab="", sub="", cex=labsize)
+```
+
+
+```{r}
+plot(hc_average, main = "Average Linkage", xlab="", sub="", cex=labsize)
+```
+
+
+```{r}
+plot(hc_single, main = "Single Linkage", xlab="", sub="", cex=labsize)
+```
+
+
+```{r}
+plot(hc_ward, main = "Ward's Method", xlab="", sub="", cex=labsize)
+```
+
+
+
+```{r}
+# focus on a subset of variables 
+# use only happiness level and some selected variables 
+happiness <- lifedata2015 %>% 
+  select(happiness_level, life_exp, avr_daily_earnings, sat_rate_with_health_status)
+```
+ 
+
+
+```{r}
+# cluster using hclust
+hc_complete <- hclust(dist(scale(happiness)), method="complete")
+hc_average <- hclust(dist(scale(happiness)), method="average")
+hc_single <- hclust(dist(scale(happiness)), method="single")
+hc_ward <- hclust(dist(scale(happiness)), method="ward.D2")
+```
+
+
+```{r}
+plot(hc_complete, main="Complete Linkage", xlab="", sub="", cex=labsize)
+plot(hc_average, main="Average Linkage", xlab="", sub="", cex=labsize)
+plot(hc_ward, main="Ward's method", xlab="", sub="", cex=labsize)
+```
+
+
+```{r}
+# form clusters  
+ncluster = 2
+cutree(hc_complete, ncluster)
+```
+
+
+```{r}
+# plot dendrogram
+plot(hc_complete)
+# draw rectangles around clusters
+rect.hclust(hc_complete , k = ncluster, border = 2:6) 
+```
+
+
+```{r}
+# colorize branches using dendextend library
+library(dendextend)
+avg_dend_obj <- as.dendrogram(hc_complete)
+avg_col_dend <- color_branches(avg_dend_obj, h = 3)
+plot(avg_col_dend)
+```
+
+
+
+
+```{r}
+# Cut tree into  groups
+hc_cluster2 <- cutree(hc_complete, k = 2)
+
+# Number of members in each cluster
+table(hc_cluster2)
+```
+
+
+```{r}
+# visualize result in a scatter plot using factoextra package 
+# 2 clusters
+library(factoextra) 
+fviz_cluster(list(data = happiness, cluster = hc_cluster2))
+```
+
+```{r}
+# we can add cluster information into data 
+happiness %>%
+  mutate(cluster = hc_cluster2) %>%
+  head
+```
+
+
+```{r}
+# Cut tree into  3 groups
+# use Ward method results
+hc_cluster3 <- cutree(hc_ward, k = 3)
+
+# Number of members in each cluster
+table(hc_cluster3)
+```
+
+
+```{r}
+# visualize dendrogram 
+# use factoextra::hcut() function 
+hres3 <- hcut(happiness, k = 3, stand = TRUE)
+# Visualize
+fviz_dend(hres3, rect = TRUE, cex = 0.5,
+          k_colors = c("#F1C40F","#28B463", "#E67E22"))
+# for html color codes visit https://htmlcolorcodes.com/ 
+```
+
+
+
+```{r}
+# visualize result in a scatter plot using factoextra package 
+# 3 clusters 
+library(factoextra) 
+fviz_cluster(list(data = happiness, cluster = hc_cluster3), 
+             palette = c("#F1C40F", "#E67E22", "#28B463"), 
+             repel = TRUE # avoid overplotting text labels
+             )
+```
+
+
+
+```{r}
+# visualize dendrogram 
+# use factoextra::hcut() function 
+# cut into 4 clusters
+hres4 <- hcut(happiness, k = 4, stand = TRUE) # default is hc_method = "ward.D2"
+# Visualize
+fviz_dend(hres4, cex = 0.5,
+          k_colors = c("#F1C40F", "#28B463", "#E67E22", "#3498DB"), 
+          color_labels_by_k = TRUE,
+          rect = TRUE,
+          rect_border = c("#F1C40F","#28B463", "#E67E22", "#3498DB"), 
+          rect_fill = TRUE
+         )
+```
+
+```{r}
+# horizontal dendrogram: 
+# add horiz = TRUE option
+fviz_dend(hres4, cex = 0.5, horiz = TRUE, 
+          k_colors = c("#F1C40F", "#28B463", "#E67E22", "#3498DB"), 
+          color_labels_by_k = TRUE,
+          rect = TRUE,
+          rect_border = c("#F1C40F","#28B463", "#E67E22", "#3498DB"), 
+          rect_fill = TRUE
+         )
+```
+
+```{r}
+# circular dendrogram   
+# add type = "circular" option
+fviz_dend(hres4, cex = 0.5, type = "circular", 
+          k_colors = c("#F1C40F", "#28B463", "#E67E22", "#3498DB") 
+         )
+``` 
+
+
+```{r eval=FALSE, include=TRUE}
+# Alternatively dendrogram may be cut inside the fviz_dend
+fviz_dend(hc_ward,      # cluster results
+          k = 4,        # desired number of clusters
+          rect = TRUE,  # draw rectangles around clusters
+          cex = 0.5     # label size (province names)
+          )
+```
+
+
+
+```{r}
+# 4 clusters using Ward's method 
+# Cut tree into  4 groups
+hc_cluster_ward4 <- cutree(hc_ward, k = 4)
+library(factoextra) 
+fviz_cluster(list(data = happiness, cluster = hc_cluster_ward4),
+          palette = c("#F1C40F", "#3498DB", "#E67E22", "#28B463"), 
+          repel = TRUE)
+```
+
+```{r}
+# add hierarchical clustering result to the data set
+happiness_cl <- happiness_cl %>% 
+  mutate(cluster_hc = hres4$cluster)
+# cluster means
+happiness_cl %>% 
+  select(-cluster_kmeans) %>% 
+  group_by(cluster_hc) %>% 
+  summarize_all(mean)
+```
+
+
+
+Illustration of using the pipe operator ` %>% `: 
+```{r}
+# using pipes
+# dend <- 1:10 %>% dist %>% hclust %>% as.dendrogram 
+# dend %>% plot()
+
+dend <- happiness %>%               # take the data
+  scale() %>%                       # standardize
+  dist %>%                          # calculate a distance matrix, 
+  hclust(method = "complete") %>%   # hierarchical clustering using  
+  as.dendrogram                     # turn it into a dendrogram.
+
+dend %>% plot()
+```
+
 
 
 <br>
