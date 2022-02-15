@@ -78,7 +78,7 @@ This class is supported by <https://www.datacamp.com/> through the "DataCamp for
 
 ## Textbook
 
-James, Gareth, D. Witten, T. Hastie, R. Tibshirani (2017), An Introduction to Statistical Learning with Applications in R, Springer.
+James, Gareth, D. Witten, T. Hastie, R. Tibshirani (2021), An Introduction to Statistical Learning with Applications in R, 2nd ed., Springer.
 
 Electronic version of the the book can be accessed:  
 <https://www.statlearning.com/>
@@ -111,6 +111,6 @@ Varian, H.R. (2014), ''Big Data: New Tricks for Econometrics'', *Journal of Econ
 
 [Artificial Intelligence, the History and Future - with Chris Bishop](https://www.youtube.com/watch?v=8FHBh_OmdsM)
 
-[İstatistiksel Öğrenme Dersleri YouTube Oynatma Listesi: Introduction to Statistical Learning by Robert Tibshirani, Trevor Hastie, and Daniela Witten.](https://www.youtube.com/playlist?list=PLOg0ngHtcqbPTlZzRHA2ocQZqB1D_qZ5V)
+[Youtube playlist: Introduction to Statistical Learning by Robert Tibshirani, Trevor Hastie, and Daniela Witten.](https://www.youtube.com/playlist?list=PLOg0ngHtcqbPTlZzRHA2ocQZqB1D_qZ5V)
 
 <https://www.dataschool.io/15-hours-of-expert-machine-learning-videos/>
