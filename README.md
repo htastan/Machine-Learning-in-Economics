@@ -1,4 +1,4 @@
-# Machine-Learning-in-Economics 
+# Machine Learning in Economics 
  
 An introductory course on machine learning methods for economics majors.
  
@@ -62,6 +62,16 @@ Instructor: Prof. Dr. Hüseyin Taştan (Yıldız Technical University, Departmen
 
 The purpose of this course is to teach basic machine learning algorithms and methods relevant for empirical economists. The availability of large scale data sets has led to the development of new methods that are similar to those utilized in econometrics but also distinct in some aspects. This course, therefore, will emphasize the use of these new algorithms by focusing on statistical learning in economics and business. Students will learn the basic concepts, methods, and algorithms used in machine learning and develop skills to apply them in practice.
 
+## Textbook
+
+James, Gareth, D. Witten, T. Hastie, R. Tibshirani (2021), An Introduction to Statistical Learning with Applications in R, 2nd ed., Springer.
+
+Electronic version of the the book can be accessed:  
+<https://www.statlearning.com/>
+
+Alpaydın, Ethem (2018), Yapay Öğrenme, 4. Baskı (Ethem Alpaydın, Introduction to Machine Learning, 2. baskıdan çeviri), Boğaziçi Üniversitesi Yayınevi, İstanbul
+
+
 ## Software
 
 We will use R in class and in lab sessions. R is an open-source software for statistical computing and graphics which is widely used by statisticians, researchers, data scientists and econometricians as well as industry professionals. The latest version of R can be downloaded from:
@@ -72,18 +82,16 @@ And R-studio may be used as an integrated development environment for R:
 
 <https://www.rstudio.com/products/RStudio/>
 
-## DataCamp for the Classroom
+## Datacamp for the classroom 
 
-This class is supported by <https://www.datacamp.com/> through the "DataCamp for the Classroom" program.
+<a href='https://www.datacamp.com/'><img src='datacamp1.png' align="left"  width="200"/></a>
 
-## Textbook
+This class is supported by <https://www.datacamp.com/> through the "DataCamp for the Classroom" program.  
 
-James, Gareth, D. Witten, T. Hastie, R. Tibshirani (2021), An Introduction to Statistical Learning with Applications in R, 2nd ed., Springer.
+<a href='https://www.datacamp.com/groups/classrooms'><img src="datacamp2.png" width="100%" /></a>
 
-Electronic version of the the book can be accessed:  
-<https://www.statlearning.com/>
 
-Alpaydın, Ethem (2018), Yapay Öğrenme, 4. Baskı (Ethem Alpaydın, Introduction to Machine Learning, 2. baskıdan çeviri), Boğaziçi Üniversitesi Yayınevi, İstanbul
+
 
 ## Articles
 
