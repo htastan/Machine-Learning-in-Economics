@@ -94,7 +94,7 @@ This class is supported by <https://www.datacamp.com/> through the "DataCamp for
 
 <br>
 
-![Datacamp](datacamp2.png)
+![Datacamp](datacamp2.PNG)
 
 
 ## Articles
