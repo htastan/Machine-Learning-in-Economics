@@ -84,18 +84,16 @@ And R-studio may be used as an integrated development environment for R:
 
 ## Datacamp for the classroom 
 
-<a href='https://www.datacamp.com/'><img src='datacamp1.png' align="left"  width="200"/></a>
+<a href='https://www.datacamp.com/'><img src='datacamp1.PNG' align="left"  width="200"/></a>
 
 This class is supported by <https://www.datacamp.com/> through the "DataCamp for the Classroom" program.  
 
 <br>
 
-<a href='https://www.datacamp.com/groups/classrooms'><img src="datacamp2.png" width="100%" /></a>
+<a href='https://www.datacamp.com/groups/classrooms'><img src="datacamp2.PNG" width="100%" /></a>
 
 <br>
-
-![Datacamp](datacamp2.PNG)
-
+ 
 
 ## Articles
 
