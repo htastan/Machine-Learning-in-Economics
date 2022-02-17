@@ -90,7 +90,7 @@ This class is supported by <https://www.datacamp.com/> through the "DataCamp for
 
 <a href='https://www.datacamp.com/groups/classrooms'><img src="datacamp2.png" width="100%" /></a>
 
-
+![Datacamp](datacamp2.png)
 
 
 ## Articles
