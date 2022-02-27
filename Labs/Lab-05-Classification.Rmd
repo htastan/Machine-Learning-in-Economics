@@ -4,7 +4,7 @@ subtitle: Machine Learning in Economics
 author: 
   name: "Prof. Dr. Hüseyin Taştan"
   affiliation: "Yildiz Technical University"
-date: "2021 Spring"
+date: "2022 Spring"
 output:
   html_document: 
     number_sections: true
@@ -14,7 +14,7 @@ output:
     toc: yes
     toc_depth: 3
     toc_float: yes
-    keep_md: true 
+    keep_md: false 
 ---
 <style type="text/css"> 
 body{
@@ -57,12 +57,12 @@ Smarket %>%
   geom_line()
 ```
 
-Based on the past information can we predict the direction (ie, the sign of the today's return, up or down) ?
+Based on the past information can we predict the direction (i.e., the sign of the today's return, up or down) ?
 ```{r}
 table(Smarket$Direction)/1250
 Smarket %>%  
   ggplot(aes(x=Today)) + 
-  geom_histogram()
+  geom_histogram(color = "darkblue", fill = "lightblue")
 ```
 
 
