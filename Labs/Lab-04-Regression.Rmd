@@ -4,7 +4,7 @@ subtitle: Machine Learning in Economics
 author: 
   name: "Prof. Dr. Hüseyin Taştan"
   affiliation: "Yildiz Technical University"
-date: "2021 Spring"
+date: "2022 Spring"
 output:
   html_document: 
     number_sections: true
@@ -14,7 +14,7 @@ output:
     toc: yes
     toc_depth: 3
     toc_float: yes
-    keep_md: true 
+    keep_md: false 
 ---
 <style type="text/css"> 
 body{
@@ -79,7 +79,7 @@ names(reg1)
 coef(reg1)
 ```
 
-We can also use `tidy()`, `glance()` and `augment()` functions from the `broom` package to summarize the results and create separate data frames: 
+We can also use `tidy()`, `glance()` and `augment()` functions from the `{broom}` package to summarize the results and create separate data frames: 
 ```{r}
 library(broom)
 tidy(reg1)
