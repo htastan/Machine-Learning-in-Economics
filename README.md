@@ -10,7 +10,7 @@ Instructor: Prof. Dr. Hüseyin Taştan (Yıldız Technical University, Departmen
 
     -   Syllabus: [pdf](https://raw.githack.com/htastan/Machine-Learning-in-Economics/main/syllabus.pdf)
     -   Introduction to machine learning in economics: [html](https://raw.githack.com/htastan/Machine-Learning-in-Economics/main/Slides/Intro-to-ML-in-Econ.html)
-    -   Lab: [Introduction to R and RStudio](https://raw.githack.com/htastan/Machine-Learning-in-Economics/main/Labs/Lab-01-Intro-to-R-and-RStudio-Part-1.html)
+    -   Lab: [Introduction to R and RStudio](https://raw.githack.com/htastan/Machine-Learning-in-Economics/main/Labs/Lab-01-Intro-to-R-and-RStudio-Part-1.html) | [.Rmd](https://github.com/htastan/Machine-Learning-in-Economics/blob/main/Labs/Lab-01-Intro-to-R-and-RStudio-Part-1.Rmd)
 
 2.  **Basic Concepts in Machine Learning**
 
