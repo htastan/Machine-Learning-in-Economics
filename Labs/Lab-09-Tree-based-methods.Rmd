@@ -4,7 +4,7 @@ subtitle: Machine Learning in Economics
 author: 
   name: "Prof. Dr. Hüseyin Taştan"
   affiliation: "Yildiz Technical University"
-date: "Spring 2021"
+date: "Spring 2022"
 output:
   html_document: 
     number_sections: true
