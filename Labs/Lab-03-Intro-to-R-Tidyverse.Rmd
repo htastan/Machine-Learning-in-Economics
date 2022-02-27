@@ -4,7 +4,7 @@ subtitle: Machine Learning in Economics
 author: 
   name: "Prof. Dr. Hüseyin Taştan"
   affiliation: "Yildiz Technical University"
-date: "2021 Spring"
+date: "2022 Spring"
 output:
   html_document: 
     number_sections: true
@@ -14,7 +14,7 @@ output:
     toc: yes
     toc_depth: 3
     toc_float: yes
-    keep_md: true 
+    keep_md: false 
 ---
 <style type="text/css"> 
 body{
@@ -44,7 +44,8 @@ knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning=FALSE)
 [Tidyverse](https://www.tidyverse.org/) is a collection of packages designed to implement data science projects. These notes provide a basic introduction to  the functions and verbs in the Tidyverse. The fundemantal reference for Tidyverse is the book [R for Data Science](https://r4ds.had.co.nz/) written by H. Wickham. Also, see [*Tidy Data*](https://vita.had.co.nz/papers/tidy-data.pdf) (Hadley Wickham, 2014 JSS), and [Tidy data Vignette](https://cran.r-project.org/web/packages/tidyr/vignettes/tidy-data.html)  
 
 
-![Tidyverse R Packages](img/tidyverse.png)  
+![Tidyverse R Packages](img/tidyverse.png) 
+
 
 
 ```{r}
@@ -99,7 +100,7 @@ Here is another example:
 ```{r}
 df <- tibble(
   xvariable = runif(5),
-  depvariable = 2+ 5*xvariable + rnorm(5)
+  depvariable = 2 + 5*xvariable + rnorm(5)
 )
 df
 ```
@@ -120,9 +121,9 @@ df[[1]]
 
 But there are easier ways of accomplishing these as I will show below. 
 
-# `dplyr` Function
+# `{dplyr}` Package: Data manipulation
 
-Using several functions in the `dplyr`, we can easily manipulate data. These functions are sometimes called "verb" as they basically do what their names suggest, for example, filter, select, mutate, summarize, arrange, etc. 
+Using several functions in the `{dplyr}` package, we can easily manipulate data. These functions are sometimes called "verbs" as they basically do what their names suggest, for example, filter, select, mutate, summarize, arrange, etc. 
 
 ## `filter()` 
 
@@ -135,7 +136,7 @@ Using several functions in the `dplyr`, we can easily manipulate data. These fun
 (turkey <- gapminder[1573:1584,])
 ```
 
-But this approach is not advisable as it is prone to error. Intead we use `dplyr::filter()` function. The input of `filter()` verb is a set of logical expressions. For example: 
+But this approach is not advisable as it is prone to error. Instead we use `dplyr::filter()` function. The input of `filter()` verb is a set of logical expressions. For example: 
 ```{r}
 filter(gapminder, country == "Turkey")
 ```
@@ -271,7 +272,7 @@ gapminder %>%
   summarize(n = n())
 ```
 
-Example: Find average life expectancy and GDP percapita according to continents in 2007. 
+Example: Find average life expectancy and GDP per capita according to continents in 2007. 
 ```{r}
 gapminder %>% 
   filter(year==2007) %>%
@@ -370,7 +371,7 @@ europe %>% group_by(year) %>%
 
 
 
-# Cleaning data using `tidyr` 
+# `{tidyr}`: Organizing and cleaning data 
 
 ## On data organization 
 
@@ -481,9 +482,9 @@ trdata1_tidy
 ```
 
 
-# `ggplot2`: Data visualization
+# `{ggplot2}`: Data visualization
 
-`ggplot2` uses the grammar of graphics to visualize variables and was developed and maintained by Hadley Wickham. There are several good references for `ggplot2`, for example, see
+`{ggplot2}` uses the grammar of graphics to visualize variables and was developed and maintained by Hadley Wickham. There are several good references for `ggplot2`, for example, see
 
 * [Hadley Wickham ve Garret Grolemund, R for Data Science, Data Visualization with ggplot2](https://r4ds.had.co.nz/data-visualisation.html)
 
@@ -603,14 +604,17 @@ grades1 <- rnorm(n, mean = 50, sd = 10)
 grades2 <- rnorm(n, mean = 60, sd = 15)
 grades3 <- rnorm(n, mean = 70, sd = 12)
 class <-  factor( rep(c("Econometrics-1","Econometrics-2","Machine-Learning"), each=n) )
-gradedata <- data.frame(class, grades = c(grades1, grades2, grades3))
+gradedata <- tibble(class, grades = c(grades1, grades2, grades3))
 gradedata <- filter(gradedata, grades<=100 & grades>=0)
 head(gradedata)
 ```
 
 ```{r}
 ggplot(data = gradedata) +
-  geom_histogram(mapping = aes(x = grades)) +
+  geom_histogram(mapping = aes(x = grades), 
+                 bins = 10, 
+                 color = "darkblue", 
+                 fill = "lightblue") +
   facet_wrap(~ class)
 ```
 
@@ -1225,9 +1229,8 @@ pop2017 %>% head(5)
 ```{r}
 # join them on names 
 popularnames1718 <- left_join(pop2017,pop2018)
-#
+#  
 popularnames1718 %>% head(10)
-# view(popularnames1718)
 ```
 
 
