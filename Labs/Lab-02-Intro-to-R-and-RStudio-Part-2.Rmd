@@ -5,7 +5,7 @@ author:
   name: "Prof. Dr. Hüseyin Taştan"
   affiliation: "Yildiz Technical University"
 # date: "`r format(Sys.time(), '%d %B %Y')`"
-date: "Spring 2021"
+date: "Spring 2022"
 output: 
   html_document:
     number_sections: true
@@ -15,7 +15,7 @@ output:
     toc: yes
     toc_depth: 3
     toc_float: yes
-    keep_md: true
+    keep_md: false
 ---
 <style type="text/css"> 
 body{
@@ -39,7 +39,7 @@ knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning=FALSE)
 
 # Data Frames
 
-A data frame is similar to a rectangular spreadsheet where rows represent observations and columns represents variables (or features). In some ways, it is also similar to a matrix, but a data frame can contain different types of variables in the columns (string, numeric, etc.) whereas a matrix can contain only one type. As an example, suppose we have the following sales records on three different product: 
+A data frame is similar to a rectangular spreadsheet where rows represent observations and columns represents variables (or features). In some ways, it is also similar to a matrix, but a data frame can contain different types of variables in the columns (string, numeric, etc.) whereas a matrix can contain only one type. As an example, suppose we have the following sales records on three different products: 
 
 ```{r}
 year <- c(2008:2013)
@@ -118,7 +118,7 @@ We note that the `read_xlsx()` command produces a `tibble` instead of a data fra
 # Creating a new variable
 
 Once we have our data frame or tibble, we can easily create new variables using the 
-assignment operator `<-` is used to create new variables. We note that the equality sign also works but we prefer using `<-`. For instance, we can create a new varible containing total sales in the  `sales` data frame which we created above.
+assignment operator `<-` is used to create new variables. We note that the equality sign also works but we prefer using `<-`. For instance, we can create a new variable containing total sales in the  `sales` data frame which we created above.
 
 ```{r}  
 sales$total <- sales$product1 + sales$product2 + sales$product3 
@@ -233,23 +233,23 @@ summary(educ)
 
 List of commands for sample statistics: 
 
-Mean:	`mean()`
+- Mean:	`mean()`
 
-Standard deviation:	`sd()`
+- Standard deviation:	`sd()`
 
-Variance:	`var()`
+- Variance:	`var()`
 
-Minimum:	`min()`
+- Minimum:	`min()`
 
-Maximum:	`max()`
+- Maximum:	`max()`
 
-Median:	`median()`
+- Median:	`median()`
 
-Range of values (minimum and maximum):	`range()`
+- Range of values (minimum and maximum):	`range()`
 
-Sample quantiles:	`quantile()`
+- Sample quantiles:	`quantile()`
  
-Interquartile range: 	`IQR()`
+- Interquartile range: 	`IQR()`
 
 We can use `sapply()` function to compute a statistic for each column in a data frame. 
 For example, 
