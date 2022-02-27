@@ -5,16 +5,16 @@ author:
   name: "Prof. Dr. Hüseyin Taştan"
   affiliation: "Yildiz Technical University"
 # date: "`r format(Sys.time(), '%d %B %Y')`"
-date: "Spring 2021"
+date: "Spring 2022"
 output: 
   html_document:
     number_sections: true
-    theme: flatly
-    highlight: default  
+    theme: journal
+    highlight: haddock  
     toc: yes
     toc_depth: 3
     toc_float: yes
-    keep_md: true
+    keep_md: false
 ---
 ```{css, echo=FALSE}
 body{
@@ -145,6 +145,8 @@ which is not exactly $0.10$.
 
 # Packages
 
+A package is a collection of functions. An `R` function is simply a series of instructions to perform a task or computation. 
+
 The base `R` comes with the following packages: 
 ```{r}
 rownames(installed.packages(priority="base"))
@@ -156,6 +158,7 @@ rownames(installed.packages(priority="base"))
 install.packages("ISLR", repos='http://cran.us.r-project.org')
 ```
 
+
 Alternatively, this can be done using `Tools>InstallPackages` from the menu and then typing "ISLR" on the search window. We basically downloaded this package into our computer. Now we can activate whenever we need it. To tell `R` that we will use we need a further command:
 
 ```{r message=FALSE, warning=FALSE, paged.print=FALSE}
@@ -164,15 +167,22 @@ library(ISLR)
 
 This instructs `R` that our code needs to access contents of that package. Note that there is no quotation mark. 
 
+The data set package for the second edition of ISLR can be installed using 
+```{r eval=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE} 
+install.packages("ISLR2", repos='http://cran.us.r-project.org')
+```
+
+
+
 # File Names and Working Directory
 
 Use `getwd()` to see the current directory. If we want to change 
-it we can use setwd(path) where path should be defined usign forward slash /, instead of backslash, \. 
+it we can use setwd(path) where path should be defined using forward slash `/`, instead of backslash, `\`. 
 ```{r, eval=FALSE, echo=TRUE}
 getwd()
 ```
- If we want to change 
-it we can use `setwd("/full/address/")` where path should be defined using forward slash `/`, instead of backslash, `\`. 
+
+If we want to change it we can use `setwd("/full/address/")` where path should be defined using forward slash `/`, instead of backslash, `\`. 
 ```{r, eval=FALSE, echo=TRUE}
 setwd("C:/Users/Folder/Another-Folder/MLinEcon")
 ```
@@ -189,7 +199,7 @@ z <- x^y
 z 
 ```
 
-Note that the equation sign can also be used but I suggest using `<-` (don't forget to put a single space before and after). 
+Note that the equation sign, `=`,  can also be used but I suggest using `<-` (don't forget to put a single space before and after). 
 
 List of all currently available objects in the memory can be accessed using the command `ls()`
 
@@ -209,7 +219,7 @@ ls()
 
 ## Vectors 
 
-An `R` vector (or an atomic vector -not an algebraic vector-) is just a collection of objects. A vector my contain numeric elements (integers and doubles), logicals, and characters. A vector can be defined in a number of ways. For example, we can use `c()` to create vectors `a` and `b`  
+An `R` vector (or an atomic vector -not an algebraic vector-) is just a collection of objects. A vector my contain numeric elements (integers and doubles), logical elements, and characters. A vector can be defined in a number of ways. For example, we can use the function `c()` to create vectors `a` and `b`  
 
 ```{r}
 a <- c(1,2,3,4,5)
