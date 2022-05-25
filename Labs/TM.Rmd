@@ -1,0 +1,462 @@
+---
+title: "Text Analysis of Federal Open Market Committee and CBRT Monetary Policy Committee Statements"
+subtitle: Machine Learning in Economics
+author: "Alican Yıldırım"
+output: 
+  html_document:
+    theme: cerulean
+    highlight: tango
+---
+```{css, echo=FALSE}
+body{
+  background-color: #EEFAFF;
+    font-size: 18px;
+  line-height: 1.8;
+}
+code.r{
+  font-size: 16px;
+}
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+--------------------------------------------------------
+
+```{r, message = FALSE}
+library(tm)
+library(qdap)
+```
+
+We have two Federal Open Market Committee statements in .docx format: one from April 2017 and one from March 2020 (right after the coronavirus outbreak). `qdap::read_docx()` function can be used to read them into R:
+
+```{r}
+FOMC_2017 <- read_docx("../Data/FOMC (04.2017).docx")
+FOMC_2017
+```
+
+Notice that each paragraph in the document is a distinct element of the character vector `FOMC_2017`. It needs to be a character vector with a single element which contains the whole text:
+
+```{r}
+FOMC_2017 <- paste(FOMC_2017, collapse = ' ')
+FOMC_2017
+```
+
+
+Below we calculate the top 5 most frequent words with the `qdap::freq_terms()` function:
+
+```{r}
+freq.terms <- freq_terms(FOMC_2017, 5)
+freq.terms
+```
+
+Not surprisingly, the frequently used terms consist of prepositions, pronouns etc., which convey no useful information. When analyzing text data, we need to get rid of unnecessary words so that we are left with proper nouns and the like, which are of primary interest. To do that, we can use `tm::stopwords()`.
+
+```{r}
+freq.terms.2 <- freq_terms(FOMC_2017, 5, stopwords = stopwords("en"))
+freq.terms.2
+```
+Below are the English `stopwords`:
+
+```{r}
+stopwords("en")
+```
+
+
+# Building the Corpus
+
+Now we can import `FOMC_2020` and combine it with `FOMC_2017`:
+
+```{r}
+FOMC_2020 <- read_docx("../Data/FOMC (03.2020).docx")
+FOMC_2020 <- paste(FOMC_2020, collapse = ' ')
+corpus <- c(FOMC_2017, FOMC_2020)
+str(corpus)
+```
+
+The `corpus` object is not a corpus yet, it is just a character vector with length 2.
+
+There are two corpus types: permanent corpus, `PCorpus` and volatile corpus, `VCorpus`. The difference essentially lies in where the data is stored on the computer. `VCorpus` objects use the computer's RAM, which makes them more efficient to work with. Before building a corpus, the source of our documents needs to be specified (in this case they are stored in a vector). `tm::VectorSource()` function can be used for that purpose:
+
+```{r}
+source <- VectorSource(corpus) #specify the source
+FOMC <- VCorpus(source) #create a VCorpus object
+str(FOMC)
+```
+
+`VectorSource()` basically identifies the source of the documents, so that when we create a corpus object, the function `VCorpus()` treats each element in the `corpus` vector as separate documents. Thus, the resulting corpus has two documents. We can reach out to the content of a particular document:
+
+```{r}
+FOMC[[2]]$content
+```
+
+# Term-Document Matrix
+
+We can now create the ***Term-Document Matrix*** (TDM), which has words (terms) in its rows and documents in its columns. We can obtain the TDM using `tm::TermDocumentMatrix()`:
+
+```{r}
+tdm <- TermDocumentMatrix(FOMC)
+tdm <- as.matrix(tdm)
+colnames(tdm) <- c("2017", "2020")
+head(tdm) 
+```
+
+Notice that there are punctuations in some terms, which may cause problems. For example, if not preceded by a dash, "inflation" will not be treated the same as "-inflation". The text should be cleaned and preprocessed before conducting any analysis.
+
+# Cleaning and Preprocessing
+
+The `tm` package provides several tools for cleaning, such as `removeWords()`, `removeNumbers()`, `removePunctuation()` and `stripWhitespace()`. Each performs what their names suggest: the first one removes words (based on some predefined rule), the second numbers, the third punctuations and the fourth excess white space. We can also use `base::tolower()` to make all characters lowercase. Let's create a function that takes a corpus and implements some of these transformations. To apply them to each document in the corpus, we need the `tm_map()`function:
+
+
+```{r}
+clean_corpus <- function(corpus){
+  corpus <- tm_map(corpus, content_transformer(tolower))
+  corpus <- tm_map(corpus, removeNumbers)
+  corpus <- tm_map(corpus, removePunctuation, ucp = T)
+  corpus <- tm_map(corpus, removeWords, c(stopwords("en"), 
+                                          "federal", "open", "market", "committee"))
+} 
+# tolower() is not a part of the tm library, has to be 
+## applied with tm::content_transformer() 
+# the order of transformations is important
+# it makes sense to remove the words "federal", "open", "market" and "committee 
+## along with English stopwords
+
+FOMC_clean <- clean_corpus(FOMC)
+str(FOMC_clean)
+```
+
+The content in each document has been transformed accordingly. Let's create the TDM:
+
+```{r}
+clean.tdm <- TermDocumentMatrix(FOMC_clean)
+clean.tdm <- as.matrix(clean.tdm)
+colnames(clean.tdm) <- c("2017", "2020")
+head(clean.tdm)
+```
+
+To inspect specific terms in the TDM:
+
+```{r}
+clean.tdm["inflation", ]
+```
+
+# Word Stemming and Stem Completion
+
+Another essential preprocessing step in text mining is word stemming and stem completion. Suppose we have the following words:
+
+```{r}
+inc <- c("increased", "increasing", "increasingly")
+```
+
+If we stem these words with `tm::stemDocument()`:
+```{r}
+inc <- stemDocument(inc)
+inc
+```
+
+What word stemming does is that it unifies the words that share the same root. However, the resulting word is not meaningful. Clearly, we should replace all of them with "increase". `tm::stemCompletion` does exactly that. It takes a character vector and a completion dictionary:
+
+```{r}
+stemcomp <- "increase"
+inc <- stemCompletion(inc, stemcomp)
+inc
+```
+
+
+# Some Visualizations
+
+```{r}
+dim(clean.tdm)
+```
+
+There are 407 distinct terms in the TDM. In practice, this number can be much larger, which will make it quite difficult to inspect the TDM term-by-term. Instead, we can create some informative visualizations. Let's say we are interested in the most frequent words used in both documents. Recall that the TDM has in its rows all the terms and their corresponding frequencies in each document. All we have to do is to take the sum of the rows. We can then create a bar plot of the top 10 most frequent words:
+
+```{r}
+highfreqterms <- rowSums(clean.tdm)
+highfreqterms <- sort(highfreqterms, decreasing = TRUE)
+barplot(highfreqterms[1:10], col ="blue", las = 2)
+```
+
+
+A more popular visualization method is word cloud, which requires the `wordcloud` library. In a word cloud, the size of a word is relative to its frequency.
+
+```{r}
+library(wordcloud)
+term_vec <- names(highfreqterms)
+wordcloud(term_vec, highfreqterms, colors = c("red","goldenrod"), scale = c(3,0.2))
+```
+
+
+We can also plot a comparison cloud, which is simply a word cloud that visualizes dissimilar words across documents:
+
+```{r}
+comparison.cloud(clean.tdm, colors = c("orange", "blue"), scale = c(2, 0.2), title.size = 2)
+```
+
+Notice how the focus shifts from "inflation" to "support".
+
+
+A commonality cloud visualizes shared terms across documents:
+
+```{r}
+commonality.cloud(clean.tdm, scale = c(2.5, 0.2))
+```
+
+
+# Moving Beyond Single Words
+
+Sometimes it would be better to focus on a group of words rather than one word. Words can have substantially different connotations when combined. For example, if our document involves something like "not beautiful", then treating the words separately (as ***unigrams***) may not be a good idea. We may not want to ***tokenize*** each term, but to make a ***bigram*** tokenization. This can be achieved by using the `RWeka::NGramTokenizer()` function:
+
+```{r}
+library(RWeka)
+tokenizer <- function(x) {
+  NGramTokenizer(x, Weka_control(min=2, max=2))
+}
+
+bigram_tdm <- TermDocumentMatrix(FOMC_clean, control = list(tokenize = tokenizer))
+bigram_tdm <- as.matrix(bigram_tdm)
+head(bigram_tdm)
+```
+
+# TF-IDF: An Alternative Frequency Criterion
+
+Suppose that we have a large corpus containing several documents, but a word appears in each document in a non-random fashion. For example, if we want to examine a set of tweets on US-China affairs, then it is highly likely that the most frequently used terms across the documents in our corpus would be "US" and "China", which, by themselves, contain no information. This is where ***Tf-Idf***, short for ***Term Frequency-Inverse Document Frequency***, becomes useful. It is a weighting criterion to be implemented when creating TDMs, which basically imposes a penalty for terms that consistently appear in multiple documents. To implement a Tf-Idf weighting, we can add a control parameter just as we did for bigram tokenization:
+
+```{r}
+tfidf <- TermDocumentMatrix(FOMC_clean, control = list(weighting=weightTfIdf))
+tfidf <- as.matrix(tfidf)
+head(tfidf)
+```
+
+We can compare this to the initial TDM:
+
+```{r}
+head(clean.tdm)
+```
+
+
+```{r}
+highfreqterms2 <- rowSums(tfidf)
+highfreqterms2 <- sort(highfreqterms2, decreasing = TRUE)
+barplot(highfreqterms2[1:10], col ="blue", las = 2)
+```
+
+
+```{r}
+term_vec2 <- names(highfreqterms2)
+wordcloud(term_vec2, highfreqterms2, colors = c("red","goldenrod"), scale = c(2.5, 0.2))
+```
+
+# Analyzing Texts Written in Turkish
+Although English versions of the CBRT Monetary Policy Committee statements are available, we will use the Turkish versions for illustrative purposes. 
+
+
+The FOMC statements were in .docx format, but CBRT Monetary Policy Committee statements are in .pdf format. We can also read pdf files into R. The code chunk below reads one of the MPC statements using `tm::readPDF()` and creates a `VCorpus`. Notice that there is another control parameter, `language = "turkish"`, since the text is in Turkish.
+
+```{r}
+PPK_2016 <- VCorpus(URISource("../Data/PPK (04.2016).pdf"), readerControl = 
+                    list(reader = readPDF, language = "turkish" ))
+str(PPK_2016)
+```
+
+Alternatively, we can use the `tabulizer::extract_text()` function:
+```{r, message = FALSE}
+library(tabulizer)
+PPK_2016_2 <- extract_text("../Data/PPK (04.2016).pdf")
+PPK_2016_2 <- VCorpus(VectorSource(PPK_2016), 
+                      readerControl = list (language = "turkish"))
+str(PPK_2016_2)
+```
+
+We may also want to read multiple pdf documents into R at once. When the number of documents is very large, reading them one by one can be excruciating. We can simply use the `list.files()` function from base R and then specify the source of our documents with `tm::URISource()` (Uniform Resource Identifier). For example:
+
+```{r}
+(files <- list.files(pattern = "pdf$"))
+# It creates a list from the names of the files in the working directory
+# $ specifies the end of the file name
+```
+
+Then we can create a corpus:
+
+```{r}
+PPK <- VCorpus(URISource(files), readerControl = 
+                    list(reader = readPDF, language = "turkish" ))
+str(PPK)
+```
+
+The steps for cleaning and preprocessing is as usual. However, stopwords for the Turkish language is not available in the `tm` library. We will need the `stopwords` package:
+
+```{r, message=FALSE}
+library(stopwords)
+stopwords = stopwords("turkish", source = "stopwords-iso")
+
+head(stopwords)
+length(stopwords)
+```
+
+We can now apply the usual transformations:
+
+```{r}
+clean.new.corpus <- function(corpus){
+  corpus <- tm_map(corpus, content_transformer(tolower))
+  corpus <- tm_map(corpus, removeWords, stopwords)
+  corpus <- tm_map(corpus, removeNumbers)
+  corpus <- tm_map(corpus, removePunctuation, ucp = TRUE)
+  #use unicode character properties to identify punctuations
+  corpus <- tm_map(corpus, stripWhitespace)
+}
+
+PPK_clean <- clean.new.corpus(PPK)
+str(PPK_clean)
+```
+
+Take a closer look at the content of the second document. It seems that it does not contain any textual element. If you pull out the content:
+
+```{r}
+PPK_clean[[2]]$content
+```
+
+This particular pdf document is a four-pages-long text but in the corpus it has 4 empty character strings. `tm::readPDF()` fails to read it is since the pdf document is nonsearchable (i.e., an image). Fortunately, there is a way to extract text from such files. We can use `tesseract::ocr()` for optical character recognition from images. We should first convert the pdf document to an image format (preferably .png) using `pdftools::pdf_convert()`. The function converts each page in a pdf file to a specified image format:
+
+```{r, message = FALSE}
+library(pdftools)
+png <- pdf_convert("../Data/PPK (04.2020).pdf", format = "png", dpi = 300)
+```
+
+Now that each page is converted to .png, we are ready to perform optical character recognition. Luckily, `tesseract` provides an engine that recognizes special Turkish characters.
+
+```{r}
+library(tesseract)
+PPK_2020 <- ocr(png, engine = tesseract("tur"))
+str(PPK_2020)
+```
+
+Then simply replace the content of the document:
+
+```{r}
+PPK_clean[[2]]$content <- PPK_2020
+str(PPK_clean)
+```
+
+Notice that the content of each document consists of as many character strings as the number of pages in the original pdf document. The final step involves making the content a character vector with a single string which contains the whole text (as we did for FOMC statements). A simple loop will achieve this for each document:
+
+```{r}
+for(i in 1: length(PPK_clean)){
+  PPK_clean[[i]]$content <- paste(PPK_clean[[i]]$content, collapse = ' ')
+}
+str(PPK_clean)
+```
+
+Finally, reapply the cleaning function:
+
+```{r}
+PPK_clean <- clean.new.corpus(PPK_clean)
+str(PPK_clean)
+```
+
+OCR could not read the TCMB logo on the front page, thus some strange words appear in the first line which need to be removed.
+
+```{r}
+#remove words with length 2 or less
+PPK_clean[[2]]$content <- gsub('\\b\\w{1,2}\\b','',PPK_clean[[2]]$content)
+str(PPK_clean)
+```
+
+Let's create the TDM and draw some visuals:
+
+```{r}
+tdmppk <- TermDocumentMatrix(PPK_clean)
+tdmppk <- as.matrix(tdmppk)
+freqtermsppk <- rowSums(tdmppk)
+freqtermsppk <- sort(freqtermsppk, decreasing = TRUE)
+barplot(freqtermsppk[1:10], las = 2, col = "blue")
+```
+
+
+```{r}
+term_vec_ppk <- names(freqtermsppk)
+wordcloud(term_vec_ppk, freqtermsppk, colors = c("red","goldenrod"), scale = c(2.5, 0.3))
+```
+ 
+```{r}
+comparison.cloud(tdmppk, colors = c("orange", "blue"),  title.size = 0.4, scale = c(1.2,0.2))
+
+```
+ 
+# Sentiment Analysis
+
+We can use `SentimentAnalysis::analyzeSentiment()` for sentiment analysis, which aims to assess whether the tone of a document is positive or negative with the help of a predefined dictionary of positive and negative words. The package `SentimentAnalysis`comes with built-in dictionaries. `analyzeSentiment()` takes a string, corpus or a TDM and returns a matrix with calculated sentiment scores based on a set of rules:
+
+```{r, message = FALSE}
+library(SentimentAnalysis)
+sentiments <- analyzeSentiment(FOMC_clean, 
+                               rules = list("Overall Score"=list(ruleSentiment,
+                                                               loadDictionaryLM()),
+                                            "Positivity" = list(rulePositivity,
+                                                                  loadDictionaryLM()),
+                                            "Negativity" = list(ruleNegativity,
+                                                                  loadDictionaryLM()),
+                                            "Polarity" = list(ruleSentimentPolarity,
+                                                                loadDictionaryLM())),
+                               stemming = TRUE)
+sentiments
+```
+Sentiment scores are obtained using the Loughran-McDonald dictionary (2011), which was specifically created for the analysis of financial texts. The overall sentiment score is calculated as the ratio of the difference between positive and negative word counts to the total number of words. Positivity is the proportion of words that are labeled as positive and negativity is the proportion of words that are labeled as negative. Finally, polarity is the difference between positive and negative words divided by their sum. All of these scores are calculated for each document. Alternatively, not specifying a rule list in the function will return sentiment scores based on all available dictionaries. For example:
+
+```{r}
+sentimentsall <- analyzeSentiment(FOMC_clean, stemming = TRUE)
+sentimentsall
+```
+
+When the Harvard Dictionary (GI) is used, the FOMC statement in April 2016 turns out to be written in a more negative tone when compared to April 2017. However, the results change when Henry's Financial Dictionary or the LM dictionary is used. This illustrates the context-sensitivity of dictionaries. As expected, when calculated with the other two dictionaries, sentiment scores imply a more negative tone in the March 2020 statement. 
+
+We can also examine the sentiment in the CBRT Monetary Policy Committee statements. However, we need a custom dictionary since there are no available Turkish dictionaries in the `SentimentAnalysis` package. We can use the Google Translated version of the LM dictionary as a first step. 
+
+```{r}
+library(readxl)
+turkish_neg <- read_xlsx("../Data/LM-turkish.xlsx", sheet = 1, col_names = FALSE) 
+turkish_pos <- read_xlsx("../Data/LM-turkish.xlsx", sheet = 2, col_names = FALSE) 
+
+turkish_neg <- as.character(turkish_neg$...1)
+turkish_pos <- as.character(turkish_pos$...1)
+
+str(turkish_neg)
+str(turkish_pos)
+```
+
+We should create our custom dictionary with the `SentimentAnalysis::SentimentDictionaryBinary()` function, which creates a new object with two separate vectors of positive and negative words. The calculation rules require that the dictionary be this type of object, otherwise sentiment scores cannot be calculated.
+
+```{r}
+dict <- SentimentDictionaryBinary(turkish_pos, turkish_neg)
+str(dict)
+```
+
+Notice that there are bigrams among positive and negative words, which is the downside of working with a google-translated dictionary. As we will see, the number of words identified as positive or negative are going to be much lower.
+
+Now we are ready to calculate sentiment scores:
+
+```{r}
+sentiment_tr <- analyzeSentiment(PPK_clean, 
+                                 rules = list("Words" = list(ruleWordCount),
+                                            "Positivity" = list(rulePositivity,
+                                                                dict),
+                                            "Negativity" = list(ruleNegativity,
+                                                                dict),
+                                            "Overall" = list(ruleSentiment,
+                                                                dict),
+                                            "Polarity" = list(ruleSentimentPolarity,
+                                                                dict)),
+stemming = TRUE)
+
+sentiment_tr
+```
+
+We can simply multiply the total number of words in each document with their respective positivity and negativity scores to find out how many words matched with those classified as positive or negative in the LM dictionary. For instance, there are 1489 total words in the 2016 statement, and $1489 \times 0.01 \approx 15$ positive words are identified. Likewise, there are $1489 \times 0.044 \approx 67$ negative words. For the 2020 statement, the number of positive words and negative words are $1307 \times 0.016 \approx 22$ and $1307 \times 0.055 \approx 72$, respectively.
+
+Overall, a more negative tone is present in the 2020 MPC statement, although overall sentiment scores are quite close to each other. On the other hand, polarity scores, which are not sensitive to document length, imply a more negative tone in the 2016 statement. This is due to a slightly higher gap between the number of positive and negative words used in the 2016 statement: $67 - 15 = 52$. For 2020, the difference is $72 - 22 = 50$. Coupled with a lower number of total positive and negative words, the resulting polarity score is substantially larger for 2016.
+
+
+
+

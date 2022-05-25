@@ -1,0 +1,814 @@
+---
+title: "Introduction to Text Mining" 
+subtitle: Machine Learning in Economics
+author: 
+  name: "Prof. Dr. Hüseyin Taştan"
+  affiliation: "Yildiz Technical University"
+date: "Spring 2022"
+output:
+  html_document: 
+    number_sections: true
+    self_contained: true
+    theme: lumen
+    highlight: haddock 
+    # code_folding: show
+    toc: yes
+    toc_depth: 3
+    toc_float: yes
+    keep_md: false
+---
+<style type="text/css"> 
+body{
+  background-color: #FAFAFA;
+  font-size: 18px;
+  line-height: 1.8;
+}
+code.r{
+  font-size: 12pt;
+}
+</style>
+
+```{r setup, include=FALSE}
+# knitr::opts_chunk$set(echo = TRUE, results = 'asis', fig.show = 'asis')
+knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning=FALSE)
+``` 
+
+<br/>
+<br/>
+
+
+# Introduction 
+
+There are several frameworks for text analysis in R. For a comprehensive list visit the CRAN task force on natural language processing: [https://cran.r-project.org/web/views/NaturalLanguageProcessing.html](https://cran.r-project.org/web/views/NaturalLanguageProcessing.html). 
+
+Here are some of the widely used packages and frameworks: 
+
+- `tm` package: uses DTM object (Term Document Matrix) and provides a general framework for text mining in R. A DTM is a matrix where each row represents a document, each column represents a term and each value includes the number of times that term appears in that document. For more details see the CRAN page: [https://cran.r-project.org/web/packages/tm/index.html](https://cran.r-project.org/web/packages/tm/index.html) and the article [Text Mining Infrastructure in R](http://www.jstatsoft.org/v25/i05/)
+
+- `quanteda` package: uses `dfm` object (document feature matrix), see the website [https://quanteda.io/](https://quanteda.io/). 
+
+- `tidytext` package: uses tidyverse principles in analyzing text data. It provides tools for word processing and sentiment analysis. The book Text Mining with R written by Julia Silge and David Robinson uses `tidytext` package and introduces readers to principles of text mining. See the electronic version of the book [Text Mining with R](https://www.tidytextmining.com/index.html). Also visit Julia Silge's github page: 
+[https://github.com/juliasilge/tidytext](https://github.com/juliasilge/tidytext). Also check out the tutorial by Julia Silge: [Tutorial on Tidytext](https://juliasilge.shinyapps.io/learntidytext/#section-introduction)
+
+In the following, I will use `{tidytext}` package. 
+
+# Tidy Text mining 
+
+## Tidy text data 
+
+In a usual tidy data set, each variable is a column and each observation is a row. Similarly, a tidy text data is a table or data frame (tibble) where each row is a token.  A **token** is a meaningful unit of text, for example a word. Converting a text data set into tokens is generally known as '*tokenization*'. We can use the standart tidyverse tools (`{dplyr}`, `{ggplot2}`, etc.) to analyze tidy text data. 
+
+As an example, consider the following text data
+```{r}
+# United Nations Universal Declaration of Human Rights 1948
+article1 <- c("All human beings are born free and equal in dignity and rights.",
+              "They are endowed with reason and conscience and should act towards one another in a spirit of brotherhood.")
+article1
+```
+
+It consists of two rows of characters. Let's create a tibble using `article1`: 
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+text_data <- tibble(sentence = 1:2, 
+                    text = article1)
+text_data
+```
+
+Once we have a tibble containing our text data, we can tokenize it based on single words using `tidytext::unnest_tokens()` function. 
+```{r}
+# you need install and activate the tidytext package
+library(tidytext)
+#
+text_data %>%
+  unnest_tokens(word, text) # word is output; text is input
+```
+
+Notice that 2-by-1 text data now has 30 rows each containing a single word in the text. The data set is still in tidy format. Sentence numbers (first column) are retained but punctuation is removed after tokenization. 
+
+A **token** can consist of more than one word. These are also known as **n-grams**. An **n-gram** is simply a consecutive sequence of n words. A **bigram**, for example, is a consecutive sequence of two words. 
+
+```{r}
+text_data %>% 
+  unnest_tokens(bigram, text, token = "ngrams", n = 2)
+```
+
+Representing a text as list or "bag" of its words without any regard to context and  grammar is also known as "bag-of-words" approach. 
+
+
+## Frequent Words and Stopwords
+
+Let's count the words in the text data tibble `text_data`: 
+```{r}
+text_data_tidy <- text_data %>%
+                  unnest_tokens(word, text) 
+# count
+text_data_tidy %>%
+  count(word, sort = TRUE)
+```
+
+Not surprisingly, the most frequent words are common words like "the, a, and, are, is" which are not useful for analysis. These are known as "stopwords". We can easily remove them before the analysis. To do this, we need a list of stopwords. Here is a list of stop words in the `{stopwords}` package:
+
+```{r}
+library(stopwords)
+get_stopwords()
+```
+
+Here is another stop words data set: 
+```{r}
+get_stopwords(language = "en", source = "stopwords-iso") %>% head(20)
+```
+
+An example of Turkish stop words: 
+```{r}
+Sys.setlocale("LC_ALL", "turkish") # you may not need this
+# Turkish stop words in stopwords package
+get_stopwords(language = "tr", source = "stopwords-iso")
+```
+
+We can remove stop words using the `dplyr::anti_join()` command: 
+```{r}
+# remove stopwords and count
+text_data_tidy %>%
+  anti_join(get_stopwords()) %>%
+  count(word, sort=TRUE)
+```
+
+Apparently, each word appears only once in the first article of the UN Universal Declaration of Human Rights. 
+
+We could remove the stop words using the `stop_words` data set in the `tidytext` package. 
+```{r}
+data(stop_words) # in the tidytext package
+# remove stopwords and count
+text_data_tidy %>%
+  anti_join(stop_words) %>% 
+  count(word, sort=TRUE)
+```
+
+**Exercise**: The second article states that 
+```{r}
+# United Nations Universal Declaration of Human Rights 1948
+article2 <- c("Everyone is entitled to all the rights and freedoms set forth in this Declaration, without distinction of any kind, such as race, colour, sex, language, religion, political or other opinion, national or social origin, property, birth or other status.",
+              "Furthermore, no distinction shall be made on the basis of the political, jurisdictional or international status of the country or territory to which a person belongs, whether it be independent, trust, non-self-governing or under any other limitation of sovereignty.")
+article2
+```
+
+Combine `article1` and `article2` and create a tibble. Tokenize single words, eliminate stop words and count the number of times each word is used. 
+
+
+## Wordclouds 
+
+A wordcloud is a simple graphical tool to summarize text data which displays frequently used words relatively larger, bolder, or in different colors. 
+
+There are several packages in R to draw wordclouds. `{ggwordcloud}` provides a `geom` to be used with `ggplot`. The `geom_text_wordcloud_area()` geom accepts two inputs in the aesthetics, label (word) and size (frequency). For example: 
+```{r}
+library(ggwordcloud)
+wordcloud_df <-text_data_tidy %>% 
+  anti_join(stop_words) %>% 
+  count(word, sort = T)
+wordcloud_df
+```
+
+
+```{r}
+wordcloud_df %>%
+  ggplot() +
+  geom_text_wordcloud_area(aes(label = word, size = n)) +
+  scale_size_area(max_size = 20) +
+  theme_minimal()
+```
+
+Since each word appears only once their sizes in wordcloud are the same. 
+
+**Example**: H.G. Wells' Time Machine
+
+```{r}
+library(tidyverse)
+library(tidytext)
+# Download H.G. Wells' Time Machine using gutenbergr package
+library(gutenbergr)
+time_machine <- gutenberg_download(35)
+tidy_time_machine <- time_machine %>%
+  unnest_tokens(word, text) %>%
+  anti_join(stop_words)
+# word count
+time_wordcloud_df <- tidy_time_machine %>%
+    count(word, sort = TRUE)
+time_wordcloud_df
+```
+
+```{r}
+library(ggwordcloud)
+set.seed(11) # for reproducibility 
+time_wordcloud_df %>% filter(n>10) %>% 
+  ggplot() +
+  geom_text_wordcloud_area(aes(label = word, size = n)) +
+  scale_size_area(max_size = 20) +
+  theme_minimal()
+```
+
+
+See below for additional examples. 
+
+
+## Sentiment Analysis 
+
+In sentiment analysis, we are interested in identifying emotional content of a text. In particular, we aim to understand if a given text or a section of a text can be characterized as positive or negative, or can be classified into certain kinds of emotions. One way to achieve this is to analyze the sentiment content of individual words. In order to do this we need to employ a sentiment lexicon. There are three general-purpose sentiment lexicons  in `tidytext` package: 
+
+* `AFINN` from [Finn Årup Nielsen](http://www2.imm.dtu.dk/pubdb/views/publication_details.php?id=6010): assigns words with a score that runs between -5 and 5, with negative scores indicating negative sentiment and positive scores indicating positive sentiment. 
+
+```{r}
+library(tidytext)
+library(textdata)
+get_sentiments("afinn")
+```
+
+
+* `bing` from [Bing Liu and collaborators](https://www.cs.uic.edu/~liub/FBS/sentiment-analysis.html): categorizes words in a binary fashion into positive and negative categories. 
+
+```{r}
+get_sentiments("bing")
+```
+
+
+* `nrc` from [Saif Mohammad and Peter Turney](http://saifmohammad.com/WebPages/NRC-Emotion-Lexicon.htm): categorizes words in a binary fashion ("yes"/"no") into categories of positive, negative, anger, anticipation, disgust, fear, joy, sadness, surprise, and trust.
+
+```{r}
+get_sentiments("nrc")
+```
+
+```{r}
+# sentiment types in nrc lexicon 
+get_sentiments("nrc") %>% 
+  group_by(sentiment) %>% 
+  summarise(n = n()) %>% 
+  arrange(desc(n))
+```
+
+```{r}
+nrc_positive <- get_sentiments("nrc") %>% 
+  filter(sentiment == "positive")
+nrc_positive
+```
+
+Example: Count the positive words in `text_data_tidy` which was previously created above: 
+```{r}
+text_data_tidy %>% inner_join(nrc_positive) %>% 
+  count(word, sort = TRUE)
+```
+
+
+Example: Time Machine 
+```{r}
+time_machine_sentiment <- tidy_time_machine %>%
+  # find a sentiment score for each word using bing lexicon
+  inner_join(get_sentiments("bing")) 
+# count sentiment
+time_machine_sentiment %>%
+  count(sentiment) 
+```
+
+
+```{r}
+# sentiment types in nrc lexicon 
+time_machine_sentiment_nrc <- tidy_time_machine %>% 
+  inner_join(get_sentiments("nrc")) 
+time_machine_sentiment_nrc
+```
+
+
+```{r}
+time_machine_sentiment_nrc %>% 
+  group_by(sentiment) %>% 
+  summarise(n = n()) %>% 
+  arrange(desc(n))
+```
+
+
+```{r}
+time_machine_sentiment_nrc %>% 
+  group_by(sentiment) %>% 
+  summarise(n = n()) %>%  
+  ggplot(aes(fct_reorder(sentiment, n),n)) +
+  geom_bar(stat="identity") +
+  coord_flip() +
+  xlab("")
+```
+
+
+
+## Word importance: tf.idf
+
+The frequency of a word or **term frequency** (tf) is a measure of how important a word is in a document. In English as well as in other languages there are several words that may not be important on their own (the, is, a, etc.). Removing these so-called stopwords from the document before the analysis is one way to measure the importance of words. Another way is to compute **tf idf** (term frequency inverse document frequency) statistic. 
+
+Inverse document frequency (**idf**) puts smaller weights on commonly used words in a document but increases the weight of less commonly used ones (so, the closer the idf to zero, the more common a word is).  Multiplying **tf** (number of times a word appears in a document) by **idf**, we obtain the **tf.idf** statistic which measures how relevant a word is to a document in a collection of documents (for example, to one novel in a collection of novels or to one website in a collection of websites, see Silge, Text Mining with R).
+
+**idf** can be computed using 
+
+$$idf(\text{term}) = \ln{\left(\frac{n_{\text{documents}}}{n_{\text{documents containing term}}}\right)}$$
+
+where the numerator $n_{\text{documents}}$ is the number of documents in the corpus and the denominator is the number of documents containing the term. For example, if there are 5 documents in the corpus and a given word is contained in all of them then $idf$ will be $0$. If a word is only contained in one of the documents then $idf=\ln(5/1)\approx 1.61$. 
+ 
+
+# Example: Text Analysis of Jane Austen's Books 
+
+This example is from Text Mining with R (by Julia Silge and David Robinson). For more details on the preprocessing please visit [https://www.tidytextmining.com/tidytext.html#tidyausten](https://www.tidytextmining.com/tidytext.html#tidyausten). 
+
+```{r}
+# Jane Austin's books
+# This is an example from Julia silge's book
+# load data
+load("../Data/j_austen_books_tidy.rda")
+```
+
+## Frequent words
+
+Remove stop words: 
+```{r}
+data(stop_words)
+
+j_austen_books_tidy <- j_austen_books_tidy %>%
+  anti_join(stop_words)
+```
+
+Count word frequency: 
+```{r}
+j_austen_books_tidy %>%
+  count(word, sort = TRUE)
+```
+Bar graph using ggplot: 
+```{r}
+j_austen_books_tidy %>%
+  count(word, sort = TRUE) %>%
+  filter(n > 600) %>%
+  mutate(word = reorder(word, n)) %>%
+  ggplot(aes(n, word)) +
+  geom_col() +
+  labs(y = NULL)
+```
+
+
+
+Display the most frequent words (n>300) over books: 
+```{r}
+j_austen_books_tidy %>%
+  group_by(book) %>% 
+  count(word, sort = TRUE) %>%
+  filter(n > 300) %>%
+  mutate(word = reorder(word, n)) %>%
+  ggplot(aes(n, word)) +
+  geom_col() + facet_wrap(~book) +
+  labs(y = NULL) +
+  theme(legend.position="none")
+```
+
+Graph the most frequently used (n>100) words in Sense and Sensibility: 
+```{r}
+j_austen_books_tidy %>%
+  filter(book == "Sense & Sensibility") %>% 
+  count(word, sort = TRUE) %>%
+  filter(n > 100) %>%
+  mutate(word = reorder(word, n)) %>%
+  ggplot(aes(n, word)) +
+  geom_col() +
+  scale_x_continuous(breaks = seq(0,650,50)) +
+  labs(y = NULL,
+       title = "Most frequent words in Sense & Sensibility (n>100)")
+```
+
+## Word Clouds 
+
+All 6 books together: 
+```{r}
+library(ggwordcloud)
+wordcloud_df <-j_austen_books_tidy %>% 
+  count(word, sort = T) %>%
+  top_n(100)
+
+wordcloud_df %>%
+  ggplot() +
+  geom_text_wordcloud_area(aes(label = word, size = n)) +
+  scale_size_area(max_size = 15)
+```
+
+By books: 
+```{r}
+n <- 200
+p1 <-j_austen_books_tidy %>% 
+  filter(book=="Sense & Sensibility") %>% 
+  count(word, sort = T) %>%
+  top_n(n) %>%
+  ggplot() +
+  geom_text_wordcloud_area(aes(label = word, size = n)) +
+  scale_size_area(max_size = 15) + 
+  labs(title = "Sense & Sensibility")
+p1
+# 
+p2 <-j_austen_books_tidy %>% 
+  filter(book=="Pride & Prejudice") %>% 
+  count(word, sort = T) %>%
+  top_n(n) %>%
+  ggplot() +
+  geom_text_wordcloud_area(aes(label = word, size = n)) +
+  scale_size_area(max_size = 15) + 
+  labs(title = "Pride & Prejudice")
+p2
+# 
+p3 <-j_austen_books_tidy %>% 
+  filter(book=="Mansfield Park") %>% 
+  count(word, sort = T) %>%
+  top_n(n) %>%
+  ggplot() +
+  geom_text_wordcloud_area(aes(label = word, size = n)) +
+  scale_size_area(max_size = 15) + 
+  labs(title = "Mansfield Park")
+p3
+# 
+p4 <-j_austen_books_tidy %>% 
+  filter(book=="Emma") %>% 
+  count(word, sort = T) %>%
+  top_n(n) %>%
+  ggplot() +
+  geom_text_wordcloud_area(aes(label = word, size = n)) +
+  scale_size_area(max_size = 15) + 
+  labs(title = "Emma")
+p4
+```
+
+```{r}
+library(patchwork)
+p1 + p2 + p3 + p4
+```
+
+
+
+
+## Sentiment Analysis
+
+Examining how sentiment changes across J. Austen's books (this example is from J. Silge's text.)
+```{r} 
+jane_austen_sentiment <- j_austen_books_tidy %>%
+  # find a sentiment score for each word using bing lexicon
+  inner_join(get_sentiments("bing")) %>%
+  # count up how many positive and negative words there are 
+  # in sections of 80 lines of text.
+  count(book, index = linenumber %/% 80, sentiment) %>%
+  # convert to wide format
+  pivot_wider(names_from = sentiment, values_from = n, values_fill = 0) %>% 
+  # compute net sentiment score
+  mutate(sentiment = positive - negative)
+head(jane_austen_sentiment)
+```
+
+Note that there are 12620 lines in Sense & Sensibility which gives us about 157 sections of 80 lines. Here is the graph of emotional content per book: 
+
+```{r} 
+ggplot(jane_austen_sentiment, aes(index, sentiment, fill = book)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~book, ncol = 2, scales = "free_x")
+```
+
+## Word imortance: tf.idf
+
+**Example**: J. Austen's books (from J. Silge's text)
+
+
+```{r}
+# Jane Austin's books
+# This is an example from Julia silge's book
+library(dplyr)
+library(janeaustenr)
+library(tidytext)
+
+book_words <- austen_books() %>%
+  unnest_tokens(word, text) %>%
+  count(book, word, sort = TRUE)
+
+total_words <- book_words %>% 
+  group_by(book) %>% 
+  summarize(total = sum(n))
+
+book_words <- left_join(book_words, total_words)
+
+book_words
+```
+Plot term frequency (tf = n/total): 
+```{r}
+library(ggplot2)
+
+ggplot(book_words, aes(n/total, fill = book)) +
+  geom_histogram(show.legend = FALSE) +
+  xlim(NA, 0.0009) +
+  facet_wrap(~book, ncol = 2, scales = "free_y")
+
+# long right tail is truncated at 0.0009
+```
+
+Compute tf-idf: 
+
+```{r}
+book_tf_idf <- book_words %>%
+  bind_tf_idf(word, book, n)
+
+book_tf_idf
+```
+
+Common and unimportant words have zero tfidf values. 
+
+```{r}
+book_tf_idf %>%
+  select(-total) %>%
+  arrange(desc(tf_idf))
+```
+
+```{r}
+library(forcats)
+
+book_tf_idf %>%
+  group_by(book) %>%
+  slice_max(tf_idf, n = 15) %>%
+  ungroup() %>%
+  ggplot(aes(tf_idf, fct_reorder(word, tf_idf), fill = book)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~book, ncol = 2, scales = "free") +
+  labs(x = "tf-idf", y = NULL)
+```
+
+
+The most important terms in these novels are the names of people and places. 
+
+
+# Example: FOMC meetings
+
+## Prepare the data 
+
+```{r}
+library(tidyverse)
+library(tidytext)
+library(stopwords)
+library(textreadr)
+
+fomc_2017 <- textreadr::read_docx("../Data/FOMC (04.2017).docx")
+fomc_2020 <- textreadr::read_docx("../Data/FOMC (03.2020).docx")
+```
+
+
+```{r}
+# single character
+fomc_2017 <- paste(fomc_2017, collapse = ' ')
+
+# put them in a tibble
+fomc_2017 <- tibble(year=2017, text=fomc_2017)
+```
+
+
+```{r}
+# tidy text: text data must be be one word in each row format
+fomc_2017_tidy <- fomc_2017 %>%
+  unnest_tokens(word, text) %>% 
+  filter(is.na(as.numeric(word))) # remove numbers
+```
+
+```{r}
+# do the same for 2020 
+# single character
+fomc_2020 <- paste(fomc_2020, collapse = ' ')
+
+# put them in a tibble
+fomc_2020 <- tibble(year=2020, text=fomc_2020)
+
+# tidy text: text data must be be one word in each row format
+fomc_2020_tidy <- fomc_2020 %>%
+  unnest_tokens(word, text) %>% 
+  filter(is.na(as.numeric(word))) # remove numbers
+```
+
+We can also combine these two data set into single corpus: 
+```{r}
+fomc_tidy <- rbind(fomc_2017_tidy, fomc_2020_tidy)
+# could use full_join() as well 
+# fomc_tidy <- full_join(fomc_2017_tidy, fomc_2020_tidy)
+```
+
+
+
+## Word frequency 
+
+```{r}
+# count how many times each word is used in 2017
+fomc_2017_tidy %>%
+  count(word, sort = TRUE)
+```
+
+
+```{r}
+# remove stopwords
+fomc_2017_tidy %>%
+  anti_join(get_stopwords()) %>%
+  count(word, sort=TRUE)
+```
+
+
+```{r}
+# visualize top words in 2017
+fomc_2017_tidy %>%
+  # remove stop words
+  anti_join(get_stopwords()) %>%
+  count(word, sort = TRUE) %>%
+  slice_max(n, n = 20) %>%
+  mutate(word = reorder(word, n)) %>%
+  # put `n` on the x-axis and `word` on the y-axis
+  ggplot(aes(x = n, y = word)) +
+  geom_col()
+```
+
+```{r}
+# visualize top words in 2020
+fomc_2020_tidy %>%
+  # remove stop words
+  anti_join(get_stopwords()) %>%
+  count(word, sort = TRUE) %>%
+  slice_max(n, n = 20) %>%
+  mutate(word = reorder(word, n)) %>%
+  # put `n` on the x-axis and `word` on the y-axis
+  ggplot(aes(x = n, y = word)) +
+  geom_col()
+```
+
+
+
+## Wordclouds 
+
+```{r}
+# wordcloud
+high_freq_terms <- fomc_2017_tidy %>%
+  anti_join(get_stopwords()) %>%
+  count(word, sort=TRUE)
+
+library(wordcloud)
+wordcloud(high_freq_terms$word,
+          high_freq_terms$n,
+          colors = c("red","goldenrod"),
+          scale = c(3,0.2))
+```
+
+
+```{r}
+fomc_2017_tidy %>%
+  anti_join(get_stopwords()) %>%
+  count(word) %>%
+  with(wordcloud(word, n, max.words = 500))
+```
+
+
+```{r}
+# alternatively
+library(ggwordcloud)
+wordcloud_df <-fomc_2017_tidy %>%
+  anti_join(get_stopwords()) %>%
+  count(word, sort = T) %>%
+  top_n(50)
+
+wordcloud_df %>%
+  ggplot() +
+  geom_text_wordcloud_area(aes(label = word, size = n)) +
+  scale_size_area(max_size = 15)
+```
+
+
+## Sentiment Analysis 
+
+Count the number of positive and negative words 
+```{r} 
+library(ggwordcloud)
+
+wordcloud_df_2017 <- fomc_2017_tidy %>%
+  anti_join(get_stopwords()) %>%
+  inner_join(get_sentiments("bing")) %>%
+  count(sentiment, word, sort = T) %>%
+  top_n(100)
+wordcloud_df_2017
+```
+
+```{r}
+wordcloud_df_2017 %>% 
+  group_by(sentiment) %>% 
+  summarise(n=n())
+```
+ 
+
+```{r}
+wordcloud_df_2017 %>%
+  ggplot() +
+  geom_text_wordcloud_area(aes(label = word, size = n, color=sentiment)) +
+  scale_size_area(max_size = 15) +
+  labs(title = "2017")
+```
+
+
+```{r}
+# 2020
+wordcloud_df_2020 <-fomc_2020_tidy %>%
+  anti_join(get_stopwords()) %>%
+  inner_join(get_sentiments("bing")) %>%
+  count(sentiment, word, sort = T) %>%
+  top_n(100)
+wordcloud_df_2020
+```
+
+
+```{r}
+wordcloud_df_2020 %>%
+  ggplot() +
+  geom_text_wordcloud_area(aes(label = word, size = n, color=sentiment)) +
+  scale_size_area(max_size = 15) +
+  labs(title = "2020")
+```
+
+Compared to 2017, we see new negative words in 2020 such as virus, hardship, crisis, and outbreak. The words support, effective, and stability are still important but support has the highest frequency. 
+ 
+  
+Compare negative and positive words using comparison clouds:  
+```{r}
+library(wordcloud)
+
+fomc_2017_tidy %>%
+  inner_join(get_sentiments("bing")) %>%
+  count(word, sentiment, sort = TRUE) %>%
+  reshape2::acast(word ~ sentiment, value.var = "n", fill = 0) %>%
+  comparison.cloud(colors = c("gray20", "gray80"),
+                   max.words = 100)
+```
+
+
+```{r}
+fomc_2020_tidy %>%
+  inner_join(get_sentiments("bing")) %>%
+  count(word, sentiment, sort = TRUE) %>%
+  reshape2::acast(word ~ sentiment, value.var = "n", fill = 0) %>%
+  comparison.cloud(colors = c("gray20", "gray80"),
+                   max.words = 100)
+```
+
+
+tf-idf analysis:
+
+```{r}
+# count the frequency of each word 
+# and add total words in each document (year)
+fomc_words <- fomc_tidy %>% 
+  add_count(year, name = "total_words") %>%
+  group_by(year, total_words) %>% 
+  count(word, sort = TRUE) %>% 
+  ungroup()
+#
+fomc_words
+```
+
+Inspect the distribution of `n/total` in `fomc_words`: 
+```{r}
+ggplot(fomc_words) + 
+  geom_histogram(aes(n / total_words, fill = year), show.legend = FALSE) + 
+  facet_wrap(~ year, nrow = 1, scales = "free_y")
+```
+
+
+Use `tidytext::bind_tf_idf()` function: 
+```{r}
+fomc_words_idf <- fomc_words %>% 
+  select(-total_words) %>%
+  bind_tf_idf(term = word, document = year, n = n)
+fomc_words_idf
+```
+
+Notice that `tf_idf` is practically zero for the most common words (such as the, and, to, of, etc.). We could remove these stopwords before the analysis but here we kept them to demonstrate that these will be essentially zero. 
+
+```{r}
+fomc_words_idf %>% 
+  arrange(desc(tf_idf))
+```
+ 
+
+```{r}
+library(forcats)
+
+fomc_words_idf %>%
+  group_by(year) %>%
+  slice_max(tf_idf, n = 15) %>%
+  ungroup() %>%
+  ggplot(aes(tf_idf, fct_reorder(word, tf_idf), fill = year)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~ year, ncol = 2, scales = "free") +
+  labs(x = "tf-idf", y = NULL)
+```
+
+
+
+
+
+
+
+
+<br>
+<div class="tocify-extend-page" data-unique="tocify-extend-page" style="height: 0;"></div>
+
+

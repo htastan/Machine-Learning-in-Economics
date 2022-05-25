@@ -58,6 +58,14 @@ Instructor: Prof. Dr. Hüseyin Taştan (Yıldız Technical University, Departmen
     -   Slides: [html](https://raw.githack.com/htastan/Machine-Learning-in-Economics/main/Slides/Unsupervised-learning.html)
     -   Lab: [html](https://raw.githack.com/htastan/Machine-Learning-in-Economics/main/Labs/Lab-10-Unsupervised-learning.html) | [.Rmd](https://github.com/htastan/Machine-Learning-in-Economics/blob/main/Labs/Lab-10-Unsupervised-learning.Rmd)
 
+11. **Text Data**
+
+    -   Lab (using tidytext package): [html](https://raw.githack.com/htastan/Machine-Learning-in-Economics/main/Labs/Lab-11-Text-mining.html) | [.Rmd](https://github.com/htastan/Machine-Learning-in-Economics/blob/main/Labs/Lab-11-Text-mining.Rmd)
+    
+    -   Lab (using tm package) (by Alican Yıldırım): [html](https://raw.githack.com/htastan/Machine-Learning-in-Economics/main/Labs/TM.html) | [.Rmd](https://github.com/htastan/Machine-Learning-in-Economics/blob/main/Labs/TM.Rmd)
+    
+
+
 ## Scope and Purpose
 
 The purpose of this course is to teach basic machine learning algorithms and methods relevant for empirical economists. The availability of large scale data sets has led to the development of new methods that are similar to those utilized in econometrics but also distinct in some aspects. This course, therefore, will emphasize the use of these new algorithms by focusing on statistical learning in economics and business. Students will learn the basic concepts, methods, and algorithms used in machine learning and develop skills to apply them in practice.
