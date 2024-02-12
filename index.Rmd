@@ -20,9 +20,9 @@ An introductory course on machine learning methods for economics majors.
 
 1.  **Introduction**:
 
-    -   Syllabus: [pdf](https://raw.githack.com/htastan/Machine-Learning-in-Economics/main/syllabus.pdf) 
+    -   Syllabus: [pdf](syllabus.pdf) 
     -   Introduction to machine learning in economics: [html](Slides/Intro-to-ML-in-Econ.html) 
-    -   Lab: [Introduction to R and RStudio](https://raw.githack.com/htastan/Machine-Learning-in-Economics/main/Labs/Lab-01-Intro-to-R-and-RStudio-Part-1.html) | [.Rmd](https://github.com/htastan/Machine-Learning-in-Economics/blob/main/Labs/Lab-01-Intro-to-R-and-RStudio-Part-1.Rmd)
+    -   Lab: [Introduction to R and RStudio](Labs/Lab-01-Intro-to-R-and-RStudio-Part-1.html) | [.Rmd](Labs/Lab-01-Intro-to-R-and-RStudio-Part-1.Rmd)
 
 2.  **Basic Concepts in Machine Learning**
 
