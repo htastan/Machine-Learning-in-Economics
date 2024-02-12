@@ -9,7 +9,7 @@ Instructor: Prof. Dr. Hüseyin Taştan (Yıldız Technical University, Departmen
 1.  **Introduction**:
 
     -   Syllabus: [pdf](https://raw.githack.com/htastan/Machine-Learning-in-Economics/main/syllabus.pdf)
-    -   Introduction to machine learning in economics: [html](https://raw.githack.com/htastan/Machine-Learning-in-Economics/main/Slides/Intro-to-ML-in-Econ.html)
+    -   Introduction to machine learning in economics: [html](Machine-Learning-in-Economics/Slides/Intro-to-ML-in-Econ.html)
     -   Lab: [Introduction to R and RStudio](https://raw.githack.com/htastan/Machine-Learning-in-Economics/main/Labs/Lab-01-Intro-to-R-and-RStudio-Part-1.html) | [.Rmd](https://github.com/htastan/Machine-Learning-in-Economics/blob/main/Labs/Lab-01-Intro-to-R-and-RStudio-Part-1.Rmd)
 
 2.  **Basic Concepts in Machine Learning**
@@ -60,9 +60,9 @@ Instructor: Prof. Dr. Hüseyin Taştan (Yıldız Technical University, Departmen
 
 11. **Text Data**
 
-    -   Lab (using tidytext package): [html](https://raw.githack.com/htastan/Machine-Learning-in-Economics/main/Labs/Lab-11-Text-mining.html) | [.Rmd](https://github.com/htastan/Machine-Learning-in-Economics/blob/main/Labs/Lab-11-Text-mining.Rmd)
+    -   Lab (using {tidytext} package): [html](https://raw.githack.com/htastan/Machine-Learning-in-Economics/main/Labs/Lab-11-Text-mining.html) | [.Rmd](https://github.com/htastan/Machine-Learning-in-Economics/blob/main/Labs/Lab-11-Text-mining.Rmd)
     
-    -   Lab (using tm package) (by Alican Yıldırım): [html](https://raw.githack.com/htastan/Machine-Learning-in-Economics/main/Labs/TM.html) | [.Rmd](https://github.com/htastan/Machine-Learning-in-Economics/blob/main/Labs/TM.Rmd)
+    -   Lab (using {tm} package) (by Alican Yıldırım): [html](https://raw.githack.com/htastan/Machine-Learning-in-Economics/main/Labs/TM.html) | [.Rmd](https://github.com/htastan/Machine-Learning-in-Economics/blob/main/Labs/TM.Rmd)
     
 
 
