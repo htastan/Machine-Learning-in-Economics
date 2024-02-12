@@ -141,6 +141,8 @@ Varian, H.R. (2014), ''Big Data: New Tricks for Econometrics'', *Journal of Econ
 
 [Artificial Intelligence, the History and Future - with Chris Bishop](https://www.youtube.com/watch?v=8FHBh_OmdsM)
 
+[What's the future for generative AI? - The Turing Lectures with Mike Wooldridge](https://www.youtube.com/watch?v=b76gsOSkHB4)
+
 [Youtube playlist: Introduction to Statistical Learning by Robert Tibshirani, Trevor Hastie, and Daniela Witten.](https://www.youtube.com/playlist?list=PLOg0ngHtcqbPTlZzRHA2ocQZqB1D_qZ5V)
 
 <https://www.dataschool.io/15-hours-of-expert-machine-learning-videos/>
