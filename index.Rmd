@@ -26,55 +26,55 @@ An introductory course on machine learning methods for economics majors.
 
 2.  **Basic Concepts in Machine Learning**
 
-    -   Slides: [html](https://raw.githack.com/htastan/Machine-Learning-in-Economics/main/Slides/Basic-concepts-in-ML.html)
-    -   Lab: [Introduction to R programming](https://raw.githack.com/htastan/Machine-Learning-in-Economics/main/Labs/Lab-02-Intro-to-R-and-RStudio-Part-2.html) | [.Rmd](https://github.com/htastan/Machine-Learning-in-Economics/blob/main/Labs/Lab-02-Intro-to-R-and-RStudio-Part-2.Rmd)
+    -   Slides: [html](Slides/Basic-concepts-in-ML.html)
+    -   Lab: [Introduction to R programming](Labs/Lab-02-Intro-to-R-and-RStudio-Part-2.html) | [.Rmd](Labs/Lab-02-Intro-to-R-and-RStudio-Part-2.Rmd)
 
 3.  **Introduction to the Tidyverse**
 
     -   Slides: No slides, see the lab notes.  
-    -   Lab: [html](https://raw.githack.com/htastan/Machine-Learning-in-Economics/main/Labs/Lab-03-Intro-to-R-Tidyverse.html) | [.Rmd](https://github.com/htastan/Machine-Learning-in-Economics/blob/main/Labs/Lab-03-Intro-to-R-Tidyverse.Rmd)
+    -   Lab: [html](Labs/Lab-03-Intro-to-R-Tidyverse.html) | [.Rmd](Labs/Lab-03-Intro-to-R-Tidyverse.Rmd)
     -   [Introduction to RMarkdown - Slides by Danielle Navarro](https://slides.djnavarro.net/starting-rmarkdown/#1)
 
 4.  **Linear Regression**
 
-    -   Slides: [html](https://raw.githack.com/htastan/Machine-Learning-in-Economics/main/Slides/Regression.html)
-    -   Lab: [html](https://raw.githack.com/htastan/Machine-Learning-in-Economics/main/Labs/Lab-04-Regression.html) | [.Rmd](https://github.com/htastan/Machine-Learning-in-Economics/blob/main/Labs/Lab-04-Regression.Rmd)
+    -   Slides: [html](Slides/Regression.html)
+    -   Lab: [html](Labs/Lab-04-Regression.html) | [.Rmd](Labs/Lab-04-Regression.Rmd)
 
 5.  **Classification**
 
-    -   Slides: [html](https://raw.githack.com/htastan/Machine-Learning-in-Economics/main/Slides/Classification.html)
-    -   Lab: [html](https://raw.githack.com/htastan/Machine-Learning-in-Economics/main/Labs/Lab-05-Classification.html) | [.Rmd](https://github.com/htastan/Machine-Learning-in-Economics/blob/main/Labs/Lab-05-Classification.Rmd)
+    -   Slides: [html](Slides/Classification.html)
+    -   Lab: [html](Labs/Lab-05-Classification.html) | [.Rmd](Labs/Lab-05-Classification.Rmd)
 
 6.  **Validation Methods and Bootstrap**
 
-    -   Slides: [html](https://raw.githack.com/htastan/Machine-Learning-in-Economics/main/Slides/Cross-validation.html)
-    -   Lab: [html](https://raw.githack.com/htastan/Machine-Learning-in-Economics/main/Labs/Lab-06-Validation-and-resampling.html) | [.Rmd](https://github.com/htastan/Machine-Learning-in-Economics/blob/main/Labs/Lab-06-Validation-and-resampling.Rmd)
+    -   Slides: [html](Slides/Cross-validation.html)
+    -   Lab: [html](Labs/Lab-06-Validation-and-resampling.html) | [.Rmd](Labs/Lab-06-Validation-and-resampling.Rmd)
 
 7.  **Model Selection and Regularization**
 
-    -   Slides: [html](https://raw.githack.com/htastan/Machine-Learning-in-Economics/main/Slides/Regularization.html)
-    -   Lab: [html](https://raw.githack.com/htastan/Machine-Learning-in-Economics/main/Labs/Lab-07-Regularization.html) | [.Rmd](https://github.com/htastan/Machine-Learning-in-Economics/blob/main/Labs/Lab-07-Regularization.Rmd)
+    -   Slides: [html](Slides/Regularization.html)
+    -   Lab: [html](Labs/Lab-07-Regularization.html) | [.Rmd](Labs/Lab-07-Regularization.Rmd)
 
 8.  **Nonlinear Models**
 
-    -   Slides: [html](https://raw.githack.com/htastan/Machine-Learning-in-Economics/main/Slides/Nonlinear-models.html)
-    -   Lab: [html](https://raw.githack.com/htastan/Machine-Learning-in-Economics/main/Labs/Lab-08-Nonlinear.html) | [.Rmd](https://github.com/htastan/Machine-Learning-in-Economics/blob/main/Labs/Lab-08-Nonlinear.Rmd)
+    -   Slides: [html](Slides/Nonlinear-models.html)
+    -   Lab: [html](Labs/Lab-08-Nonlinear.html) | [.Rmd](Labs/Lab-08-Nonlinear.Rmd)
 
 9.  **Regression and Classification Trees**
 
-    -   Slides: [html](https://raw.githack.com/htastan/Machine-Learning-in-Economics/main/Slides/Tree-based-methods.html)
-    -   Lab: [html](https://raw.githack.com/htastan/Machine-Learning-in-Economics/main/Labs/Lab-09-Tree-based-methods.html) | [.Rmd](https://github.com/htastan/Machine-Learning-in-Economics/blob/main/Labs/Lab-09-Tree-based-methods.Rmd)
+    -   Slides: [html](Slides/Tree-based-methods.html)
+    -   Lab: [html](Labs/Lab-09-Tree-based-methods.html) | [.Rmd](Labs/Lab-09-Tree-based-methods.Rmd)
 
 10. **Unsupervised Learning**
 
-    -   Slides: [html](https://raw.githack.com/htastan/Machine-Learning-in-Economics/main/Slides/Unsupervised-learning.html)
-    -   Lab: [html](https://raw.githack.com/htastan/Machine-Learning-in-Economics/main/Labs/Lab-10-Unsupervised-learning.html) | [.Rmd](https://github.com/htastan/Machine-Learning-in-Economics/blob/main/Labs/Lab-10-Unsupervised-learning.Rmd)
+    -   Slides: [html](Slides/Unsupervised-learning.html)
+    -   Lab: [html](Labs/Lab-10-Unsupervised-learning.html) | [.Rmd](Labs/Lab-10-Unsupervised-learning.Rmd)
 
 11. **Text Data**
 
-    -   Lab (using {tidytext} package): [html](https://raw.githack.com/htastan/Machine-Learning-in-Economics/main/Labs/Lab-11-Text-mining.html) | [.Rmd](https://github.com/htastan/Machine-Learning-in-Economics/blob/main/Labs/Lab-11-Text-mining.Rmd)
+    -   Lab (using {tidytext} package): [html](Labs/Lab-11-Text-mining.html) | [.Rmd](Labs/Lab-11-Text-mining.Rmd)
     
-    -   Lab (using {tm} package) (by Alican Yıldırım): [html](https://raw.githack.com/htastan/Machine-Learning-in-Economics/main/Labs/TM.html) | [.Rmd](https://github.com/htastan/Machine-Learning-in-Economics/blob/main/Labs/TM.Rmd)
+    -   Lab (using {tm} package) (by Alican Yıldırım): [html](Labs/TM.html) | [.Rmd](Labs/TM.Rmd)
     
 
 
