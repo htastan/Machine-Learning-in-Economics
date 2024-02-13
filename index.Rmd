@@ -20,7 +20,6 @@ An introductory course on machine learning methods for economics majors.
 
 1.  **Introduction**:
 
-    -   Syllabus: [pdf](syllabus.pdf) 
     -   Introduction to machine learning in economics: [html](Slides/Intro-to-ML-in-Econ.html) 
     -   Lab: [Introduction to R and RStudio](Labs/Lab-01-Intro-to-R-and-RStudio-Part-1.html) | [.Rmd](Labs/Lab-01-Intro-to-R-and-RStudio-Part-1.Rmd)
 
