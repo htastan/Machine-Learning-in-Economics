@@ -4,7 +4,7 @@ subtitle: Machine Learning in Economics
 author: 
   name: "Prof. Dr. Hüseyin Taştan"
   affiliation: "Yildiz Technical University"
-date: "2022 Spring"
+date: " "
 output:
   html_document: 
     number_sections: true
@@ -41,7 +41,7 @@ knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning=FALSE)
 # Tidyverse: A modern interpretation of R 
 
 
-[Tidyverse](https://www.tidyverse.org/) is a collection of packages designed to implement data science projects. These notes provide a basic introduction to  the functions and verbs in the Tidyverse. The fundemantal reference for Tidyverse is the book [R for Data Science](https://r4ds.had.co.nz/) written by H. Wickham. Also, see [*Tidy Data*](https://vita.had.co.nz/papers/tidy-data.pdf) (Hadley Wickham, 2014 JSS), and [Tidy data Vignette](https://cran.r-project.org/web/packages/tidyr/vignettes/tidy-data.html)  
+[Tidyverse](https://www.tidyverse.org/) is a collection of `R` packages designed to implement data science projects. These notes provide a short introduction to  the functions and verbs in the Tidyverse. The fundamental reference for Tidyverse is the book [R for Data Science](https://r4ds.had.co.nz/) written by H. Wickham. Also, see [*Tidy Data*](https://vita.had.co.nz/papers/tidy-data.pdf) (Hadley Wickham, 2014 JSS), and [Tidy data Vignette](https://cran.r-project.org/web/packages/tidyr/vignettes/tidy-data.html)  
 
 
 ![Tidyverse R Packages](img/tidyverse.png) 
@@ -125,7 +125,7 @@ But there are easier ways of accomplishing these as I will show below.
 
 Using several functions in the `{dplyr}` package, we can easily manipulate data. These functions are sometimes called "verbs" as they basically do what their names suggest, for example, filter, select, mutate, summarize, arrange, etc. 
 
-## `filter()` 
+## `filter()`: Filtering observations
 
 `dplyr::filter()` function can be used to select rows (filter) and create a new table or data set.
 
@@ -153,7 +153,7 @@ filter(gapminder, country == "Turkey", year>2000)
 filter(gapminder, country %in% c("Turkey","Brazil"), year>2000)
 ```
 
-## `select()` 
+## `select()`: Extracting columns 
 
 ![](img/select.png)
 
@@ -162,11 +162,19 @@ When we want extract columns (variables) from a data set we use  `dplyr::select(
 select(gapminder, year, gdpPercap) %>% head(10)
 ```
 
-**On Pipe (` %>% `) Operator**:
+**On Pipe (` %>% ` or ` |> ` ) Operator**:
 
-The pipe operator ` %>% `, or function, is originally a part of `magrittr` package. It is automatically loaded when we load the tidyverse packages. The pipe operator allows computations to run from left to right in a smooth and easily readable manner. For example 
+The pipe operator ` %>% `, or function, is originally a part of `magrittr` package. It is automatically loaded when we load the tidyverse packages. 
+
+The native `R` pipe operator is ` |> `, which is built-in when you install the latest version of `R`. ` %>% ` requires you to activate `{magrittr}` or `{tidyverse}` packages. Either one can be used to streamline the code. 
+
+The pipe operator allows computations to run from left to right in a smooth and easily readable manner. For example 
 ```{r}
 gapminder %>% select(year, gdpPercap) %>% head(5)
+```
+or 
+```{r}
+gapminder|> select(year, gdpPercap) |> head(5)
 ```
 which is equivalent to 
 ```{r}
@@ -176,13 +184,14 @@ head(select(gapminder, year, gdpPercap), 5)
 The code chunk with the pipe above takes the `gapminder` data and feeds it into `select()` function which is then passed on to the `head()` function to display the first five rows. Note that when we use the pipe operator, the first input is the data. 
 
 
-Example: Use `select()` and `filter()` together using the pipe operator. 
+**Example**: Use `select()` and `filter()` together using the pipe operator to extract data of Brazil and Turkey after 2000. 
 ```{r}
-gapminder %>% filter(country %in% c("Turkey","Brazil"), year>2000) %>% 
+gapminder |>  
+  filter(country %in% c("Turkey","Brazil"), year>2000) |> 
   select(year, gdpPercap)
 ```
 
-**Exercise**: Use the base `R` functions for the previous example 
+**Exercise**: Use the base `R` functions for the previous example. 
 
 **Solution**: There are often several ways to do the same thing in `R`. Here is a solution: 
 ```{r}
@@ -191,108 +200,112 @@ gapminder[gapminder$country  %in% c("Turkey", "Brazil") & gapminder$year>2000, c
 Can you explain what this code does?
 
 
-## `mutate()` 
+## `mutate()`: Creating new variables 
 
 ![](img/mutate.png)
 
 We use `dplyr::mutate()` to create new variables or change existing ones. The functions inside `mutate()` must be vectorized, that is, both inputs and outputs must be vectors. 
 
-Example: Create natural logarithm of GDP per capita:   
+**Example**: Create the natural logarithm of GDP per capita:   
 ```{r}
-mutate(gapminder, lgdppc = log(gdpPercap)) %>% head(5)
+mutate(gapminder, lgdppc = log(gdpPercap)) |> head(5)
 ```
 
-Example: In the data set there is GDP per capita and population but no GDP. Create the GDP variable. 
+**Example**: In the Gapminder data set, there is GDP per capita and population but no GDP. Create the GDP variable. 
 ```{r}
-mutate(gapminder, gdp = gdpPercap*pop ) %>%
-  select(year, country, gdpPercap, pop, gdp) %>% 
+mutate(gapminder, gdp = gdpPercap*pop ) |>
+  select(year, country, gdpPercap, pop, gdp) |> 
   head(5)
 ```
 
 To change the name of existing variables we use `rename()` function. 
 
-## `arrange()`  
+## `arrange()`: Arranging rows   
 
 ![](img/arrange.png)
 
 We use `dplyr::arrange()` to rearrange the rows of data. 
 
-Example: Order year in ascending, countries in alphabetical order: 
+**Example**: Order year in ascending, countries in alphabetical order: 
 ```{r, echo=TRUE}
 arrange(gapminder, year, country) 
 ```
+
 It does not change the data set, just orders it. We need to be careful when we have time series data. 
 
-Example: First order countries and then years in ascending order:  
+**Example**: First order countries and then years in ascending order:  
 ```{r}
 arrange(gapminder, country, year) 
 ```
 
 Default = ascending. If we want descending order use: 
 ```{r}
-arrange(gapminder, country, desc(year)) %>% head(5)
+arrange(gapminder, country, desc(year)) |> 
+  head(5)
 ```
 
 
 `filter()` and `arrange()` can be used together. For example, 
 ```{r}
-gapminder %>% 
-  filter(year==2007, continent=="Americas") %>% 
+gapminder |> 
+  filter(year==2007, continent=="Americas") |> 
   arrange(lifeExp) 
 ```
 
-Example: Life expectancy in Europe in 2007 in descending order: 
+**Example**: Life expectancy in Europe in 2007 in descending order: 
 ```{r}
-gapminder %>% 
-  filter(year==2007, continent=="Europe") %>% 
+gapminder |> 
+  filter(year==2007, continent=="Europe") |> 
   arrange(desc(lifeExp)) 
 ```
 
-## `group_by()`
+## `group_by()`: Grouping data
 
 This function is useful to group variables. It does not change the data. `group_by()` is especially useful together with summarize()`. 
 ```{r}
-gapminder %>%  
+gapminder |>  
   group_by(continent, year)  
 ```
 
-## `summarize()`
+## `summarize()`: Summarizing data
 
 ![summarize()](img/summarize.PNG) 
 
-We  `dplyr::summarize()` to compute summary statistics of our variables. By grouping variables using `group_by()` we can conveniently compute group summaries. 
+We  `dplyr::summarize()` or `dplyr::summarise()` to compute summary statistics of our variables. By grouping variables using `group_by()` we can conveniently compute group summaries. 
 
 ![group_by()](img/groupby.png)
 
-Example: How many countries are there in each continent in 2007?
+**Example**: How many countries are there in each continent in 2007?
 ```{r}
-gapminder %>% 
-  filter(year==2007) %>%
-  group_by(continent) %>%
+gapminder |> 
+  filter(year==2007) |>
+  group_by(continent) |>
   summarize(n = n())
 ```
 
-Example: Find average life expectancy and GDP per capita according to continents in 2007. 
+**Example**: Find the average life expectancy and GDP per capita according to continents in 2007. 
 ```{r}
-gapminder %>% 
-  filter(year==2007) %>%
-  group_by(continent) %>%
-  summarize(mean_life_exp = mean(lifeExp), mean_income = mean(gdpPercap))
+gapminder |> 
+  filter(year==2007) |>
+  group_by(continent) |>
+  summarize(mean_life_exp = mean(lifeExp), 
+            mean_income = mean(gdpPercap)
+            )
 ```
 
 Alternatively, `summarize_at()` may be useful to compute summary statistics for multiple variables: 
 ```{r}
-gapminder %>% 
-  filter(year==2007) %>%
-  group_by(continent) %>%
+gapminder |> 
+  filter(year==2007) |>
+  group_by(continent) |>
   summarize_at(vars(lifeExp,gdpPercap), list(~mean(.)) )
 ```
 
-Example: Do the same for years 1952 and 2007 compare the means: 
+**Example**: Do the same for years 1952 and 2007 compare the means: 
 ```{r}
-gapminder %>% 
-  filter(year %in% c(1952,2007)) %>%
-  group_by(continent, year) %>%
+gapminder |> 
+  filter(year %in% c(1952,2007)) |>
+  group_by(continent, year) |>
   summarize_at(vars(lifeExp,gdpPercap), list(~mean(.)) )
 ```
 
@@ -302,34 +315,34 @@ We can use the following standard summary statistics: `mean()`, `median()`, `var
 
 **Example**: For each year, find minimum and maximum life expectancy in Europe.  
 ```{r}
-gapminder %>% 
-  filter(continent=="Europe") %>%
-  group_by(year) %>%
+gapminder |> 
+  filter(continent=="Europe") |>
+  group_by(year) |>
   summarize(minlexp = min(lifeExp), maxlexp = max(lifeExp) )
 ```
 
 **Example**: Using `mutate()` and  `group_by()` together. For each country, create a new variable that shows the ratio of GDP per capita to the initial year 1952. The new variable will be 1 in 1952 and equal 1+growth rate with respect to the initial year..   
 ```{r}
-gapminder %>%  
-  group_by(country) %>%
-  select(country, year, gdpPercap) %>% 
+gapminder |>  
+  group_by(country) |>
+  select(country, year, gdpPercap) |> 
   mutate(gdppc_to_first = gdpPercap/first(gdpPercap))
 ```
 
 
 **Example**: Now create a new variable for the year-to-year growth rate in GDP per capita as a percentage.
 ```{r}
-gapminder %>%  
-  group_by(country) %>%
-  select(country, year, gdpPercap) %>% 
+gapminder |>  
+  group_by(country) |>
+  select(country, year, gdpPercap) |> 
   mutate(gdppc_growth = 100*(gdpPercap-lag(gdpPercap))/lag(gdpPercap))
 ```
 
 In the example above, the `lag()` function takes the first lag (value in the previous year). We can also add the lag explicitly as a new variable:
 ```{r}
-gapminder %>%  
-  group_by(country) %>%
-  select(country, year, gdpPercap) %>% 
+gapminder |>  
+  group_by(country) |>
+  select(country, year, gdpPercap) |> 
   mutate(lag_gdppc = lag(gdpPercap, 1, order_by = year), 
          gdppc_growth = 100*(gdpPercap-lag_gdppc)/lag_gdppc)
 ```
@@ -344,26 +357,30 @@ Which one would you prefer?
 
 **Example**: Create a new tibble containing minimum and maximum life expectancy in Europe together with country information:   
 ```{r}
-europe <- gapminder %>% 
-  filter(continent=="Europe") %>%
+# create a new tibble called europe
+europe <- gapminder |> 
+  filter(continent=="Europe") |>
   select(year, country, lifeExp) 
-europe %>% head(10)
+# first 10 observations in europe in 1952 
+europe |> 
+  arrange(year) |>  
+  head(10)
 ``` 
 
 Then, create a new variable for the ordered life expectancy using `min_rank()` and list the first few countries: 
 ```{r}
-europe %>% 
-  group_by(year) %>% 
-  mutate(le_rank = min_rank(lifeExp)) %>% 
-  filter(le_rank < 3) %>% 
+europe |> 
+  group_by(year) |> 
+  mutate(le_rank = min_rank(lifeExp)) |> 
+  filter(le_rank < 3) |> 
   arrange(year)
 ```
 
 Do the same for the highest life expectancy countries: 
 ```{r}
-europe %>% group_by(year) %>% 
-  mutate(le_desc_rank = min_rank(desc(lifeExp))) %>% 
-  filter(le_desc_rank < 3) %>% 
+europe |> group_by(year) |> 
+  mutate(le_desc_rank = min_rank(desc(lifeExp))) |> 
+  filter(le_desc_rank < 3) |> 
   arrange(year)
 ```
 
@@ -408,37 +425,62 @@ table4b
 
 How can we transform these data sets into tidy form? We need to make sure we follow these rules: 
 
-1. Her değişken kendi sütununda olmalıdır.  
-1. Her gözlem kendi satırında olmalıdır. 
-1. Her değer kendi hücresinde olmalıdır. 
+1. Each variable must have its own column. 
+1. Each observation must have its own row.
+1. Each value must have its own cell.
 
-## `pivot_longer()`
+For more details, visit <https://r4ds.had.co.nz/tidy-data.html#tidy-data-1>.
+
+## `pivot_longer()`: Convert into long form
 
 Similar to the base `R`'s `reshape()` function, we convert data into long form using `pivot_longer()`. For example, consider `table4a` and  `table4b` introduced above:
 ```{r}
-pivot_longer(table4a, c(`1999`, `2000`), names_to = "year", values_to = "cases")
+pivot_longer(table4a,            # data set
+             c(`1999`, `2000`),  # which columns
+             names_to = "year",  # column names will become cell entries 
+             values_to = "cases" # values go into new variable cases
+             )
 ```
 
-Or using the pipe operator:  
+Compare this to the original table: 
 ```{r}
-table4a %>% 
-  pivot_longer(c(`1999`, `2000`), names_to = "year", values_to = "cases")
+table4a
+```
+
+
+The same operation using the pipe operator:  
+```{r}
+table4a |> 
+  pivot_longer(c(`1999`, `2000`), 
+               names_to = "year", 
+               values_to = "cases"
+               )
 ```
 
 The second data set, `table4b`, contains population:
 ```{r}
-table4b %>% 
-  pivot_longer(c(`1999`, `2000`), names_to = "year", values_to = "population")
+table4b
 ```
 
-Now we have two separate data set containing  `cases` and `population` variables. How can we combine these two tidy data sets? 
+Convert this into long form creating a new variable population: 
+```{r}
+table4b |> 
+  pivot_longer(c(`1999`, `2000`), 
+               names_to = "year", 
+               values_to = "population"
+               )
+```
+
+Now we have two separate data sets containing  `cases` and `population` variables. How can we combine these two tidy data sets? 
 
 We use `dplyr::left_join()` for this purpose: 
 ```{r}
-tidy4a <- table4a %>% 
+# create tibbles
+tidy4a <- table4a |> 
   pivot_longer(c(`1999`, `2000`), names_to = "year", values_to = "cases")
-tidy4b <- table4b %>% 
+tidy4b <- table4b |> 
   pivot_longer(c(`1999`, `2000`), names_to = "year", values_to = "population")
+# join
 left_join(tidy4a, tidy4b)
 ```
 
@@ -455,29 +497,49 @@ dfwide
 ```
 and then convert it into long format using `pivot_longer()`: 
 ```{r}
-pivot_longer(dfwide, c(`GDPpc2005`, `GDPpc2010`, `GDPpc2015`), names_to = "year", values_to = "GDPpc", names_prefix = "GDPpc")
+pivot_longer(dfwide, 
+             c(`GDPpc2005`, `GDPpc2010`, `GDPpc2015`), 
+             names_to = "year", 
+             values_to = "GDPpc", 
+             names_prefix = "GDPpc"
+             )
 ```
 
-In the data set `trdata1`, which we created previously, contains several variables. We can handle this case as follows: 
+The data set `trdata1`, which we created previously, contains several variables. 
 ```{r}
 trdata1
-trdata1_long <- pivot_longer(trdata1, c(`y2005`, `y2010`, `y2015`), names_to = "year", values_to = "values", names_prefix = "y")
+```
+We can handle this case as follows: 
+```{r}
+trdata1_long <- pivot_longer(trdata1, 
+                             c(`y2005`, `y2010`, `y2015`), 
+                             names_to = "year", 
+                             values_to = "values", 
+                             names_prefix = "y")
 trdata1_long
 ```
 
 But we still have variables in the rows. We need to put them into columns. We can use  `pivot_wider()` to accomplish this. 
 
-## `pivot_wider()`
+## `pivot_wider()`: Convert to wide form
 
 `pivot_wider()` converts long-form data into wide-form. For example, consider the table `table2`:
 ```{r}
-table2  
-pivot_wider(table2, names_from = type, values_from = count)
+table2
+```
+
+
+```{r}
+pivot_wider(table2, 
+            names_from = type, 
+            values_from = count)
 ```
 
 **Example**: `trdata1` and `trdata1_long` data sets: 
 ```{r}
-trdata1_tidy <- pivot_wider(trdata1_long, names_from = variable, values_from = values)
+trdata1_tidy <- pivot_wider(trdata1_long, 
+                            names_from = variable, 
+                            values_from = values)
 trdata1_tidy
 ```
 
@@ -528,7 +590,7 @@ Example: Draw a time series graph for Turkish per capita GDP:
 ```{r}
 library(gapminder)
 # create a new table
-turkey <- gapminder %>% filter(country=="Turkey")
+turkey <- gapminder |> filter(country=="Turkey")
 # plot
 ggplot(turkey, aes(x = year, y = gdpPercap)) +
   geom_line()  
@@ -537,7 +599,7 @@ ggplot(turkey, aes(x = year, y = gdpPercap)) +
 Add points, add labels to x and y axes, and a title:  
 ```{r}
 library(gapminder)
-turkey <- gapminder %>% filter(country=="Turkey")
+turkey <- gapminder |> filter(country=="Turkey")
 ggplot(turkey, aes(x = year, y = gdpPercap)) +
   geom_line() +
   geom_point() +
@@ -547,13 +609,13 @@ ggplot(turkey, aes(x = year, y = gdpPercap)) +
 ```
 
 
-Example: For low-income European countries draw a time series graph of life expectancy. If gdpPercap<10000 in 2007 then low-income, otherwise high-income 
+**Example**: For low-income European countries, draw a time series graph of life expectancy. Use the following rule: if `gdpPercap<10000 in 2007` then classify as low-income, otherwise classify as high-income.  
 ```{r}
 # create the data set
-europe <- gapminder %>% 
+europe <- gapminder |> 
   filter(continent == "Europe") 
-clist <- filter(europe, gdpPercap<10000 & year==2007)
-lowincome_europe <- filter(europe, country %in% clist$country)
+clist <- filter(europe, gdpPercap<10000 & year==2007) |> pull(country)
+lowincome_europe <- filter(europe, country %in% clist)
 # plot 
 ggplot(lowincome_europe, aes(x = year, y = lifeExp, color = country)) +
   geom_line()
@@ -572,7 +634,7 @@ ggplot(lowincome_europe, aes(x = year, y = lifeExp, linetype = country)) +
 
 ## Histogram
 
-Histogram is useful in visualizing how a continuous variable is distributed. We use  `geom_histogram()` for this. Fro example: 
+Histogram is useful in visualizing how a continuous variable is distributed. We use  `geom_histogram()` for this. For example: 
 
 ```{r}
 y2007 <- filter(gapminder, year==2007)
@@ -580,35 +642,44 @@ ggplot(data = y2007 ) +
 geom_histogram(mapping = aes(x = lifeExp))
 ```
 
-The most important choice in histogram is the number of bins. Users should select the appropriate number of bins instead of relying on default values. Redraw the histogram with bins=15
+The most important choice in histogram is the number of bins. Users should select the appropriate number of bins instead of relying on default values. Redraw the histogram with bins=10
 ```{r} 
-ggplot(data = y2007 ) +
-  geom_histogram(mapping = aes(x = lifeExp), bins = 15)
+y2007 |> ggplot() +
+  geom_histogram(aes(x = lifeExp), 
+                 bins = 10, 
+                 color = "darkblue", 
+                 fill = "lightblue"
+                 ) +
+  labs(title = "Life expectancy in 2007")
 ```
-We see that life expectancy is bimodal in 2007.  
+We see that life expectancy is bimodal in 2007. There seems to be two groups of countries with centers around 55 years and 75 years.   
 
-Example: Draw the histogram using all years: 
+**Example**: Draw the histogram using all years: 
 ```{r}
 library(gapminder)
 ggplot(data =gapminder ) +
-  geom_histogram(mapping = aes(x = lifeExp), binwidth = 0.5)
+  geom_histogram(mapping = aes(x = lifeExp), binwidth = 0.5, color="white")
 ```
 
 
 
-Example: A simulated data set: 
+**Example**: A simulated data set: 
 ```{r} 
+# create an artificial data set
 set.seed(1)
 n <- 200
 grades1 <- rnorm(n, mean = 50, sd = 10)
 grades2 <- rnorm(n, mean = 60, sd = 15)
 grades3 <- rnorm(n, mean = 70, sd = 12)
-class <-  factor( rep(c("Econometrics-1","Econometrics-2","Machine-Learning"), each=n) )
+class <-  factor( 
+  rep(c("Econometrics-1","Econometrics-2","Machine-Learning"), each=n) 
+  )
 gradedata <- tibble(class, grades = c(grades1, grades2, grades3))
 gradedata <- filter(gradedata, grades<=100 & grades>=0)
 head(gradedata)
 ```
 
+Draw the histogram of each class side by side: 
 ```{r}
 ggplot(data = gradedata) +
   geom_histogram(mapping = aes(x = grades), 
@@ -620,16 +691,16 @@ ggplot(data = gradedata) +
 
 ## Box Plot 
 
+**Example**: Draw the box plots of classes from the previous example: 
 ```{r, echo=TRUE}
 ggplot(data = gradedata) +
   geom_boxplot(mapping = aes(x = class, y=grades))  
 ```
 
-**Example:** Draw box plots of life expectancy according to continents 
-over continents
-
+**Example:** Draw box plots of life expectancy over continents in the Gapminder data set: 
 ```{r} 
-ggplot(data = gapminder, mapping = aes(x = continent, y = lifeExp)) + 
+ggplot(data = gapminder, 
+       mapping = aes(x = continent, y = lifeExp)) + 
   geom_boxplot()
 ```
 
@@ -641,11 +712,14 @@ When we have a categorical variable and a continuous variable dot plot may be us
 Example: Draw a dot plot of life expectancy in Europe in 2007 in descending order. 
 ```{r}
 # create data set
-europe2007 <- gapminder %>% 
+europe2007 <- gapminder |> 
   filter(year == 2007, continent == "Europe") 
 # plot
 ggplot(europe2007, aes(x = lifeExp, y = fct_reorder(country, lifeExp))) +
-  geom_point()
+  geom_point() +
+  labs(title = "Life expectancy in Europe (2007)",
+       y = "", 
+       x = "Life expectancy at birth")
 ```
 
 ## Scatter plots 
@@ -653,7 +727,7 @@ ggplot(europe2007, aes(x = lifeExp, y = fct_reorder(country, lifeExp))) +
 **Example**: GDP per capita and life expectancy in Gapminder: 
 ```{r}
 library(gapminder)
-ggplot(gapminder, aes(x=log(gdpPercap),y=lifeExp)) +
+ggplot(gapminder, aes(x=log(gdpPercap), y=lifeExp)) +
       geom_point()
 ```
 
@@ -734,14 +808,14 @@ Inspecting the data set using `View(lifedata)` we see that some of the rows and 
 Erase the empty columns: 
 ```{r}
 # erase columns starting with "..."  
-lifedata <- lifedata %>% 
+lifedata <- lifedata |> 
   dplyr::select(-contains('...'))
 # note: select() may not work right if MASS is package is also loaded
 ```
 
 Erase the first row: 
 ```{r} 
-lifedata <- lifedata %>% drop_na()
+lifedata <- lifedata |> drop_na()
 ```
 Now we have a data set containing 42 variables on 81 provinces. But variable names are too long. Let's change them. 
 
@@ -828,23 +902,24 @@ Summary statistics on Mutluluk and histogram:
 summary(lifedata$mutluluk)
 ```
 ```{r}
-lifedata %>% ggplot(mapping = aes(x = mutluluk)) +
-  geom_histogram(bins = 6)
+lifedata |> ggplot(mapping = aes(x = mutluluk)) +
+  geom_histogram(bins = 6, color="white")
 ```
 
 Which provinces are the happiest? 
 ```{r}
 # list top 10 happiest provinces
-lifedata %>% 
-  select(il, mutluluk)  %>% 
-  arrange(desc(mutluluk)) %>% 
+lifedata |> 
+  select(il, mutluluk)  |> 
+  arrange(desc(mutluluk)) |> 
   head(10) 
 ```
 
 All provinces in a dot plot:  
 ```{r}
 ggplot(lifedata, aes(x = mutluluk, y = fct_reorder(il, mutluluk))) +
-  geom_point()
+  geom_point() +
+  labs(y="", x="Mutluluk düzeyi")
 ```
 
 Interpret the following two graphs
@@ -878,7 +953,7 @@ pop_dens_growth <- read_excel("../Data/nufus_artis_yog_il.xls", range = "A4:Z86"
 We need to separate the two variables in `pop_dens_growth`. Let's start with population density: 
 ```{r}
 popdensity <- pop_dens_growth[, c(1,14:26)]
-popdensity %>% head(5)
+popdensity |> head(5)
 ```
 
 The first row contains overall density over the years. 
@@ -888,20 +963,20 @@ nr <- dim(popdensity)[1]
 nc <- dim(popdensity)[2]
 popdensity <- popdensity[2:nr,]
 popdensity <- rename(popdensity, "province"="...1")
-popdensity %>% head(5)
+popdensity |> head(5)
 ```
 
 Convert to long form:  
 ```{r}
-popdens <- popdensity %>% 
+popdens <- popdensity |> 
   pivot_longer(-province, names_to="year", values_to = "density") 
-popdens %>% arrange(year,province) %>% head(5)
+popdens |> arrange(year,province) |> head(5)
 ```
 
 Now do the same for the growth rate. 
 ```{r}
 popgrowth <- pop_dens_growth[,c(1:13)]
-popgrowth %>% head(5)
+popgrowth |> head(5)
 ```
 
 ```{r}
@@ -909,7 +984,7 @@ travr_popgrowth <- popgrowth[1,]
 popgrowth <- popgrowth[2:nr,]
 # rename the first column 
 popgrowth <- rename(popgrowth, "province"="...1")
-popgrowth %>% head(5)
+popgrowth |> head(5)
 ```
 
 Columns are the growth rates over the specified period. We need to convert them to single numbers. 
@@ -918,17 +993,20 @@ years20072019 <- colnames(popdensity)[-1]
 years20082019 <- years20072019[-1]
 oldnames <- colnames(popgrowth)[-1]
 # rename the rest of the cols
-popgrowth <- popgrowth %>% 
+popgrowth <- popgrowth |> 
   rename_at(vars(oldnames), ~ years20082019)
-popgrowth %>% head(5)
+popgrowth |> head(5)
 ```
 
 Now we are ready to convert it to long form. 
 ```{r}
 # convert to long form 
-popgr <- popgrowth %>% 
+popgr <- popgrowth |> 
   pivot_longer(-province, names_to="year", values_to = "growth")
-popgr %>% arrange(year, province) %>% head(5)
+# show the first 5 obs
+popgr |> 
+  arrange(year, province) |> 
+  head(5)
 ```
 
 
@@ -936,52 +1014,58 @@ The second data set contains city populations.
 ```{r}
 # population data
 city_pop <- read_excel("../Data/nufus_il2019.xls", range = "A4:U86")
-city_pop %>% head(5)
+city_pop |> head(5)
 ```
 
 
 ```{r}
 # first row is TR total population
-trpop_overall <- city_pop[1,] 
-trpop_province <- city_pop[-1,]
-# rename the first column 
+trpop_overall <- city_pop[1,]   # TR total population saved in 
+trpop_province <- city_pop[-1,] # erase the first row
+# rename the first column from "...1" to "province"
 trpop_province <- rename(trpop_province, "province"="...1")
-trpop_province %>% head(5)
+trpop_province |> head(5)
 ```
-
-
+This table is in wide form as we have years in the columns. We need to create a new variable year, and put values into population: 
 ```{r}
 # wide to long
-population <- trpop_province %>% 
-  pivot_longer(-province, names_to="year", values_to = "population")
-population %>% arrange(year, province) %>% head(5)
+population <- trpop_province |> 
+  pivot_longer(-province,               # all columns except province
+               names_to = "year", 
+               values_to = "population")
+# show the first 5 obs
+population |> 
+  arrange(year, province) |> 
+  head(5)
 ```
 
 We have three data sets in long form: `population`, `popgr`, and `popdens`. 
-Combine all in a single tibble
+Combine all in a single tibble: 
 ```{r}
 # join them in a tibble
 # Joining, by = c("province", "year")
 trpopinfo <- full_join(popdens, popgr)
 trpopinfo <- full_join(population, trpopinfo)
-trpopinfo %>% head(20)
+trpopinfo |> head(20)
 ```
 
 **TASK**: Create a new variable using the formula `area = population/density`. City area must be a constant over years. 
 ```{r}
 # create a new variable for the area 
-trpopinfo <- trpopinfo %>% group_by(year) %>% 
+trpopinfo <- trpopinfo |> 
+  group_by(year) |> 
   mutate(area=population/density)
-trpopinfo %>% head(20)
+#
+trpopinfo |> head(20)
 ```
 
 Since `density` is missing before 2007, `area` is also missing. 
 ```{r}
 # cant get rid of year: 
-province_area <- trpopinfo %>% 
-  filter(year==2007) %>% 
+province_area <- trpopinfo |> 
+  filter(year==2007) |> 
   select(province,year,area) 
-province_area %>% head(5)
+province_area |> head(5)
 ```
 
 Create a cross-sectional data set containing `area` (square km). 
@@ -989,31 +1073,33 @@ Create a cross-sectional data set containing `area` (square km).
 # force a cross section of areas
 province_area2 <- tibble(province = province_area$province, 
                          area2 = province_area$area)
-province_area2 %>% head(5)
+province_area2 |> head(5)
 ```
 
 Merge the area data set with the population data. 
 ```{r}
 # merge 
 trpop <- left_join(trpopinfo, province_area2)
-trpop %>% head(20)
+trpop |> head(20)
 ```
 
 Compute population densities for the missing years: 
 ```{r}
 # create a new density variable 
-trpop <- trpop %>% group_by(province) %>% 
+trpop <- trpop |> 
+  group_by(province) |> 
   mutate(density2 = population/area2)
-trpop %>% head(20)
+trpop |> head(20)
 ```
 
 ```{r}
 # create a new growth variable 
 # growth2 is slightly different from TUIK's growth 
 # for the period 2008-2019
-trpop <- trpop %>% group_by(province) %>% 
+trpop <- trpop |> 
+  group_by(province) |> 
   mutate(growth2 = 1000*(population-lag(population))/lag(population))
-trpop %>% head(20)
+trpop |> head(20)
 ```
 
 ## Graphs
@@ -1021,7 +1107,7 @@ trpop %>% head(20)
 ```{r}
 # ts plots of density
 trpop$year <- as.numeric(trpop$year)
-trpop %>% filter(province %in% c("İstanbul","İzmir", "Ankara")) %>% 
+trpop |> filter(province %in% c("İstanbul","İzmir", "Ankara")) |> 
   ggplot(aes(x=year,y=density2,color=province)) +
   geom_line()
 ```
@@ -1029,7 +1115,7 @@ trpop %>% filter(province %in% c("İstanbul","İzmir", "Ankara")) %>%
 
 ```{r}
 # ts plot of all provinces 
-trpop %>%
+trpop |>
   ggplot(aes(x=year, y=density2, color=province)) +
   geom_line() +
   theme(legend.position = "none") 
@@ -1037,7 +1123,7 @@ trpop %>%
 
 ```{r}
 # Draw a line plot for the population growth rate of İstanbul 
-trpop %>% filter(province == "İstanbul") %>% 
+trpop |> filter(province == "İstanbul") |> 
   ggplot(aes(x=year,y=growth2, color=province)) +
   geom_line()
 ```
@@ -1045,20 +1131,20 @@ trpop %>% filter(province == "İstanbul") %>%
 
 ```{r}
 # Do the same for the largest cities
-trpop %>% filter(province %in% c("İstanbul","İzmir", "Ankara")) %>% 
+trpop |> filter(province %in% c("İstanbul","İzmir", "Ankara")) |> 
   ggplot(aes(x=year, y=growth2, color=province)) +
   geom_line()
 ```
 
 ```{r}
 # Find and list provinces having the smallest density in 2019
-trpop %>% filter(year==2019) %>% 
+trpop |> filter(year==2019) |> 
   arrange(density2)
 ```
 
 ```{r}
 # Draw the histogram of density in 2019
-trpop %>% filter(year==2019) %>% 
+trpop |> filter(year==2019) |> 
   ggplot(aes(x=density)) + 
   geom_histogram()
 ```
@@ -1066,24 +1152,25 @@ trpop %>% filter(year==2019) %>%
 ```{r}
 # Find mean and median population density over years
 # create a tibble and call it sum_popdens
-sum_popdens <- trpop %>% group_by(year) %>% 
+sum_popdens <- trpop |> group_by(year) |> 
   summarize(popdensmean = mean(density2), 
             popdensmedian = median(density2))
 # plot
-sum_popdens %>% ggplot(aes(x=year, y=popdensmean)) +
+sum_popdens |> ggplot(aes(x=year, y=popdensmean)) +
   geom_line()
 ```
 
-# Application: How popular is your name?
+# Application: Popular babynames
 
 ## Read the data set
 
-Turkish Statistical Institute publishes the 100 most popular men and women's names from the address based registration system. I downloaded the data for men's names in  `xls` format and saved it in the Data folder. Upon inspection of the excel file, we see that data is within the range `A6:BA88` including the variable names. We will not alter the original raw data using excel. We will make necessary adjustments using `R`. Let us read it into R: 
+Turkish Statistical Institute publishes the 100 most popular men and women's names given to newly born babies in a year. I downloaded the data for men's names in  `xls` format and saved it in the Data folder. Upon inspection of the excel file, we see that data is within the range `A6:BA88` including the variable names. We will not alter the original raw data using excel but make all necessary adjustments using `R`. Let us read it into R: 
 
 ```{r}
 library(tidyverse)
 library(readxl)
-mennames2018 <- read_excel("../Data/erkek_isim_siralama2018.xls", range = "A4:AQ301")
+mennames2018 <- read_excel("../Data/erkek_isim_siralama2018.xls", 
+                           range = "A4:AQ301")
 # View(mennames2018) 
 ```
 
@@ -1097,15 +1184,17 @@ mennames2018 <- rename(mennames2018, "name"="...1")
 ```{r}
 # the data is in wide format 
 # convert it to long
-mennames <- mennames2018 %>% 
-  pivot_longer(-name, names_to="year", values_to = "rank")
+mennames <- mennames2018 |> 
+  pivot_longer(-name, 
+               names_to="year", 
+               values_to = "rank")
 ```
 
 Check out the data set: 
 ```{r}
 #
-mennames %>% 
-  arrange(year, name) %>% 
+mennames |> 
+  arrange(year, name) |> 
   head(10)
 ```
 
@@ -1115,8 +1204,8 @@ mennames %>%
 
 ```{r}
 # Find and list the most popular 10 names in 2018 
-top10_2018 <- mennames %>% 
-  filter(year==2018, rank<11) %>% 
+top10_2018 <- mennames |> 
+  filter(year==2018, rank<11) |> 
   arrange(rank)
 top10_2018
 ```
@@ -1125,8 +1214,8 @@ top10_2018
 
 ```{r}
 # 
-top10_2017 <- mennames %>% 
-  filter(year==2017,rank<11) %>% 
+top10_2017 <- mennames |> 
+  filter(year==2017,rank<11) |> 
   arrange(rank)
 top10_2017
 ```
@@ -1141,9 +1230,9 @@ top10
 
 ```{r}
 # graph of 2017 top 10
-top10 %>% 
-  filter(year==2017) %>%
-  mutate(Name = factor(name), Rank = factor(rank)) %>%  
+top10 |> 
+  filter(year==2017) |>
+  mutate(Name = factor(name), Rank = factor(rank)) |>  
   ggplot(aes(x=reorder(name,-rank), Rank)) +
   geom_bar(position=position_dodge(), stat = "identity") +
   ylab("") +
@@ -1155,8 +1244,8 @@ top10 %>%
 
 ```{r}
 # together 
-top10 %>%  
-  mutate(Name = factor(name), Rank = factor(rank), Year=factor(year)) %>%  
+top10 |>  
+  mutate(Name = factor(name), Rank = factor(rank), Year=factor(year)) |>  
   ggplot(aes(x=reorder(name,-rank), Rank, fill=Year)) +
   geom_bar(position=position_dodge(), stat = "identity") +
   xlab("") +
@@ -1168,8 +1257,8 @@ An alternative is to draw the dot plot. This may be aesthetically more pleasing.
 
 ```{r}
 # dotplot 
-top10 %>% 
-  mutate(Name = factor(name), Rank = factor(rank), Year=factor(year)) %>%
+top10 |> 
+  mutate(Name = factor(name), Rank = factor(rank), Year=factor(year)) |>
   ggplot(aes(x=reorder(Name,-rank), Rank, color=Year)) +
   geom_point(position=position_dodge(width = 0.5), stat = "identity") +
   xlab("") +
@@ -1201,11 +1290,11 @@ ggplot(mynames, aes(x = as.numeric(year), y = 100-rank, color=name)) +
 5. Create a new tibble containing all names in 2017 and 2018 but they should be ranked according to the 2018 data. In the new data set, rows must contain names and columns must contain rankings. 
 ```{r}
 # all names sorted according to rank in 2018 
-sorted2018 <- mennames %>% 
-  filter(year==2018) %>% 
+sorted2018 <- mennames |> 
+  filter(year==2018) |> 
   arrange(rank) 
 
-sorted2018 %>%  head(5)
+sorted2018 |>  head(5)
 ```
 
 
@@ -1214,15 +1303,15 @@ sorted2018 %>%  head(5)
 # create a new data containing 2018 rankings 
 # i.e. create a new variable rank2018 and delete year 
 pop2018 <- tibble(name=sorted2018$name, rank2018=sorted2018$rank)
-pop2018 %>% head(5)
+pop2018 |> head(5)
 #
 # Do exactly the same for 2017 
-sorted2017 <- mennames %>% 
-  filter(year==2017) %>% 
+sorted2017 <- mennames |> 
+  filter(year==2017) |> 
   arrange(desc(-rank))
 pop2017 <- tibble(name=sorted2017$name,rank2017=sorted2017$rank)
 #
-pop2017 %>% head(5)
+pop2017 |> head(5)
 ```
 
 
@@ -1230,7 +1319,7 @@ pop2017 %>% head(5)
 # join them on names 
 popularnames1718 <- left_join(pop2017,pop2018)
 #  
-popularnames1718 %>% head(10)
+popularnames1718 |> head(10)
 ```
 
 
@@ -1240,6 +1329,9 @@ popularnames1718 %>% head(10)
 Call the new data set `popnames1518`. 
 
 2. Carry out a similar analysis for women's names. The data set `kadin_isim_siralama2018.xls` is available in the Data folder. 
+
+
+
 
 <div class="tocify-extend-page" data-unique="tocify-extend-page" style="height: 0;"></div>
 
