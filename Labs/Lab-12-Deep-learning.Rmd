@@ -1,0 +1,550 @@
+---
+title: "Introduction to Deep Learning" 
+subtitle: Machine Learning in Economics
+author: 
+  name: "Prof. Dr. Hüseyin Taştan"
+  affiliation: "Yildiz Technical University"
+date: ""
+output:
+  html_document: 
+    number_sections: true
+    self_contained: true
+    theme: lumen
+    highlight: haddock 
+    # code_folding: show
+    toc: yes
+    toc_depth: 3
+    toc_float: yes
+    keep_md: false
+---
+<style type="text/css"> 
+body{
+  background-color: #FAFAFA;
+  font-size: 18px;
+  line-height: 1.8;
+}
+code.r{
+  font-size: 12pt;
+}
+</style>
+
+```{r setup, include=FALSE}
+# knitr::opts_chunk$set(echo = TRUE, results = 'asis', fig.show = 'asis')
+knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning=FALSE)
+``` 
+
+<br/>
+<br/>
+
+
+# ANN Packages in R 
+
+There are several Artificial Neural Network (ANN) packages in R including [nnet](https://cran.r-project.org/web/packages/nnet/index.html), [neuralnet](https://cran.r-project.org/web/packages/neuralnet/index.html), and [RSNNS](https://cran.r-project.org/web/packages/RSNNS/index.html). 
+
+## `{neuralnet}`  
+
+```{r}
+library(tidyverse)
+library(neuralnet)
+```
+
+## Example: Simulated data 
+
+```{r}
+# simulate data 
+set.seed(1)
+x1=rnorm(1000)
+x2=rnorm(1000)
+x3=rnorm(1000)
+
+y=10 + 2*x1 -5*x2 +4*x3 + 3*x1*x2 - 8*x1*x3 + 2*x2*x3 + 5*x1*x2*x3 + rnorm(1000)
+df <- tibble(y,x1,x2,x3)
+```
+
+```{r}
+# ANN single hidden layer, activation=identity
+set.seed(12345)
+nnet0 <- neuralnet(y ~ x1 + x2 + x3, data=df, act.fct = identity)
+summary(nnet0)
+nnet0$result.matrix
+```
+
+
+```{r}
+plot(nnet0, rep = "best")
+```
+
+OLS estimation of linear regression produces: 
+```{r}
+regfit0 <- lm(y ~ x1 + x2 + x3, data=df)
+summary(regfit0)
+```
+
+Standardize variables into 0-1 interval: 
+```{r}
+# scale function
+scale1 <- function(x){
+  (x - min(x)) / (max(x) - min(x))
+}
+#
+dfs <- df |> 
+  mutate_all(scale1)
+```
+
+Train-test split: 
+```{r}
+# %75 train %25 test
+set.seed(555)
+train_id <- sample(1000, 750)
+dfs_train <- dfs[train_id, ]
+dfs_test <- dfs[-train_id, ]
+```
+
+
+```{r}
+# single neuron, single layer, default act.fct = "logistic" (i.e., sigmoid)
+nnet1 <- neuralnet(y ~ x1 + x2 + x3, data = dfs_train)
+plot(nnet1, rep = "best")
+```
+
+
+```{r}
+# single layer 2 neurons
+nnet2 <- neuralnet(y ~ x1 + x2 + x3, data=dfs_train, hidden=2)
+plot(nnet2, rep = "best")
+```
+
+```{r}
+# 3 neurons
+nnet3 <- neuralnet(y ~ x1 + x2 + x3, data=dfs_train, hidden=3)
+plot(nnet3, rep = "best")
+```
+```{r}
+# 2 hidden layers with 3 neurons each
+# relu <- function(x) {max(0,x)}
+nnet4 <- neuralnet(y ~ x1 + x2 + x3, 
+                   data = dfs_train, 
+                   hidden = c(3,3))
+plot(nnet4, rep = "best")
+```
+
+Test MSE from nnet4: 
+```{r}
+pred_nnet4 <- predict(nnet4, newdata = dfs_test)
+mse_nnet4 <- mean((dfs_test$y - pred_nnet4)^2)
+mse_nnet4
+```
+
+Test MSE from linear regression: 
+```{r}
+linreg <- lm(y ~ x1 + x2 + x3, data = dfs_train)
+pred_linreg <- predict(linreg, newdata = dfs_test)
+mse_linreg <- mean((dfs_test$y - pred_linreg)^2)
+mse_linreg
+```
+
+Test MSE from the linear regression is larger than the test MSE from the ANN with two layers with 3 neurons (nnet4). 
+
+Let's add interaction terms to the linear regression: 
+```{r}
+linreg2 <- lm(y ~ x1*x2*x3, data = dfs_train)
+summary(linreg2)
+```
+
+Compute test MSE from the linear regression with full interactions
+```{r}
+options(scipen = 999) # turn off scientific display
+pred_linreg2 <- predict(linreg2, newdata = dfs_test)
+mse_linreg2 <- mean((dfs_test$y - pred_linreg2)^2)
+mse_linreg2 
+```
+
+Clearly this has a better prediction accuracy than the neural net above. We note that, in this simulated example, we know the true model. But in reality when we typically have large number of features, it may not be easy to specify the true model. 
+
+Visualizing predictions: 
+```{r}
+data_pred <- tibble(pred_nnet4, 
+                    pred_linreg, 
+                    pred_linreg2, 
+                    truth = dfs_test$y)
+#
+p1 <- ggplot(data_pred, aes(truth, pred_nnet4)) + 
+  geom_point() + 
+  geom_smooth() +
+  ggtitle("NNET4")
+p2 <- ggplot(data_pred, aes(truth, pred_linreg)) + 
+  geom_point() + 
+  geom_smooth() +
+  ggtitle("Linear regression")
+p3 <- ggplot(data_pred, aes(truth, pred_linreg2)) + 
+  geom_point() + 
+  geom_smooth() +
+  ggtitle("Lin reg w/interactions")
+# plot 
+library(patchwork)
+p1 | p2 | p3
+```
+
+
+
+
+## Example: Predicting house prices
+
+```{r}
+library(tidyverse)
+library(MASS)
+library(neuralnet)
+data("Boston")
+```
+
+```{r}
+# scale variables, except chas and medv
+# boston <- as_tibble(Boston) %>% 
+#  mutate(across(.cols=-c("chas","medv"), scale1))
+boston <- as_tibble(Boston) |>  
+  mutate(across(.cols=-c("chas"), scale1))
+# scale1 was defined previously
+```
+
+
+```{r}
+# train-test split
+library(rsample) 
+set.seed(10) # for replication
+boston_split <- initial_split(boston, 
+                           prop = 0.75, 
+                           strata = medv)
+```
+
+```{r}
+# train-test data
+boston_train <- boston_split |> training()
+boston_test <- boston_split |> testing()
+```
+
+```{r}
+# 2 hidden layers with 5 neurons each
+set.seed(1010)
+nn1 <- neuralnet(medv ~ crim + zn + indus + chas + nox + rm + age + 
+                   dis + rad + tax + ptratio + black + lstat,
+                 data = boston_train,
+                 hidden = c(5,5))
+```
+
+
+```{r}
+# ANN(5,5) architecture
+plot(nn1, col.hidden = 'darkgreen',     
+     col.hidden.synapse = 'darkgreen',
+     show.weights = F,
+     information = F,
+     fill = 'lightblue', 
+     rep = "best"   # to render graph in html output
+     )
+```
+
+```{r}
+# predictions
+pred_nn1 <- predict(nn1, newdata = boston_test)
+
+# convert scale1 
+pred_nn1_converted <- (max(pred_nn1)-min(pred_nn1))*pred_nn1 + min(pred_nn1)
+test_medv <- (max(boston_test$medv)-min(boston_test$medv))*boston_test$medv + min(boston_test$medv)
+# create a tibble 
+result_data <- tibble(test_medv, pred_nn1_converted)
+head(result_data)
+```
+
+
+```{r}
+# MSE  
+mse_boston_nn1 <- mean((pred_nn1_converted - test_medv)^2)
+mse_boston_nn1
+```
+Compare to linear regression: 
+```{r}
+# linear regression with full set of variables
+reg1 <- lm(medv ~ crim + zn + indus + chas + nox + rm + age + dis + rad + tax + 
+                   ptratio + black + lstat, data = boston_train)
+pred_reg1 <- predict(reg1, newdata = boston_test)
+pred_reg1_converted <- (max(pred_reg1)-min(pred_reg1))*pred_reg1 + min(pred_reg1)
+result_data$pred_reg1_converted <- pred_reg1_converted
+head(result_data)
+```
+
+
+```{r}
+# MSE lin reg
+mse_boston_reg1 <- mean((pred_reg1_converted - test_medv)^2)
+mse_boston_reg1
+```
+
+
+```{r}
+# compare predictions 
+p1 <- ggplot(result_data, aes(test_medv, pred_nn1_converted)) + 
+  geom_point() + 
+  geom_smooth() +
+  ggtitle("ANN(5,5)")
+p2 <- ggplot(result_data, aes(test_medv, pred_reg1_converted)) + 
+  geom_point() + 
+  geom_smooth() +
+  ggtitle("Linear Regression") 
+# plot 
+library(patchwork)
+p1 | p2  
+```
+
+# Forecasting Financial Time Series using RNNs
+
+This section will focus on time series forecasting using Recurrent Neural Networks (RNN). 
+
+For other applications, please refer to the resources section of the textbook website: <https://www.statlearning.com/>. 
+
+In particular, see the html output of Ch.10 lab in the text: 
+
+<https://hastie.su.domains/ISLR2/Labs/Rmarkdown_Notebooks/Ch10-deeplearning-lab-torch.html>
+
+which uses R's `{torch}` package (alternatively there is also `{keras}` version which relies on Python). 
+
+We will replicate the example in Section 10.5.2 in the text. We refer to 
+
+<https://hastie.su.domains/ISLR2/Labs/Rmarkdown_Notebooks/Ch10-deeplearning-lab-torch.html>
+
+for the original source of the replication using R `{torch}` package. 
+
+```{r}
+library(glmnet)
+library(torch)
+library(luz) # high-level interface for torch
+library(torchvision) # for datasets and image transformation
+library(torchdatasets) # for datasets we are going to use
+library(zeallot)
+torch_manual_seed(13)
+```
+
+
+```{r}
+library(ISLR2)
+xdata <- data.matrix(
+ NYSE[, c("DJ_return", "log_volume","log_volatility")]
+ )
+istrain <- NYSE[, "train"]
+xdata <- scale(xdata)
+```
+
+`istrain` = `TRUE` for each year in the training set, and = `FALSE` for each year
+ in the test set.
+
+We first write functions to create lagged versions of the three time series.  We start with a function that takes as input a data
+matrix and a lag $L$, and returns a lagged version of the matrix. It
+simply inserts $L$ rows of `NA` at the top, and truncates the
+bottom.
+
+```{r}
+lagm <- function(x, k = 1) {
+   n <- nrow(x)
+   pad <- matrix(NA, k, ncol(x))
+   rbind(pad, x[1:(n - k), ])
+}
+```
+
+We now use this function to create a data frame with all the required
+lags, as well as the response variable.
+
+```{r}
+arframe <- data.frame(log_volume = xdata[, "log_volume"],
+   L1 = lagm(xdata, 1), L2 = lagm(xdata, 2),
+   L3 = lagm(xdata, 3), L4 = lagm(xdata, 4),
+   L5 = lagm(xdata, 5)
+ )
+```
+
+
+If we look at the first five rows of this frame, we will see some
+missing values in the lagged variables (due to the construction above). We remove these rows, and adjust `istrain`
+accordingly.
+
+```{r}
+arframe <- arframe[-(1:5), ]
+istrain <- istrain[-(1:5)]
+```
+
+We now fit the linear AR model to the training data using `lm()`, and predict on the
+test data.
+
+```{r}
+arfit <- lm(log_volume ~ ., data = arframe[istrain, ])
+arpred <- predict(arfit, arframe[!istrain, ])
+V0 <- var(arframe[!istrain, "log_volume"])
+1 - mean((arpred - arframe[!istrain, "log_volume"])^2) / V0
+```
+
+The last two lines compute the $R^2$ on the test data, as defined in (3.17).
+
+We refit this model, including the factor variable `day_of_week`.
+
+```{r}
+arframed <-
+    data.frame(day = NYSE[-(1:5), "day_of_week"], arframe)
+arfitd <- lm(log_volume ~ ., data = arframed[istrain, ])
+arpredd <- predict(arfitd, arframed[!istrain, ])
+1 - mean((arpredd - arframe[!istrain, "log_volume"])^2) / V0
+```
+
+To fit the RNN, we need to reshape these data, since it expects a
+sequence of $L=5$ feature vectors $X=\{X_\ell\}_1^L$ for each observation, as in (10.20) on
+page  428. These are  lagged versions of the
+time series going back $L$ time points.
+
+```{r}
+n <- nrow(arframe)
+xrnn <- data.matrix(arframe[, -1])
+xrnn <- array(xrnn, c(n, 3, 5))
+xrnn <- xrnn[,, 5:1]
+xrnn <- aperm(xrnn, c(1, 3, 2))
+dim(xrnn)
+```
+
+We have done this in four steps. The first simply extracts the
+$n\times 15$ matrix of lagged versions of the three predictor
+variables from `arframe`. The second converts this matrix to a
+$n\times 3\times 5$ array. We can do this by simply changing the
+dimension attribute, since the new array is filled column wise. The
+third step reverses the order of lagged variables, so that index $1$
+is furthest back in time, and index $5$ closest. The
+final step rearranges the coordinates of the array (like a partial
+transpose) into the format that the RNN module in `torch`
+expects.
+
+Now we are ready to proceed with the RNN, which uses 12 hidden units.
+
+```{r}
+model <- nn_module(
+  initialize = function() {
+    self$rnn <- nn_rnn(3, 12, batch_first = TRUE)
+    self$dense <- nn_linear(12, 1)
+    self$dropout <- nn_dropout(0.2)
+  },
+  forward = function(x) {
+    c(output, ...) %<-% (x %>% 
+      self$rnn())
+    output[,-1,] %>% 
+      self$dropout() %>% 
+      self$dense() %>% 
+      torch_flatten(start_dim = 1)
+  }
+)
+
+model <- model %>% 
+  setup(
+    optimizer = optim_rmsprop,
+    loss = nn_mse_loss()
+  ) %>% 
+  set_opt_hparams(lr = 0.001)
+
+```
+
+The output layer has a single unit for the response.
+
+We  fit the model in a similar fashion to previous networks. We
+supply the `fit` function with test data as validation data, so that when
+we monitor its progress and plot the history function we can see the
+progress on the test data. Of course we should not use this as a basis for
+early stopping, since then the test performance would be biased.
+
+
+```{r}
+fitted <- model %>% fit(
+    list(xrnn[istrain,, ], arframe[istrain, "log_volume"]),
+    epochs = 30, # = 200,
+    dataloader_options = list(batch_size = 64),
+    valid_data =
+      list(xrnn[!istrain,, ], arframe[!istrain, "log_volume"])
+  )
+kpred <- as.numeric(predict(fitted, xrnn[!istrain,, ]))
+1 - mean((kpred - arframe[!istrain, "log_volume"])^2) / V0
+```
+
+This model takes about one minute to train.
+
+We could replace the  `nn_module()`  command above with the following command:
+
+```{r}
+model <- nn_module(
+  initialize = function() {
+    self$dense <- nn_linear(15, 1)
+  },
+  forward = function(x) {
+    x %>% 
+      torch_flatten(start_dim = 2) %>% 
+      self$dense()
+  }
+)
+```
+
+Here, `torch_flatten()` simply takes the input sequence and
+turns it into a long vector of predictors. This results in a linear AR model.
+To fit a nonlinear AR model, we could add in a hidden layer.
+
+However, since we already have the matrix of lagged variables from the AR
+model that we fit earlier using the `lm()` command, we can actually fit a nonlinear AR model without needing to perform flattening.
+We extract the model matrix `x` from `arframed`, which
+includes the `day_of_week` variable.
+
+```{r}
+x <- model.matrix(log_volume ~ . - 1, data = arframed)
+colnames(x)
+```
+
+The `-1` in the formula avoids the creation of a column of ones for
+the intercept. The variable `day\_of\_week` is a five-level
+factor (there are five trading days), and the
+ `-1` results in  five rather than four dummy variables.
+
+The rest of the steps to fit a nonlinear AR model should by now be familiar.
+
+```{r}
+arnnd <- nn_module(
+  initialize = function() {
+    self$dense <- nn_linear(20, 32)
+    self$dropout <- nn_dropout(0.5)
+    self$activation <- nn_relu()
+    self$output <- nn_linear(32, 1)
+    
+  },
+  forward = function(x) {
+    x %>% 
+      torch_flatten(start_dim = 2) %>% 
+      self$dense() %>% 
+      self$activation() %>% 
+      self$dropout() %>% 
+      self$output() %>% 
+      torch_flatten(start_dim = 1)
+  }
+)
+arnnd <- arnnd %>% 
+  setup(
+    optimizer = optim_rmsprop,
+    loss = nn_mse_loss()
+  ) %>% 
+  set_opt_hparams(lr = 0.001)
+
+fitted <- arnnd %>% fit(
+    list(x[istrain,], arframe[istrain, "log_volume"]),
+    epochs = 30, 
+    dataloader_options = list(batch_size = 64),
+    valid_data =
+      list(x[!istrain,], arframe[!istrain, "log_volume"])
+  )
+plot(fitted)
+npred <- as.numeric(predict(fitted, x[!istrain, ]))
+1 - mean((arframe[!istrain, "log_volume"] - npred)^2) / V0
+```
+
+
+
+<br>
+<div class="tocify-extend-page" data-unique="tocify-extend-page" style="height: 0;"></div>
+
+

@@ -74,6 +74,11 @@ An introductory course on machine learning methods for economics majors.
     -   Lab (using {tidytext} package): [html](Labs/Lab-11-Text-mining.html) | [.Rmd](Labs/Lab-11-Text-mining.Rmd)
     
     -   Lab (using {tm} package) (by Alican Yıldırım): [html](Labs/TM.html) | [.Rmd](Labs/TM.Rmd)
+
+12. **Deep Learning**
+
+    -   Slides: [html](Slides/Deep-learning.html)
+    -   Lab: [html](Labs/Lab-12-Deep-learning.html) | [.Rmd](Labs/Lab-12-Deep-learning.Rmd)
     
 
 
