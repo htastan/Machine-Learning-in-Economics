@@ -4,7 +4,7 @@ subtitle: Machine Learning in Economics
 author: 
   name: "Prof. Dr. Hüseyin Taştan"
   affiliation: "Yildiz Technical University"
-date: "2022 Spring"
+date: ""
 output:
   html_document: 
     number_sections: true
@@ -99,24 +99,172 @@ lm.fit3 <- lm(mpg~poly(horsepower,3),data=Auto,subset=train)
 mean((Auto$mpg-predict(lm.fit3,Auto))[-train]^2)
 ```
 
+```{r message=FALSE, warning=FALSE}
+# replicate the validation set approach many times using Auto data 
+library(tidyverse)
+library(ISLR2)
+
+dmax = 10 # max degree of the polynomial, the flexibility
+nrep = 20 # number of replications
+#
+set.seed(1)
+# create an empty tibble
+mse <- tibble(rep = numeric(), d = numeric(), testmse = numeric())
+
+for (i in 1:nrep){
+  train <- sample(392,196)   # train-test splits
+  train_auto <- Auto[train,] # train data 
+  test_auto <- Auto[-train,] # test data 
+  # loop over flexibility
+  for (j in 1:dmax){
+    lmfit <- lm(mpg ~ poly(horsepower,j), data = train_auto)
+    test_predict <- predict(lmfit, test_auto)
+    test_error <- test_auto$mpg - test_predict
+    MSE = mean(test_error^2)
+    mse <- add_row(mse, rep=i, d=j, testmse = MSE ) 
+  }
+}
+
+mse |> 
+  ggplot(aes(d,testmse,color=factor(rep))) + 
+  geom_line() +
+  geom_point() +
+  scale_x_continuous(breaks=c(1:dmax)) +
+  labs(x="Degree of the polynomial", 
+       y="Test MSE") +
+  theme(legend.position="none")
+```
+
+
+As we discussed class, the validation set approach produces high variability in test MSE values (here in 20 replications of random train-test splits). 
+
+Exercise: There are several pays of completing a task in R (in fact in any programming language). In the above I created an empty data frame (tibble) and then looped over both rep and d. Do the same but this time use a matrix to store MSE values. For example
+```{r}
+dmax = 10
+nrep = 20 
+
+# create an empty matrix
+MSE <- matrix(NA, nrow = nrep, ncol = dmax)
+set.seed(1)
+for (i in 1:nrep){
+  train <- sample(392,196)   # train-test splits
+  train_auto <- Auto[train,] # train data 
+  test_auto <- Auto[-train,] # test data 
+  # loop over flexibility
+  for (j in 1:dmax){
+    lmfit <- lm(mpg ~ poly(horsepower,j), data = train_auto)
+    test_predict <- predict(lmfit, test_auto)
+    test_error <- test_auto$mpg - test_predict
+    MSE[i,j] <- mean(test_error^2)
+  }
+}
+MSE
+```
+
+Now convert the matrix MSE into a data frame (tibble) and plot d and MSE. 
+
+
 # Leave-one-out Cross-Validation (LOOCV)
 
-In LOOCV we repeatedly estimate the model on the training set by leaving one observation out on at a time. We can use `cv.glm()` function which is a part of the `boot` library together with `glm()` function to perform linear regression. 
+In LOOCV we repeatedly estimate the model on the training set by leaving one observation out on at a time. 
+
+Here is an illustration of the LOOCV method using Auto data set: 
+```{r}
+data(Auto)
+n = nrow(Auto)
+loocv = numeric(n) # vector of zeros to be filled with test MSE
+for (i in 1:n){
+  testdata <- Auto[i,]
+  traindata <- Auto[-i,]
+  lmfit <- lm(mpg ~ poly(horsepower,1), # degree = 1
+              data = traindata)
+    test_predict <- predict(lmfit, testdata)
+    test_error <- testdata$mpg - test_predict
+    loocv[i] <- mean(test_error^2)
+}
+MSE_LOOCV_degree1 <- mean(loocv)
+MSE_LOOCV_degree1
+```
+
+When d=1 (i.e., a linear regression of mpg on horsepower) the LOOCV produces an average MSE of 24.23151. 
+
+Let's use a quadratic fit, d=2: 
+```{r}
+data(Auto)
+n = nrow(Auto)
+loocv = numeric(n) # vector of zeros to be filled with test MSE
+for (i in 1:n){
+  testdata <- Auto[i,]
+  traindata <- Auto[-i,]
+  lmfit <- lm(mpg ~ poly(horsepower,2),  # degree 2
+              data = traindata)
+    test_predict <- predict(lmfit, testdata)
+    test_error <- testdata$mpg - test_predict
+    loocv[i] <- mean(test_error^2)
+}
+MSE_LOOCV_degree2 <- mean(loocv)
+MSE_LOOCV_degree2
+```
+
+We can do these in a loop over the flexibility of the model (degree d): 
+```{r}
+data(Auto)
+n = nrow(Auto)
+loocv = numeric(n) # vector of zeros to be filled with test MSE
+dmax = 10
+MSE_LOOCV = numeric(dmax)
+for (d in 1:dmax){
+for (i in 1:n){
+  testdata <- Auto[i,]
+  traindata <- Auto[-i,]
+  lmfit <- lm(mpg ~ poly(horsepower,d),  # degree d
+              data = traindata)
+    test_predict <- predict(lmfit, testdata)
+    test_error <- testdata$mpg - test_predict
+    loocv[i] <- mean(test_error^2)
+}
+MSE_LOOCV[d] <- mean(loocv) 
+}
+MSE_LOOCV
+```
+
+```{r}
+tibble(MSE_LOOCV) |> 
+  ggplot(aes(1:10,MSE_LOOCV)) + 
+  geom_line() +
+  geom_point() + 
+  scale_x_continuous(breaks=c(1:dmax)) +
+  labs(x="Degree of the polynomial", 
+       y="Test MSE", 
+       title="LOOCV test error") 
+  
+```
+
+
+
+
+
+
+We can use `cv.glm()` function which is a part of the `boot` library together with `glm()` function to perform linear regression. 
 
 `glm()` function is similar to `lm()`: 
 ```{r}
-glm.fit <- glm(mpg~horsepower,data=Auto)
+glm.fit <- glm(mpg ~ horsepower, data = Auto)
 coef(glm.fit)
-lm.fit <- lm(mpg~horsepower,data=Auto)
+```
+
+
+```{r}
+lm.fit <- lm(mpg ~ horsepower, data = Auto)
 coef(lm.fit)
 ```
 
 The usage of `cv.glm()`:
 ```{r}
 library(boot)
-glm.fit <- glm(mpg~horsepower, data=Auto)
-cv.err <- cv.glm(Auto, glm.fit)
-cv.err$delta
+glm.fit <- glm(mpg ~ horsepower, data=Auto)
+cv.err <- cv.glm(Auto, glm.fit) # default is LOOCV i.e., K=n
+cv.err$delta # raw and adjusted CV estimate
 ```
 
 `cv.err` contains cross-validation mean error (see equation 5.1 in the ISLR text). As the default, `cv.glm()` performs LOOCV. See below for K-fold Cross-Validation. 
@@ -124,15 +272,40 @@ cv.err$delta
 Let's apply LOOCV for more complicated models (higher order polynomials) and compare the results: 
 
 ```{r}
-cv.error=rep(0,5)
-for (i in 1:5){
-  glm.fit <- glm(mpg ~ poly(horsepower,i), data=Auto)
+dmax = 10
+cv.error = rep(0,dmax)
+for (i in 1:dmax){
+  glm.fit <- glm(mpg ~ poly(horsepower,i), data = Auto)
   cv.error[i] <- cv.glm(Auto, glm.fit)$delta[1]
 }
 cv.error
 ```
 
 # K-fold Cross-Validation
+
+```{r}
+data(Auto)
+n = nrow(Auto)
+k = 5
+kfoldcv = numeric(k) # vector of zeros to be filled with test MSE
+# create a loop over k
+set.seed(17)
+folds <- sample(1:k, n, replace=TRUE)
+for (i in 1:k){
+  testdata <- Auto[folds == i,]
+  traindata <- Auto[folds != i,]
+  lmfit <- lm(mpg ~ poly(horsepower,1), # degree = 1
+              data = traindata)
+    test_predict <- predict(lmfit, testdata)
+    test_error <- testdata$mpg - test_predict
+    kfoldcv[i] <- mean(test_error^2)
+}
+kfoldcv
+MSE_kfoldcv_degree1 <- mean(kfoldcv)
+MSE_kfoldcv_degree1
+```
+
+
 
 ```{r}
 set.seed(17)
@@ -227,6 +400,7 @@ set.seed(1)
 boot(Auto,boot.fn,1000)
 summary(lm(mpg ~ horsepower + I(horsepower^2), data=Auto))$coef
 ```
+
 
 # An Introduction to the Tidymodels
 
