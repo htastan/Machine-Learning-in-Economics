@@ -295,6 +295,37 @@ library(patchwork)
 p1 | p2  
 ```
 
+## Example: Classification 
+
+```{r}
+library(ISLR2)
+library(tidyverse)
+
+head(Smarket) 
+```
+```{r}
+Smarket <- as_tibble(Smarket) |>  
+  mutate(across(.cols=-c("Direction"), scale1))
+Smarket |> mutate(Direction = ifelse(Direction == "Up", 1, 0))
+```
+
+```{r}
+set.seed(123)
+nn1_smarket <- neuralnet(Direction ~ Lag1 + Lag2 + Lag3 +
+                 Lag4 + Lag5 + Volume, data = Smarket,
+                 linear.output = FALSE, 
+                 err.fct = "ce", 
+                 hidden = 2,
+                 likelihood = TRUE)
+```
+
+```{r}
+plot(nn1_smarket, rep = "best")
+```
+
+
+
+
 # Forecasting Financial Time Series using RNNs
 
 This section will focus on time series forecasting using Recurrent Neural Networks (RNN). 

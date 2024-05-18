@@ -4,7 +4,7 @@ subtitle: Machine Learning in Economics
 author: 
   name: "Prof. Dr. Hüseyin Taştan"
   affiliation: "Yildiz Technical University"
-date: "Spring 2022"
+date: ""
 output:
   html_document: 
     number_sections: true
@@ -79,7 +79,7 @@ Once we have a tibble containing our text data, we can tokenize it based on sing
 # you need install and activate the tidytext package
 library(tidytext)
 #
-text_data %>%
+text_data |> 
   unnest_tokens(word, text) # word is output; text is input
 ```
 
@@ -88,7 +88,7 @@ Notice that 2-by-1 text data now has 30 rows each containing a single word in th
 A **token** can consist of more than one word. These are also known as **n-grams**. An **n-gram** is simply a consecutive sequence of n words. A **bigram**, for example, is a consecutive sequence of two words. 
 
 ```{r}
-text_data %>% 
+text_data |>  
   unnest_tokens(bigram, text, token = "ngrams", n = 2)
 ```
 
@@ -99,10 +99,10 @@ Representing a text as list or "bag" of its words without any regard to context 
 
 Let's count the words in the text data tibble `text_data`: 
 ```{r}
-text_data_tidy <- text_data %>%
+text_data_tidy <- text_data |> 
                   unnest_tokens(word, text) 
 # count
-text_data_tidy %>%
+text_data_tidy |> 
   count(word, sort = TRUE)
 ```
 
@@ -115,7 +115,7 @@ get_stopwords()
 
 Here is another stop words data set: 
 ```{r}
-get_stopwords(language = "en", source = "stopwords-iso") %>% head(20)
+get_stopwords(language = "en", source = "stopwords-iso") |>  head(20)
 ```
 
 An example of Turkish stop words: 
@@ -128,8 +128,8 @@ get_stopwords(language = "tr", source = "stopwords-iso")
 We can remove stop words using the `dplyr::anti_join()` command: 
 ```{r}
 # remove stopwords and count
-text_data_tidy %>%
-  anti_join(get_stopwords()) %>%
+text_data_tidy |> 
+  anti_join(get_stopwords()) |> 
   count(word, sort=TRUE)
 ```
 
@@ -139,8 +139,8 @@ We could remove the stop words using the `stop_words` data set in the `tidytext`
 ```{r}
 data(stop_words) # in the tidytext package
 # remove stopwords and count
-text_data_tidy %>%
-  anti_join(stop_words) %>% 
+text_data_tidy |> 
+  anti_join(stop_words) |>  
   count(word, sort=TRUE)
 ```
 
@@ -162,15 +162,15 @@ A wordcloud is a simple graphical tool to summarize text data which displays fre
 There are several packages in R to draw wordclouds. `{ggwordcloud}` provides a `geom` to be used with `ggplot`. The `geom_text_wordcloud_area()` geom accepts two inputs in the aesthetics, label (word) and size (frequency). For example: 
 ```{r}
 library(ggwordcloud)
-wordcloud_df <-text_data_tidy %>% 
-  anti_join(stop_words) %>% 
+wordcloud_df <-text_data_tidy |>  
+  anti_join(stop_words) |>  
   count(word, sort = T)
 wordcloud_df
 ```
 
 
 ```{r}
-wordcloud_df %>%
+wordcloud_df |> 
   ggplot() +
   geom_text_wordcloud_area(aes(label = word, size = n)) +
   scale_size_area(max_size = 20) +
@@ -187,11 +187,11 @@ library(tidytext)
 # Download H.G. Wells' Time Machine using gutenbergr package
 library(gutenbergr)
 time_machine <- gutenberg_download(35)
-tidy_time_machine <- time_machine %>%
-  unnest_tokens(word, text) %>%
+tidy_time_machine <- time_machine |> 
+  unnest_tokens(word, text) |> 
   anti_join(stop_words)
 # word count
-time_wordcloud_df <- tidy_time_machine %>%
+time_wordcloud_df <- tidy_time_machine |> 
     count(word, sort = TRUE)
 time_wordcloud_df
 ```
@@ -199,7 +199,7 @@ time_wordcloud_df
 ```{r}
 library(ggwordcloud)
 set.seed(11) # for reproducibility 
-time_wordcloud_df %>% filter(n>10) %>% 
+time_wordcloud_df |>  filter(n>10) |>  
   ggplot() +
   geom_text_wordcloud_area(aes(label = word, size = n)) +
   scale_size_area(max_size = 20) +
@@ -238,56 +238,56 @@ get_sentiments("nrc")
 
 ```{r}
 # sentiment types in nrc lexicon 
-get_sentiments("nrc") %>% 
-  group_by(sentiment) %>% 
-  summarise(n = n()) %>% 
+get_sentiments("nrc") |>  
+  group_by(sentiment) |>  
+  summarise(n = n()) |>  
   arrange(desc(n))
 ```
 
 ```{r}
-nrc_positive <- get_sentiments("nrc") %>% 
+nrc_positive <- get_sentiments("nrc") |>  
   filter(sentiment == "positive")
 nrc_positive
 ```
 
 Example: Count the positive words in `text_data_tidy` which was previously created above: 
 ```{r}
-text_data_tidy %>% inner_join(nrc_positive) %>% 
+text_data_tidy |>  inner_join(nrc_positive) |>  
   count(word, sort = TRUE)
 ```
 
 
 Example: Time Machine 
 ```{r}
-time_machine_sentiment <- tidy_time_machine %>%
+time_machine_sentiment <- tidy_time_machine |> 
   # find a sentiment score for each word using bing lexicon
   inner_join(get_sentiments("bing")) 
 # count sentiment
-time_machine_sentiment %>%
+time_machine_sentiment |> 
   count(sentiment) 
 ```
 
 
 ```{r}
 # sentiment types in nrc lexicon 
-time_machine_sentiment_nrc <- tidy_time_machine %>% 
+time_machine_sentiment_nrc <- tidy_time_machine |>  
   inner_join(get_sentiments("nrc")) 
 time_machine_sentiment_nrc
 ```
 
 
 ```{r}
-time_machine_sentiment_nrc %>% 
-  group_by(sentiment) %>% 
-  summarise(n = n()) %>% 
+time_machine_sentiment_nrc |>  
+  group_by(sentiment) |>  
+  summarise(n = n()) |>  
   arrange(desc(n))
 ```
 
 
 ```{r}
-time_machine_sentiment_nrc %>% 
-  group_by(sentiment) %>% 
-  summarise(n = n()) %>%  
+time_machine_sentiment_nrc |>  
+  group_by(sentiment) |>  
+  summarise(n = n()) |>   
   ggplot(aes(fct_reorder(sentiment, n),n)) +
   geom_bar(stat="identity") +
   coord_flip() +
@@ -326,21 +326,21 @@ Remove stop words:
 ```{r}
 data(stop_words)
 
-j_austen_books_tidy <- j_austen_books_tidy %>%
+j_austen_books_tidy <- j_austen_books_tidy |> 
   anti_join(stop_words)
 ```
 
 Count word frequency: 
 ```{r}
-j_austen_books_tidy %>%
+j_austen_books_tidy |> 
   count(word, sort = TRUE)
 ```
 Bar graph using ggplot: 
 ```{r}
-j_austen_books_tidy %>%
-  count(word, sort = TRUE) %>%
-  filter(n > 600) %>%
-  mutate(word = reorder(word, n)) %>%
+j_austen_books_tidy |> 
+  count(word, sort = TRUE) |> 
+  filter(n > 600) |> 
+  mutate(word = reorder(word, n)) |> 
   ggplot(aes(n, word)) +
   geom_col() +
   labs(y = NULL)
@@ -350,11 +350,11 @@ j_austen_books_tidy %>%
 
 Display the most frequent words (n>300) over books: 
 ```{r}
-j_austen_books_tidy %>%
-  group_by(book) %>% 
-  count(word, sort = TRUE) %>%
-  filter(n > 300) %>%
-  mutate(word = reorder(word, n)) %>%
+j_austen_books_tidy |> 
+  group_by(book) |>  
+  count(word, sort = TRUE) |> 
+  filter(n > 300) |> 
+  mutate(word = reorder(word, n)) |> 
   ggplot(aes(n, word)) +
   geom_col() + facet_wrap(~book) +
   labs(y = NULL) +
@@ -363,11 +363,11 @@ j_austen_books_tidy %>%
 
 Graph the most frequently used (n>100) words in Sense and Sensibility: 
 ```{r}
-j_austen_books_tidy %>%
-  filter(book == "Sense & Sensibility") %>% 
-  count(word, sort = TRUE) %>%
-  filter(n > 100) %>%
-  mutate(word = reorder(word, n)) %>%
+j_austen_books_tidy |> 
+  filter(book == "Sense & Sensibility") |>  
+  count(word, sort = TRUE) |> 
+  filter(n > 100) |> 
+  mutate(word = reorder(word, n)) |> 
   ggplot(aes(n, word)) +
   geom_col() +
   scale_x_continuous(breaks = seq(0,650,50)) +
@@ -380,11 +380,11 @@ j_austen_books_tidy %>%
 All 6 books together: 
 ```{r}
 library(ggwordcloud)
-wordcloud_df <-j_austen_books_tidy %>% 
-  count(word, sort = T) %>%
+wordcloud_df <-j_austen_books_tidy |>  
+  count(word, sort = T) |> 
   top_n(100)
 
-wordcloud_df %>%
+wordcloud_df |> 
   ggplot() +
   geom_text_wordcloud_area(aes(label = word, size = n)) +
   scale_size_area(max_size = 15)
@@ -393,40 +393,40 @@ wordcloud_df %>%
 By books: 
 ```{r}
 n <- 200
-p1 <-j_austen_books_tidy %>% 
-  filter(book=="Sense & Sensibility") %>% 
-  count(word, sort = T) %>%
-  top_n(n) %>%
+p1 <-j_austen_books_tidy |>  
+  filter(book=="Sense & Sensibility") |>  
+  count(word, sort = T) |> 
+  slice_max(n, n=n) |> 
   ggplot() +
   geom_text_wordcloud_area(aes(label = word, size = n)) +
   scale_size_area(max_size = 15) + 
   labs(title = "Sense & Sensibility")
 p1
 # 
-p2 <-j_austen_books_tidy %>% 
-  filter(book=="Pride & Prejudice") %>% 
-  count(word, sort = T) %>%
-  top_n(n) %>%
+p2 <-j_austen_books_tidy |>  
+  filter(book=="Pride & Prejudice") |>  
+  count(word, sort = T) |> 
+  slice_max(n, n=n) |> 
   ggplot() +
   geom_text_wordcloud_area(aes(label = word, size = n)) +
   scale_size_area(max_size = 15) + 
   labs(title = "Pride & Prejudice")
 p2
 # 
-p3 <-j_austen_books_tidy %>% 
-  filter(book=="Mansfield Park") %>% 
-  count(word, sort = T) %>%
-  top_n(n) %>%
+p3 <-j_austen_books_tidy |>  
+  filter(book=="Mansfield Park") |>  
+  count(word, sort = T) |> 
+  slice_max(n, n=n) |> 
   ggplot() +
   geom_text_wordcloud_area(aes(label = word, size = n)) +
   scale_size_area(max_size = 15) + 
   labs(title = "Mansfield Park")
 p3
 # 
-p4 <-j_austen_books_tidy %>% 
-  filter(book=="Emma") %>% 
-  count(word, sort = T) %>%
-  top_n(n) %>%
+p4 <-j_austen_books_tidy |>  
+  filter(book=="Emma") |>  
+  count(word, sort = T) |> 
+  slice_max(n, n=n) |> 
   ggplot() +
   geom_text_wordcloud_area(aes(label = word, size = n)) +
   scale_size_area(max_size = 15) + 
@@ -434,7 +434,7 @@ p4 <-j_austen_books_tidy %>%
 p4
 ```
 
-```{r}
+```{r fig.height = 10, fig.width = 15}
 library(patchwork)
 p1 + p2 + p3 + p4
 ```
@@ -446,14 +446,14 @@ p1 + p2 + p3 + p4
 
 Examining how sentiment changes across J. Austen's books (this example is from J. Silge's text.)
 ```{r} 
-jane_austen_sentiment <- j_austen_books_tidy %>%
+jane_austen_sentiment <- j_austen_books_tidy |> 
   # find a sentiment score for each word using bing lexicon
-  inner_join(get_sentiments("bing")) %>%
+  inner_join(get_sentiments("bing")) |> 
   # count up how many positive and negative words there are 
   # in sections of 80 lines of text.
-  count(book, index = linenumber %/% 80, sentiment) %>%
+  count(book, index = linenumber %/% 80, sentiment) |> 
   # convert to wide format
-  pivot_wider(names_from = sentiment, values_from = n, values_fill = 0) %>% 
+  pivot_wider(names_from = sentiment, values_from = n, values_fill = 0) |>  
   # compute net sentiment score
   mutate(sentiment = positive - negative)
 head(jane_austen_sentiment)
@@ -479,12 +479,12 @@ library(dplyr)
 library(janeaustenr)
 library(tidytext)
 
-book_words <- austen_books() %>%
-  unnest_tokens(word, text) %>%
+book_words <- austen_books() |> 
+  unnest_tokens(word, text) |> 
   count(book, word, sort = TRUE)
 
-total_words <- book_words %>% 
-  group_by(book) %>% 
+total_words <- book_words |>  
+  group_by(book) |>  
   summarize(total = sum(n))
 
 book_words <- left_join(book_words, total_words)
@@ -506,7 +506,7 @@ ggplot(book_words, aes(n/total, fill = book)) +
 Compute tf-idf: 
 
 ```{r}
-book_tf_idf <- book_words %>%
+book_tf_idf <- book_words |> 
   bind_tf_idf(word, book, n)
 
 book_tf_idf
@@ -515,18 +515,18 @@ book_tf_idf
 Common and unimportant words have zero tfidf values. 
 
 ```{r}
-book_tf_idf %>%
-  select(-total) %>%
+book_tf_idf |> 
+  select(-total) |> 
   arrange(desc(tf_idf))
 ```
 
-```{r}
+```{r fig.height = 10, fig.width = 15}
 library(forcats)
 
-book_tf_idf %>%
-  group_by(book) %>%
-  slice_max(tf_idf, n = 15) %>%
-  ungroup() %>%
+book_tf_idf |> 
+  group_by(book) |> 
+  slice_max(tf_idf, n = 15) |> 
+  ungroup() |> 
   ggplot(aes(tf_idf, fct_reorder(word, tf_idf), fill = book)) +
   geom_col(show.legend = FALSE) +
   facet_wrap(~book, ncol = 2, scales = "free") +
@@ -563,8 +563,8 @@ fomc_2017 <- tibble(year=2017, text=fomc_2017)
 
 ```{r}
 # tidy text: text data must be be one word in each row format
-fomc_2017_tidy <- fomc_2017 %>%
-  unnest_tokens(word, text) %>% 
+fomc_2017_tidy <- fomc_2017 |> 
+  unnest_tokens(word, text) |>  
   filter(is.na(as.numeric(word))) # remove numbers
 ```
 
@@ -577,8 +577,8 @@ fomc_2020 <- paste(fomc_2020, collapse = ' ')
 fomc_2020 <- tibble(year=2020, text=fomc_2020)
 
 # tidy text: text data must be be one word in each row format
-fomc_2020_tidy <- fomc_2020 %>%
-  unnest_tokens(word, text) %>% 
+fomc_2020_tidy <- fomc_2020 |> 
+  unnest_tokens(word, text) |>  
   filter(is.na(as.numeric(word))) # remove numbers
 ```
 
@@ -595,27 +595,27 @@ fomc_tidy <- rbind(fomc_2017_tidy, fomc_2020_tidy)
 
 ```{r}
 # count how many times each word is used in 2017
-fomc_2017_tidy %>%
+fomc_2017_tidy |> 
   count(word, sort = TRUE)
 ```
 
 
 ```{r}
 # remove stopwords
-fomc_2017_tidy %>%
-  anti_join(get_stopwords()) %>%
+fomc_2017_tidy |> 
+  anti_join(get_stopwords()) |> 
   count(word, sort=TRUE)
 ```
 
 
 ```{r}
 # visualize top words in 2017
-fomc_2017_tidy %>%
+fomc_2017_tidy |> 
   # remove stop words
-  anti_join(get_stopwords()) %>%
-  count(word, sort = TRUE) %>%
-  slice_max(n, n = 20) %>%
-  mutate(word = reorder(word, n)) %>%
+  anti_join(get_stopwords()) |> 
+  count(word, sort = TRUE) |> 
+  slice_max(n, n = 20) |> 
+  mutate(word = reorder(word, n)) |> 
   # put `n` on the x-axis and `word` on the y-axis
   ggplot(aes(x = n, y = word)) +
   geom_col()
@@ -623,12 +623,12 @@ fomc_2017_tidy %>%
 
 ```{r}
 # visualize top words in 2020
-fomc_2020_tidy %>%
+fomc_2020_tidy |> 
   # remove stop words
-  anti_join(get_stopwords()) %>%
-  count(word, sort = TRUE) %>%
-  slice_max(n, n = 20) %>%
-  mutate(word = reorder(word, n)) %>%
+  anti_join(get_stopwords()) |> 
+  count(word, sort = TRUE) |> 
+  slice_max(n, n = 20) |> 
+  mutate(word = reorder(word, n)) |> 
   # put `n` on the x-axis and `word` on the y-axis
   ggplot(aes(x = n, y = word)) +
   geom_col()
@@ -640,8 +640,8 @@ fomc_2020_tidy %>%
 
 ```{r}
 # wordcloud
-high_freq_terms <- fomc_2017_tidy %>%
-  anti_join(get_stopwords()) %>%
+high_freq_terms <- fomc_2017_tidy |> 
+  anti_join(get_stopwords()) |> 
   count(word, sort=TRUE)
 
 library(wordcloud)
@@ -652,10 +652,10 @@ wordcloud(high_freq_terms$word,
 ```
 
 
-```{r}
-fomc_2017_tidy %>%
-  anti_join(get_stopwords()) %>%
-  count(word) %>%
+```{r fig.height = 10, fig.width = 15}
+fomc_2017_tidy |> 
+  anti_join(get_stopwords()) |> 
+  count(word) |> 
   with(wordcloud(word, n, max.words = 500))
 ```
 
@@ -663,12 +663,12 @@ fomc_2017_tidy %>%
 ```{r}
 # alternatively
 library(ggwordcloud)
-wordcloud_df <-fomc_2017_tidy %>%
-  anti_join(get_stopwords()) %>%
-  count(word, sort = T) %>%
+wordcloud_df <-fomc_2017_tidy |> 
+  anti_join(get_stopwords()) |> 
+  count(word, sort = T) |> 
   top_n(50)
 
-wordcloud_df %>%
+wordcloud_df |> 
   ggplot() +
   geom_text_wordcloud_area(aes(label = word, size = n)) +
   scale_size_area(max_size = 15)
@@ -681,23 +681,23 @@ Count the number of positive and negative words
 ```{r} 
 library(ggwordcloud)
 
-wordcloud_df_2017 <- fomc_2017_tidy %>%
-  anti_join(get_stopwords()) %>%
-  inner_join(get_sentiments("bing")) %>%
-  count(sentiment, word, sort = T) %>%
+wordcloud_df_2017 <- fomc_2017_tidy |> 
+  anti_join(get_stopwords()) |> 
+  inner_join(get_sentiments("bing")) |> 
+  count(sentiment, word, sort = T) |> 
   top_n(100)
 wordcloud_df_2017
 ```
 
 ```{r}
-wordcloud_df_2017 %>% 
-  group_by(sentiment) %>% 
+wordcloud_df_2017 |>  
+  group_by(sentiment) |>  
   summarise(n=n())
 ```
  
 
 ```{r}
-wordcloud_df_2017 %>%
+wordcloud_df_2017 |> 
   ggplot() +
   geom_text_wordcloud_area(aes(label = word, size = n, color=sentiment)) +
   scale_size_area(max_size = 15) +
@@ -707,17 +707,17 @@ wordcloud_df_2017 %>%
 
 ```{r}
 # 2020
-wordcloud_df_2020 <-fomc_2020_tidy %>%
-  anti_join(get_stopwords()) %>%
-  inner_join(get_sentiments("bing")) %>%
-  count(sentiment, word, sort = T) %>%
+wordcloud_df_2020 <-fomc_2020_tidy |> 
+  anti_join(get_stopwords()) |> 
+  inner_join(get_sentiments("bing")) |> 
+  count(sentiment, word, sort = T) |> 
   top_n(100)
 wordcloud_df_2020
 ```
 
 
 ```{r}
-wordcloud_df_2020 %>%
+wordcloud_df_2020 |> 
   ggplot() +
   geom_text_wordcloud_area(aes(label = word, size = n, color=sentiment)) +
   scale_size_area(max_size = 15) +
@@ -731,20 +731,20 @@ Compare negative and positive words using comparison clouds:
 ```{r}
 library(wordcloud)
 
-fomc_2017_tidy %>%
-  inner_join(get_sentiments("bing")) %>%
-  count(word, sentiment, sort = TRUE) %>%
-  reshape2::acast(word ~ sentiment, value.var = "n", fill = 0) %>%
+fomc_2017_tidy |> 
+  inner_join(get_sentiments("bing")) |> 
+  count(word, sentiment, sort = TRUE) |> 
+  reshape2::acast(word ~ sentiment, value.var = "n", fill = 0) |> 
   comparison.cloud(colors = c("gray20", "gray80"),
                    max.words = 100)
 ```
 
 
 ```{r}
-fomc_2020_tidy %>%
-  inner_join(get_sentiments("bing")) %>%
-  count(word, sentiment, sort = TRUE) %>%
-  reshape2::acast(word ~ sentiment, value.var = "n", fill = 0) %>%
+fomc_2020_tidy |> 
+  inner_join(get_sentiments("bing")) |> 
+  count(word, sentiment, sort = TRUE) |> 
+  reshape2::acast(word ~ sentiment, value.var = "n", fill = 0) |> 
   comparison.cloud(colors = c("gray20", "gray80"),
                    max.words = 100)
 ```
@@ -755,10 +755,10 @@ tf-idf analysis:
 ```{r}
 # count the frequency of each word 
 # and add total words in each document (year)
-fomc_words <- fomc_tidy %>% 
-  add_count(year, name = "total_words") %>%
-  group_by(year, total_words) %>% 
-  count(word, sort = TRUE) %>% 
+fomc_words <- fomc_tidy |>  
+  add_count(year, name = "total_words") |> 
+  group_by(year, total_words) |>  
+  count(word, sort = TRUE) |>  
   ungroup()
 #
 fomc_words
@@ -774,8 +774,8 @@ ggplot(fomc_words) +
 
 Use `tidytext::bind_tf_idf()` function: 
 ```{r}
-fomc_words_idf <- fomc_words %>% 
-  select(-total_words) %>%
+fomc_words_idf <- fomc_words |>  
+  select(-total_words) |> 
   bind_tf_idf(term = word, document = year, n = n)
 fomc_words_idf
 ```
@@ -783,7 +783,7 @@ fomc_words_idf
 Notice that `tf_idf` is practically zero for the most common words (such as the, and, to, of, etc.). We could remove these stopwords before the analysis but here we kept them to demonstrate that these will be essentially zero. 
 
 ```{r}
-fomc_words_idf %>% 
+fomc_words_idf |>  
   arrange(desc(tf_idf))
 ```
  
@@ -791,10 +791,10 @@ fomc_words_idf %>%
 ```{r}
 library(forcats)
 
-fomc_words_idf %>%
-  group_by(year) %>%
-  slice_max(tf_idf, n = 15) %>%
-  ungroup() %>%
+fomc_words_idf |> 
+  group_by(year) |> 
+  slice_max(tf_idf, n = 15) |> 
+  ungroup() |> 
   ggplot(aes(tf_idf, fct_reorder(word, tf_idf), fill = year)) +
   geom_col(show.legend = FALSE) +
   facet_wrap(~ year, ncol = 2, scales = "free") +
