@@ -4,7 +4,7 @@ subtitle: Machine Learning in Economics
 author: 
   name: "Prof. Dr. Hüseyin Taştan"
   affiliation: "Yildiz Technical University"
-date: "Spring 2022"
+date: ""
 output:
   html_document: 
     number_sections: true
@@ -49,9 +49,11 @@ tree.carseats <- tree(High ~ . -Sales, Carseats)
 summary(tree.carseats) 
 ```
 
-The training error rate is 9%. 
+The training error rate is 9%. The deviance is defined as:  
+$$-2\sum_m\sum_k n_{mk}log\hat{p}_{mk}$$
+where $n_{mk}$, is the number of observations in class $k$ and terminal node $m$. Smaller deviance values imply more successful classification. In the output above, the `Residual mean deviance` is found by dividing the deviance by $n-T_0$ (the number of observations minus the number of terminal nodes, 400-27). 
 
-```{r}
+```{r fig.height = 10, fig.width = 15}
 plot(tree.carseats)
 text(tree.carseats,pretty=0)
 ```
@@ -133,7 +135,7 @@ We fit a regression tree to the Boston data set. First, we create a
 training set, and fit the tree to the training data.
 
 ```{r}
-library(MASS)
+library(ISLR2)
 set.seed(81)
 train <- sample(1:nrow(Boston), nrow(Boston)/2)
 tree.boston <- tree(medv ~ ., Boston, subset=train)
@@ -142,7 +144,7 @@ summary(tree.boston)
 
 Note that only 4 variables are used to construct the tree: "rm" "lstat" "crim"  "age"  
 
-```{r}
+```{r fig.height = 8, fig.width = 10}
 plot(tree.boston)
 text(tree.boston,pretty=0)
 ```
@@ -150,6 +152,49 @@ text(tree.boston,pretty=0)
 The variable `lstat` measures the percentage of individuals with lower
 socioeconomic status. The tree indicates that lower values of `lstat` correspond
 to more expensive houses.
+
+Variable definitions in Boston data set: 
+```{r eval=FALSE, include=TRUE}
+# ?Boston
+crim
+per capita crime rate by town.
+
+zn
+proportion of residential land zoned for lots over 25,000 sq.ft.
+
+indus
+proportion of non-retail business acres per town.
+
+chas
+Charles River dummy variable (= 1 if tract bounds river; 0 otherwise).
+
+nox
+nitrogen oxides concentration (parts per 10 million).
+
+rm
+average number of rooms per dwelling.
+
+age
+proportion of owner-occupied units built prior to 1940.
+
+dis
+weighted mean of distances to five Boston employment centres.
+
+rad
+index of accessibility to radial highways.
+
+tax
+full-value property-tax rate per $10,000.
+
+ptratio
+pupil-teacher ratio by town.
+
+lstat
+lower status of the population (percent).
+
+medv
+median value of owner-occupied homes in $1000s.
+```
 
 
 Pruning the tree: 
@@ -318,7 +363,7 @@ We continue using `Boston` data set to illustrate the usage of Tidymodels tools 
 
 First, load the packages and determine train and test sets using `medv` as the stratification variable. 
 ```{r}
-library(MASS)
+library(ISLR2)
 library(tidyverse)
 library(tidymodels)
 
@@ -326,25 +371,27 @@ library(tidymodels)
 # 75% train, 25% test, with stratified sampling based on medv
 
 set.seed(135)
-boston_split <- initial_split(Boston, prop=0.75, strata=medv)
+boston_split <- initial_split(Boston, 
+                              prop = 0.75, 
+                              strata = medv)
 
-boston_train <- boston_split %>% training()
+boston_train <- boston_split |>  training()
 
-boston_test <- boston_split %>% testing()
+boston_test <- boston_split |>  testing()
 ```
 
 Then set the engine and the tuning parameters: 
 ```{r}
 # train a decision tree 
-dt_model <- decision_tree() %>%
-  set_engine('rpart') %>%
+dt_model <- decision_tree() |> 
+  set_engine('rpart') |>  
   set_mode('regression')
 
 # lets do some parameter tuning 
 dt_tune_model <- decision_tree(cost_complexity = tune(),
                                tree_depth = tune(),
-                               min_n = tune()) %>%
-  set_engine('rpart') %>%
+                               min_n = tune()) |>
+  set_engine('rpart') |> 
   set_mode('regression')
 
 dt_tune_model
@@ -374,35 +421,36 @@ boston_folds
 Define a recipe for the regression tree: 
 ```{r}
 # use all variables without any transformation
-boston_recipe <- recipe(medv ~ ., data = boston_train)
+boston_recipe <- recipe(medv ~ ., 
+                        data = boston_train)
 boston_recipe
 ```
 
 
 ```{r}
 # create workflow 
-boston_wkfl <- workflow() %>%
-  add_model(dt_tune_model) %>%
+boston_wkfl <- workflow()  |> 
+  add_model(dt_tune_model)  |> 
   add_recipe(boston_recipe)
 ```
 
 
 ```{r}
 # apply decision tree algorithm to all CV folds
-dt_tuning <- boston_wkfl %>%
+dt_tuning <- boston_wkfl  |> 
   tune_grid(resamples = boston_folds,
             grid = dt_grid)
 
-dt_tuning %>% collect_metrics()
+dt_tuning  |>  collect_metrics()
 ```
 
 
 ```{r}
 # detailed information on hyperparameters
-dt_tuning %>%
-  collect_metrics(summarize = FALSE) %>%
-  filter(.metric == 'rmse') %>%
-  group_by(id) %>%
+dt_tuning |> 
+  collect_metrics(summarize = FALSE) |> 
+  filter(.metric == 'rmse') |> 
+  group_by(id) |> 
   summarize(min_rmse = min(.estimate),
             median_rmse = median(.estimate),
             max_rmse = max(.estimate))
@@ -411,19 +459,19 @@ dt_tuning %>%
 
 ```{r}
 # which one is the best?
-dt_tuning %>%
+dt_tuning |> 
   show_best(metric = 'rmse', n = 5)
 ```
 
 
 ```{r}
-dt_tuning %>%
+dt_tuning |> 
   show_best(metric = 'rsq', n = 5)
 ```
 
-
+Minimum RMSE is obtained by the following tuning parameters: 
 ```{r}
-best_dt_model <- dt_tuning %>%
+best_dt_model <- dt_tuning |> 
   select_best(metric = 'rmse')
 best_dt_model
 ```
@@ -431,7 +479,7 @@ best_dt_model
 
 ```{r}
 # finalize the workflow (fixes the hyperparameters)
-final_boston_wkfl <- boston_wkfl %>%
+final_boston_wkfl <- boston_wkfl |> 
   finalize_workflow(best_dt_model)
 final_boston_wkfl
 ```
@@ -439,9 +487,9 @@ final_boston_wkfl
 Finally, obtain the test RMSE: 
 ```{r}
 # train the decision tree 
-boston_final_fit <- final_boston_wkfl %>%
+boston_final_fit <- final_boston_wkfl |> 
   last_fit(split = boston_split)
-boston_final_fit %>%
+boston_final_fit |> 
   collect_metrics()
 ```
 
@@ -456,19 +504,22 @@ cores <- parallel::detectCores()
 ```{r}
 # set the engine and mode, also the tuning parameters
 # mtry and min_n are set to be determined by CV
-rf_model <- rand_forest() %>%
-  set_args(mtry = tune(), min_n = tune(), trees = 1000) %>% 
-  set_engine("ranger", num.threads = cores) %>% 
+rf_model <- rand_forest() |> 
+  set_args(mtry = tune(), 
+           min_n = tune(), 
+           trees = 1000) |>  
+  set_engine("ranger", num.threads = cores) |>  
   set_mode('regression')
 ```
 
 
 ```{r}
 # use all variables without any transformation
-boston_recipe <- recipe(medv ~ ., data = boston_train) 
+boston_recipe <- recipe(medv ~ ., 
+                        data = boston_train) 
 # create a random forest workflow
-rf_workflow <- workflow() %>% 
-  add_recipe(boston_recipe) %>% 
+rf_workflow <- workflow() |>  
+  add_recipe(boston_recipe) |>  
   add_model(rf_model)
 ```
 
@@ -477,33 +528,33 @@ rf_workflow <- workflow() %>%
 # perform cross-validation on a grid of hyperparameters
 # boston_folds was created above
 set.seed(255)
-rf_tune_results <- rf_workflow %>% 
+rf_tune_results <- rf_workflow |>  
   tune_grid(resamples = boston_folds,  # CV folds
             grid = 25,
             control = control_grid(save_pred = TRUE),
             metrics = metric_set(rmse))
 
-rf_tune_results %>% show_best(metric = "rmse")
+rf_tune_results |>  show_best(metric = "rmse")
 # mtry = 7 min_n=3
 # plot hyperparameter values 
 autoplot(rf_tune_results)
 
-rf_tune_results %>% collect_metrics()
+rf_tune_results |>  collect_metrics()
 ```
 ```{r}
-best_rf_model <- rf_tune_results %>%
+best_rf_model <- rf_tune_results |> 
   select_best(metric = 'rmse')
 best_rf_model
 ```
 ```{r}
-final_rf_wkfl <- rf_workflow %>%
+final_rf_wkfl <- rf_workflow |> 
   finalize_workflow(best_rf_model)
 final_rf_wkfl
 
-rf_final_fit <- final_rf_wkfl %>%
+rf_final_fit <- final_rf_wkfl |> 
   last_fit(split = boston_split)
 
-rf_final_fit %>%
+rf_final_fit |> 
   collect_metrics()
 ```
 
@@ -511,31 +562,35 @@ rf_final_fit %>%
 ```{r}
 # last fit 
 last_rf_model <- 
-  rand_forest(mtry = 7, min_n = 3, trees = 1000) %>% 
-  set_engine("ranger", num.threads = cores, importance = "impurity") %>% 
+  rand_forest(mtry = 7, 
+              min_n = 3, 
+              trees = 1000) |>  
+  set_engine("ranger", 
+             num.threads = cores, 
+             importance = "impurity") |>  
   set_mode("regression")
 
 last_rf_workflow <- 
-  rf_workflow %>% 
+  rf_workflow |>  
   update_model(last_rf_model)
 
 set.seed(678)
 last_rf_fit <- 
-  last_rf_workflow %>% 
+  last_rf_workflow |>  
   last_fit(boston_split)
 
 last_rf_fit
 
-last_rf_fit %>% collect_metrics()
+last_rf_fit |>  collect_metrics()
 ```
 
 
 ```{r}
 # variable importance measures
 library(vip) # for variable importance measures
-last_rf_fit %>% 
-  pluck(".workflow", 1) %>%   
-  pull_workflow_fit() %>% 
+last_rf_fit |>  
+  pluck(".workflow", 1) |>    
+  pull_workflow_fit() |>  
   vip(num_features = 13)
 ```
 
@@ -561,17 +616,17 @@ theme_set(theme_minimal())
 
 library(titanic)
 # use the training data 
-titanic <- titanic_train %>%
+titanic <- titanic_train |> 
   as_tibble()
 
-titanic %>%
-  head() %>%
+titanic |> 
+  head() |> 
   knitr::kable()
 ```
 
 
 ```{r}
-titanic_tree_data <- titanic %>%
+titanic_tree_data <- titanic |> 
   mutate(Survived = if_else(Survived == 1, "Survived", "Died"),
          Survived = as.factor(Survived),
          Sex = as.factor(Sex))
@@ -614,9 +669,9 @@ Let's create a more complicated tree using additional features.
 First convert character variables into factor variables. 
 
 ```{r}
-titanic_tree_full_data <- titanic %>%
+titanic_tree_full_data <- titanic |> 
   mutate(Survived = if_else(Survived == 1, "Survived",
-                            if_else(Survived == 0, "Died", NA_character_))) %>%
+                            if_else(Survived == 0, "Died", NA_character_))) |> 
   mutate_if(is.character, as.factor)
 
 ```
@@ -631,7 +686,7 @@ titanic_tree_full
 
 ```
 
-```{r}
+```{r fig.height = 10, fig.width = 15}
 plot(titanic_tree_full,  ip_args = list(pval = FALSE, id = FALSE),
      tp_args = list( id = FALSE) )
 ```
@@ -645,8 +700,8 @@ plot(titanic_tree_full,  ip_args = list(pval = FALSE, id = FALSE),
 Let's build a random forest using `caret` package. We will use `caret::train()` function and plot the most important variables. 
 ```{r}
 # drop the NA obs.
-titanic_rf_data <- titanic_tree_full_data %>%
-  select(Survived, Pclass, Sex, Age, SibSp, Parch, Fare, Embarked) %>%
+titanic_rf_data <- titanic_tree_full_data |> 
+  select(Survived, Pclass, Sex, Age, SibSp, Parch, Fare, Embarked) |> 
   drop_na()
 titanic_rf_data
 
