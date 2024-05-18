@@ -4,7 +4,7 @@ subtitle: Machine Learning in Economics
 author: 
   name: "Prof. Dr. Hüseyin Taştan"
   affiliation: "Yildiz Technical University"
-date: "Spring 2022"
+date: ""
 output:
   html_document: 
     number_sections: true
@@ -41,7 +41,7 @@ knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning=FALSE)
 
 We will use `USArrests` data set which is a part of the base `R`.   
 ```{r} 
-library(ISLR)
+library(ISLR2)
 states <- row.names(USArrests) 
 names(USArrests)
 ```
@@ -86,7 +86,7 @@ dim(pr.out$x)
 ```
 
 We can plot the first two principal components as follows
-```{r}
+```{r fig.height = 10, fig.width = 15}
 biplot(pr.out, scale=0, cex=0.6)
 ```
 
@@ -144,7 +144,7 @@ str(bodydata)
 ```
 
 Inspecting the correlation matrix we see that these features are in fact highly correlated. 
-```{r}
+```{r fig.height = 10, fig.width = 15}
 library(ggcorrplot)
 cormat <- round(cor(bodydata), 2)
 ggcorrplot(cormat, hc.order = TRUE, type = "lower", outline.color = "white")
@@ -157,6 +157,10 @@ summary(pr.out)
 # change the signs of factor loadings
 pr.out$rotation <- -pr.out$rotation
 pr.out$x <- -pr.out$x
+```
+
+
+```{r fig.height = 10, fig.width = 15}
 biplot(pr.out, scale=0, cex=0.6)
 ```
 
@@ -187,6 +191,10 @@ summary(pr_happiness)
 # and plot the biplot
 pr_happiness$rotation <- -pr_happiness$rotation
 pr_happiness$x <- -pr_happiness$x
+```
+
+
+```{r fig.height = 10, fig.width = 15}
 # biplot
 biplot(pr_happiness, scale=0, cex=0.6)
 ```
@@ -337,7 +345,7 @@ km.out$tot.withinss
 
 ## Example: Bodydata 
 
-```{r}
+```{r fig.height = 10, fig.width = 15}
 # the data set was loaded previously
 km.out <- kmeans(bodydata, centers = 2, nstart = 20)
 plot(bodydata[,1:3], col=(km.out$cluster), cex=2)
@@ -385,7 +393,7 @@ lifedata2015 <- column_to_rownames(lifedata2015, var = "province")
 
 ```{r}
 # use only happiness level and some selected variables 
-happiness <- lifedata2015 %>% 
+happiness <- lifedata2015 |>  
   select(happiness_level, life_exp, avr_daily_earnings, sat_rate_with_health_status)
 head(happiness)
 ```
@@ -398,7 +406,7 @@ ggcorrplot(cormat, hc.order = TRUE, type = "lower", outline.color = "white")
 ```
 
 
-```{r}
+```{r fig.height = 10, fig.width = 15}
 # visualize the distance function 
 # blue: more similar; red: dissimilar 
 # (look at the color legend, low value means more similar)
@@ -412,7 +420,7 @@ as.matrix(distance)[1:6, 1:6]
 
 
 Apply K-means clustering: 
-```{r}
+```{r fig.height = 10, fig.width = 15}
 # find cluster 
 happiness_scaled <- scale(happiness)
 kmeans_happy <- kmeans(happiness_scaled, centers = 2, nstart=20)
@@ -453,9 +461,9 @@ fviz_screeplot(res.pca, addlabels = TRUE, ylim = c(0, 50))
 
 ```{r}
 # cluster plot using original data 
-happiness %>%
+happiness |> 
   mutate(cluster  = kmeans_happy$cluster,
-         province = row.names(happiness)) %>%
+         province = row.names(happiness)) |> 
   ggplot(aes(happiness_level, avr_daily_earnings, color = factor(cluster), label = province)) +
   geom_text()
 ```
@@ -463,18 +471,18 @@ happiness %>%
 
 ```{r}
 # cluster plot using original data 
-happiness %>%
+happiness |> 
   mutate(cluster  = kmeans_happy$cluster,
-         province = row.names(happiness)) %>%
+         province = row.names(happiness)) |> 
   ggplot(aes(happiness_level, life_exp, color = factor(cluster), label = province)) +
   geom_text()
 ```
 
 ```{r}
 # cluster plot using original data 
-happiness %>%
+happiness |> 
   mutate(cluster  = kmeans_happy$cluster,
-         province = row.names(happiness)) %>%
+         province = row.names(happiness)) |> 
   ggplot(aes(happiness_level, sat_rate_with_health_status, color = factor(cluster), label = province)) +
   geom_text()
 ```
@@ -492,7 +500,10 @@ p1 <- fviz_cluster(k2, geom = "point", data = happiness) + ggtitle("k = 2")
 p2 <- fviz_cluster(k3, geom = "point",  data = happiness) + ggtitle("k = 3")
 p3 <- fviz_cluster(k4, geom = "point",  data = happiness) + ggtitle("k = 4")
 p4 <- fviz_cluster(k5, geom = "point",  data = happiness) + ggtitle("k = 5")
+```
 
+
+```{r fig.height = 10, fig.width = 15, message=FALSE, warning=FALSE}
 library(gridExtra)
 grid.arrange(p1, p2, p3, p4, nrow = 2)
 ```
@@ -508,13 +519,13 @@ fviz_nbclust(happiness, kmeans, method = "wss")
 
 ```{r}
 # for optimal k=3 compute summary statistics 
-happiness %>%
-  mutate(Cluster = k3$cluster) %>%
-  group_by(Cluster) %>%
+happiness |> 
+  mutate(Cluster = k3$cluster) |> 
+  group_by(Cluster) |> 
   summarise_all("mean")
 ```
 
-```{r}
+```{r fig.height = 10, fig.width = 15}
 # visualize K-means results with 4 clusters
 fviz_cluster(k4, data = happiness,
              palette = c("#2E9FDF", "#28B463", "#E7B800", "#FC4E07"),
@@ -534,11 +545,11 @@ k4$size         # number of obs. in clusters
 ```{r}
 # for k=4 add cluster results to the data set 
 # and compute summary statistics 
-happiness_cl <- happiness %>%
+happiness_cl <- happiness |> 
   mutate(cluster_kmeans = k4$cluster) 
 
-happiness_cl %>%
-  group_by(cluster_kmeans) %>%
+happiness_cl |> 
+  group_by(cluster_kmeans) |> 
   summarise_all("mean")
 ```
 
@@ -564,7 +575,7 @@ with minimum between-cluster distance at each step. (This option corresponds
 to `cluster::agnes(..., method = "ward")` in the `{cluster}` package. 
 
 Visualize them using base R plot function: 
-```{r}
+```{r fig.height = 10, fig.width = 15}
 # plot them side-by-side using base R plot function 
 # cex = label size
 labsize = 0.8 
@@ -627,7 +638,7 @@ lifedata2015 <- column_to_rownames(lifedata2015, var = "province")
 # hierarchical clustering 
 # using stats::hclust package
 # scale variables before dist() function
-# can also use pipes, %>%, see example at the end
+# can also use pipes, |> , see example at the end
 hc_complete <- hclust(dist(scale(lifedata2015)), method="complete")
 hc_average <- hclust(dist(scale(lifedata2015)), method="average")
 hc_single <- hclust(dist(scale(lifedata2015)), method="single")
@@ -635,23 +646,23 @@ hc_ward <- hclust(dist(scale(lifedata2015)), method="ward.D2")
 ```
 
 
-```{r}
+```{r fig.height = 10, fig.width = 15}
 labsize = 0.7
 plot(hc_complete, main = "Complete Linkage", xlab="", sub="", cex=labsize)
 ```
 
 
-```{r}
+```{r fig.height = 10, fig.width = 15}
 plot(hc_average, main = "Average Linkage", xlab="", sub="", cex=labsize)
 ```
 
 
-```{r}
+```{r fig.height = 10, fig.width = 15}
 plot(hc_single, main = "Single Linkage", xlab="", sub="", cex=labsize)
 ```
 
 
-```{r}
+```{r fig.height = 10, fig.width = 15}
 plot(hc_ward, main = "Ward's Method", xlab="", sub="", cex=labsize)
 ```
 
@@ -660,7 +671,7 @@ plot(hc_ward, main = "Ward's Method", xlab="", sub="", cex=labsize)
 ```{r}
 # focus on a subset of variables 
 # use only happiness level and some selected variables 
-happiness <- lifedata2015 %>% 
+happiness <- lifedata2015 |>  
   select(happiness_level, life_exp, avr_daily_earnings, sat_rate_with_health_status)
 ```
  
@@ -675,7 +686,7 @@ hc_ward <- hclust(dist(scale(happiness)), method="ward.D2")
 ```
 
 
-```{r}
+```{r fig.height = 10, fig.width = 15}
 plot(hc_complete, main="Complete Linkage", xlab="", sub="", cex=labsize)
 plot(hc_average, main="Average Linkage", xlab="", sub="", cex=labsize)
 plot(hc_ward, main="Ward's method", xlab="", sub="", cex=labsize)
@@ -689,7 +700,7 @@ cutree(hc_complete, ncluster)
 ```
 
 
-```{r}
+```{r fig.height = 10, fig.width = 15}
 # plot dendrogram
 plot(hc_complete)
 # draw rectangles around clusters
@@ -697,7 +708,7 @@ rect.hclust(hc_complete , k = ncluster, border = 2:6)
 ```
 
 
-```{r}
+```{r fig.height = 10, fig.width = 15}
 # colorize branches using dendextend library
 library(dendextend)
 avg_dend_obj <- as.dendrogram(hc_complete)
@@ -726,8 +737,8 @@ fviz_cluster(list(data = happiness, cluster = hc_cluster2))
 
 ```{r}
 # we can add cluster information into data 
-happiness %>%
-  mutate(cluster = hc_cluster2) %>%
+happiness %>% 
+  mutate(cluster = hc_cluster2) %>% 
   head
 ```
 
@@ -766,31 +777,19 @@ fviz_cluster(list(data = happiness, cluster = hc_cluster3),
 
 
 
-```{r}
+```{r fig.height = 10, fig.width = 15}
 # visualize dendrogram 
 # use factoextra::hcut() function 
 # cut into 4 clusters
 hres4 <- hcut(happiness, k = 4, stand = TRUE) # default is hc_method = "ward.D2"
 # Visualize
-fviz_dend(hres4, cex = 0.5,
-          k_colors = c("#F1C40F", "#28B463", "#E67E22", "#3498DB"), 
-          color_labels_by_k = TRUE,
-          rect = TRUE,
-          rect_border = c("#F1C40F","#28B463", "#E67E22", "#3498DB"), 
-          rect_fill = TRUE
-         )
+fviz_dend(hres4, cex = 0.5) 
 ```
 
-```{r}
+```{r fig.height = 10, fig.width = 15}
 # horizontal dendrogram: 
 # add horiz = TRUE option
-fviz_dend(hres4, cex = 0.5, horiz = TRUE, 
-          k_colors = c("#F1C40F", "#28B463", "#E67E22", "#3498DB"), 
-          color_labels_by_k = TRUE,
-          rect = TRUE,
-          rect_border = c("#F1C40F","#28B463", "#E67E22", "#3498DB"), 
-          rect_fill = TRUE
-         )
+fviz_dend(hres4, cex = 0.5, horiz = TRUE)
 ```
 
 ```{r}
@@ -825,22 +824,22 @@ fviz_cluster(list(data = happiness, cluster = hc_cluster_ward4),
 
 ```{r}
 # add hierarchical clustering result to the data set
-happiness_cl <- happiness_cl %>% 
+happiness_cl <- happiness_cl |>    
   mutate(cluster_hc = hres4$cluster)
 # cluster means
-happiness_cl %>% 
-  select(-cluster_kmeans) %>% 
-  group_by(cluster_hc) %>% 
+happiness_cl |>  
+  select(-cluster_kmeans) |>  
+  group_by(cluster_hc) |>  
   summarize_all(mean)
 ```
 
 
 
-Illustration of using the pipe operator ` %>% `: 
-```{r}
+Illustration of using the pipe operator `|>` (`magrittr` pipe `|> ` also works): 
+```{r fig.height = 10, fig.width = 15}
 # using pipes
-# dend <- 1:10 %>% dist %>% hclust %>% as.dendrogram 
-# dend %>% plot()
+# dend <- 1:10 |>  dist |>  hclust |>  as.dendrogram 
+# dend |>  plot()
 
 dend <- happiness %>%               # take the data
   scale() %>%                       # standardize
