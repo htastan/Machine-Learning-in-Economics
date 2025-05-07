@@ -1,0 +1,432 @@
+---
+title: "Boosted Tree Algorithm: An Illustration"
+subtitle: Machine Learning in Economics
+author: 
+  name: "Prof. Dr. Hüseyin Taştan"
+  affiliation: "Yildiz Technical University"
+date: ""
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+library(rpart)
+library(rpart.plot)
+library(tidyverse)
+```
+
+## 🔍 The Boosted Tree Algorithm  
+
+Boosting is an ensemble method that constructs a strong predictor by sequentially adding **weak learners**, typically shallow decision trees. The general process is:  
+
+- Initialize the model with a constant prediction:  
+  
+  \[  
+  \hat{f}_0(x) = \text{initial estimate (e.g., mean of } y)  
+  \]  
+
+- For \( b = 1, 2, \dots, B \):  
+  
+  1. Compute the residuals (or pseudo-residuals):  
+  
+     \[  
+     r_i^{(b)} = y_i - \hat{f}_{b-1}(x_i)  
+     \]  
+  
+  2. Fit a shallow tree \( \hat{g}_b(x) \), often of small depth, to these residuals.  
+  
+  3. Update the model:  
+  
+     \[  
+     \hat{f}_b(x) = \hat{f}_{b-1}(x) + \lambda \hat{g}_b(x)  
+     \]  
+  
+- The **learning rate** \( \lambda \) controls how aggressively the model adapts (smaller \( \lambda \) means slower learning).  
+
+- The **final prediction** after \( B \) iterations is the sum:  
+
+  \[  
+  \boxed{  
+  \hat{f}(x) = \hat{f}_0(x) + \sum_{b=1}^{B} \lambda \hat{g}_b(x)  
+  }  
+  \]  
+
+This approach reduces bias by iteratively correcting errors, while controlling complexity with the learning rate and shallow trees.
+
+
+---
+
+## 📊 Illustration using Simulated Data
+
+We generate synthetic data from a nonlinear function with noise:
+
+```{r}
+set.seed(42)
+
+n <- 200
+x <- runif(n, -2, 2)
+f_true <- function(x) 2 * x + sin(3 * x)
+y <- f_true(x) + rnorm(n, 0, 1)
+data <- data.frame(x = x, y = y)
+
+# Grid for smoother prediction line
+x_grid <- seq(-2, 2, length.out = 500)
+grid_df <- data.frame(x = x_grid)
+```
+
+```{r}
+data |> 
+  mutate(ftrue = f_true(x)) |> 
+  ggplot(aes(x,y)) + 
+  geom_point() +
+  geom_line(aes(x, ftrue))
+```
+
+
+---
+
+## 🚀 Boosting Loop with Shallow Trees
+
+We illustrate the boosting process step by step with:
+
+- **B = 5** boosting rounds  
+- **d = 1** (decision stumps - depth of tree)  
+- **λ = 0.1** learning rate  
+
+We show:
+- The prediction function at selected rounds
+- The residual tree at that round
+
+```{r}
+B <- 5         # number of boosting rounds
+lambda <- 0.1  # learning rate (shrinkage)
+depth <- 1     # d = tree depth
+
+F_pred <- rep(0, n) # zero vector, initial predictions
+pred_grid <- rep(0, length(x_grid))
+
+preds_list <- list()
+trees_list <- list()
+
+for (b in 1:B) {
+  residuals <- y - F_pred      # obtain residuals
+  fit <- rpart(residuals ~ x,  # fit an unpruned tree to the residuals
+               data = data, 
+               control = rpart.control(maxdepth = depth, # d
+                                       cp = 0            # no pruning
+                                       )
+               )
+  update <- predict(fit, newdata = data) # update predictions
+  update_grid <- predict(fit, newdata = grid_df) # 
+  
+  F_pred <- F_pred + lambda * update  # predictions at iteration b
+  pred_grid <- pred_grid + lambda * update_grid
+
+  # save predictions and trees
+  preds_list[[b]] <- data.frame(x = x_grid,
+                                pred = pred_grid,
+                                round = paste("Round", b))
+  trees_list[[b]] <- fit
+}
+```
+
+---
+
+## 🖼️ Visualizing the Boosting Process
+
+Below, we plot the predicted function after each round and show the residual tree used at that round.
+
+```{r}
+# round 1, b=1
+pred_df <- preds_list[[1]]
+
+  # Function prediction plot
+ggplot() +
+    geom_point(data = data, 
+               aes(x = x, y = y), 
+               alpha = 0.5, color = "gray") +
+    geom_line(aes(x = x_grid, y = f_true(x_grid)), 
+              color = "black", linetype = "dashed", size = 1) +
+    geom_line(data = pred_df, aes(x = x, y = pred), 
+              color = "red", size = 1) +
+    ggtitle(paste("Boosted Prediction -", pred_df$round[1])) +
+    theme_minimal()
+```
+
+```{r}
+library(rpart.plot)  
+b=1 
+prp(trees_list[[b]], 
+    main = paste("Tree Fit to Residuals - Round b=", b), 
+    type = 2, extra = 1, box.palette = "Blues")
+```
+
+Note that the tree above is the fitted shallow tree (a stump since d=1). The predictions from this tree is scaled by the learning rate (lambda) as shown in the previous plot. 
+
+Let's see the second round: 
+```{r}
+# round 2, b=2
+pred_df <- preds_list[[2]]
+
+  # Function prediction plot
+ggplot() +
+    geom_point(data = data, 
+               aes(x = x, y = y), 
+               alpha = 0.5, color = "gray") +
+    geom_line(aes(x = x_grid, y = f_true(x_grid)), 
+              color = "black", linetype = "dashed", size = 1) +
+    geom_line(data = pred_df, aes(x = x, y = pred), 
+              color = "red", size = 1) +
+    ggtitle(paste("Boosted Prediction -", pred_df$round[2])) +
+    theme_minimal()
+```
+
+```{r} 
+b=2 
+prp(trees_list[[b]], 
+    main = paste("Tree Fit to Residuals - Round b=", b), 
+    type = 2, extra = 1, box.palette = "Blues")
+```
+
+
+Let's see the third round: 
+```{r}
+# round 3, b=3
+pred_df <- preds_list[[3]]
+
+  # Function prediction plot
+ggplot() +
+    geom_point(data = data, 
+               aes(x = x, y = y), 
+               alpha = 0.5, color = "gray") +
+    geom_line(aes(x = x_grid, y = f_true(x_grid)), 
+              color = "black", linetype = "dashed", size = 1) +
+    geom_line(data = pred_df, aes(x = x, y = pred), 
+              color = "red", size = 1) +
+    ggtitle(paste("Boosted Prediction -", pred_df$round[3])) +
+    theme_minimal()
+```
+
+```{r} 
+b=3 
+prp(trees_list[[b]], 
+    main = paste("Tree Fit to Residuals - Round b=", b), 
+    type = 2, extra = 1, box.palette = "Blues")
+```
+
+```{r}
+# round 4, b=4
+pred_df <- preds_list[[4]]
+
+  # Function prediction plot
+ggplot() +
+    geom_point(data = data, 
+               aes(x = x, y = y), 
+               alpha = 0.5, color = "gray") +
+    geom_line(aes(x = x_grid, y = f_true(x_grid)), 
+              color = "black", linetype = "dashed", size = 1) +
+    geom_line(data = pred_df, aes(x = x, y = pred), 
+              color = "red", size = 1) +
+    ggtitle(paste("Boosted Prediction -", pred_df$round[4])) +
+    theme_minimal()
+```
+
+```{r} 
+b=4 
+prp(trees_list[[b]], 
+    main = paste("Tree Fit to Residuals - Round b=", b), 
+    type = 2, extra = 1, box.palette = "Blues")
+```
+
+```{r}
+# round 5, b=5
+pred_df <- preds_list[[5]]
+
+  # Function prediction plot
+ggplot() +
+    geom_point(data = data, 
+               aes(x = x, y = y), 
+               alpha = 0.5, color = "gray") +
+    geom_line(aes(x = x_grid, y = f_true(x_grid)), 
+              color = "black", linetype = "dashed", size = 1) +
+    geom_line(data = pred_df, aes(x = x, y = pred), 
+              color = "red", size = 1) +
+    ggtitle(paste("Boosted Prediction -", pred_df$round[5])) +
+    theme_minimal()
+```
+
+```{r} 
+b=5 
+prp(trees_list[[b]], 
+    main = paste("Tree Fit to Residuals - Round b=", b), 
+    type = 2, extra = 1, box.palette = "Blues")
+```
+
+
+Visualize  the progression: 
+```{r}
+# Visualize the data, true function, and predictions at different rounds  
+library(ggplot2)  
+
+ggplot(data, aes(x, y)) +  
+  geom_point() +  
+  geom_line(aes(x, f_true(x)), color = "blue", size = 1, linetype = "dashed") +  
+  # Add predictions from different boosting rounds  
+  lapply(seq_along(preds_list), function(i) {  
+    geom_line(data = preds_list[[i]], aes(x, pred),   
+              color = "red", alpha = 0.5, size = 0.8,  
+              linetype = "solid", show.legend = FALSE)  
+  }) +  
+  theme_minimal() +  
+  labs(title = "Boosting Progression over Rounds")
+```
+
+
+
+We should increase B to improve the predictions. Rerun the boosting algorithm: 
+
+```{r}
+B <- 100         # number of boosting rounds
+lambda <- 0.1  # learning rate (shrinkage)
+depth <- 1     # d = tree depth
+
+F_pred <- rep(0, n) # zero vector, initial predictions
+pred_grid <- rep(0, length(x_grid))
+
+preds_list <- list()
+trees_list <- list()
+
+for (b in 1:B) {
+  residuals <- y - F_pred      # obtain residuals
+  fit <- rpart(residuals ~ x,  # fit an unpruned tree to the residuals
+               data = data, 
+               control = rpart.control(maxdepth = depth, # d
+                                       cp = 0            # no pruning
+                                       )
+               )
+  update <- predict(fit, newdata = data) # update predictions
+  update_grid <- predict(fit, newdata = grid_df) # 
+  
+  F_pred <- F_pred + lambda * update  # predictions at iteration b
+  pred_grid <- pred_grid + lambda * update_grid
+
+  # save predictions and trees
+  preds_list[[b]] <- data.frame(x = x_grid,
+                                pred = pred_grid,
+                                round = paste("Round", b))
+  trees_list[[b]] <- fit
+}
+```
+
+```{r}
+# round 100
+b=100
+pred_df <- preds_list[[b]]
+
+  # Function prediction plot
+ggplot() +
+    geom_point(data = data, 
+               aes(x = x, y = y), 
+               alpha = 0.5, color = "gray") +
+    geom_line(aes(x = x_grid, y = f_true(x_grid)), 
+              color = "black", linetype = "dashed", size = 1) +
+    geom_line(data = pred_df, aes(x = x, y = pred), 
+              color = "red", size = 1) +
+    ggtitle(paste("Boosted Prediction -", pred_df$round[b])) +
+    theme_minimal()
+```
+
+After 100 iterations we see that the predictions follow the true function more closely. 
+
+The individual tree at the last iteration can also be visualized: 
+```{r} 
+b=100 
+prp(trees_list[[b]], 
+    main = paste("Tree Fit to Residuals - Round b=", b), 
+    type = 2, extra = 1, box.palette = "Blues")
+```
+
+
+<!-- Visualize  the progression after 100 rounds:  -->
+
+<!-- ```{r} -->
+<!-- # Visualize the data, true function, and predictions at different rounds   -->
+<!-- library(ggplot2)   -->
+
+<!-- ggplot(data, aes(x, y)) +   -->
+<!--   geom_point() +   -->
+<!--   geom_line(aes(x, f_true(x)), color = "blue", size = 1, linetype = "dashed") +   -->
+<!--   # Add predictions from different boosting rounds   -->
+<!--   lapply(seq_along(preds_list), function(i) {   -->
+<!--     geom_line(data = preds_list[[i]], aes(x, pred),    -->
+<!--               color = "red", alpha = 0.5, size = 0.8,   -->
+<!--               linetype = "solid", show.legend = FALSE)   -->
+<!--   }) +   -->
+<!--   theme_minimal() +   -->
+<!--   labs(title = "Boosting Progression over Rounds") -->
+<!-- ``` -->
+
+---
+
+## 🧮 Final Aggregation
+
+After $B = 500$ rounds, the final boosted predictor is:
+```{r}
+B <- 500         # number of boosting rounds
+lambda <- 0.1  # learning rate (shrinkage)
+depth <- 1     # d = tree depth
+
+F_pred <- rep(0, n) # zero vector, initial predictions
+pred_grid <- rep(0, length(x_grid))
+
+preds_list <- list()
+trees_list <- list()
+
+for (b in 1:B) {
+  residuals <- y - F_pred      # obtain residuals
+  fit <- rpart(residuals ~ x,  # fit an unpruned tree to the residuals
+               data = data, 
+               control = rpart.control(maxdepth = depth, # d
+                                       cp = 0            # no pruning
+                                       )
+               )
+  update <- predict(fit, newdata = data) # update predictions
+  update_grid <- predict(fit, newdata = grid_df) # 
+  
+  F_pred <- F_pred + lambda * update  # predictions at iteration b
+  pred_grid <- pred_grid + lambda * update_grid
+
+  # save predictions and trees
+  preds_list[[b]] <- data.frame(x = x_grid,
+                                pred = pred_grid,
+                                round = paste("Round", b))
+  trees_list[[b]] <- fit
+}
+```
+
+We can compare the final boosted prediction with the true function:
+
+```{r}
+final_pred <- preds_list[[B]]
+ggplot() +
+  geom_point(data = data, aes(x = x, y = y), alpha = 0.4) +
+  geom_line(aes(x = x_grid, y = f_true(x_grid)), color = "black", linetype = "dashed", size = 1) +
+  geom_line(data = final_pred, aes(x = x, y = pred), color = "red", size = 1) +
+  ggtitle("Final Boosted Function vs. True Function") +
+  theme_minimal()
+```
+
+
+Note that using a large $B$ can result in overfitting. It should be chosen using cross-validation. 
+
+---
+
+## ✅ Summary
+
+This illustration shows how boosting builds a powerful prediction model by:
+
+  - Sequentially fitting **simple trees** to residuals,
+  - Updating predictions cautiously via a **learning rate** λ, 
+  - Aggregating them into a **smooth final prediction**.
+
+

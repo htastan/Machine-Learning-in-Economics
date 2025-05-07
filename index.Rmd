@@ -63,6 +63,7 @@ An introductory course on machine learning methods for economics majors.
 
     -   Slides: [html](Slides/Tree-based-methods.html)
     -   Lab: [html](Labs/Lab-09-Tree-based-methods.html) | [.Rmd](Labs/Lab-09-Tree-based-methods.Rmd)
+    -   Illustrating the Boosting Algorithm:  [html](Labs/boosted_trees_illustration.html) | [.Rmd](Labs/boosted_trees_illustration.Rmd)
 
 10. **Unsupervised Learning**
 
