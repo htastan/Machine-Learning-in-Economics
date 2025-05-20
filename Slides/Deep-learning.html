@@ -468,10 +468,38 @@ name: struct
 - Components of an ANN
   - Inputs: `\(x_1, x_2,\ldots,x_p\)` 
   - Weights (unknown parameters): `\(w_1,w_2,\ldots,w_p\)`, and `\(w_0\)` (intercept or bias) 
-  - Summation function: `\(\sum_{j=1}^{d} w_{j} x_{j}+w_{0}\)` 
-  - Activation function: `\(h(\cdot)\)` 
+  - Summation function: `\(\sum_{j=1}^{p} w_{j} x_{j}+w_{0}\)` 
+  - Activation function: `\(g(\cdot)\)` 
 - A simple ANN (perceptron) can be written as: 
-`$$y=h\left( \sum_{j=1}^{d} w_{j} x_{j}+w_{0} \right)$$`
+`$$y=g\left( \sum_{j=1}^{p} w_{j} x_{j}+w_{0} \right)$$`
+
+---
+# 🔧 Key Components of a One-Hidden-Layer ANN
+
+Let the number of hidden units be `\(K\)`. The model has two layers:
+
+1. **Hidden layer (nonlinear transformation of inputs)**  
+   For each hidden unit `\(k = 1, \ldots, K\)`:
+   `$$A_k = h_k(X) = g\left(w_{k0} + \sum_{j=1}^{p} w_{kj} X_j \right)$$`
+where 
+   - `\(g(\cdot)\)`: activation function (e.g., ReLU, sigmoid)  
+   - `\(w_{kj}\)`: weights from input `\(j\)` to hidden unit `\(k\)`  
+   - `\(w_{k0}\)`: bias term for unit `\(k\)`
+
+---
+# 🧾 Output Layer
+
+The output is a **linear function** of the hidden units:
+`$$f(X) = \beta_0 + \sum_{k=1}^{K} \beta_k A_k$$`
+
+- The activations `\(A_k\)` act like transformed features  
+
+- Coefficients `\(\beta_0, \ldots, \beta_K\)` are estimated from the data along with weights `\(w_{kj}\)`  
+
+- The network transforms the inputs using nonlinear activation functions, followed by a linear combination in the output layer.
+
+- Tuning parameters: 
+
 
 
 ---
