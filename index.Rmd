@@ -83,7 +83,9 @@ An introductory course on machine learning methods for economics majors.
 
 13. **Large Language Models (LLMs)**
 
-    -   Slides (only): [html](Slides/LLMs.html) 
+    -   Slides: [html](Slides/LLMs.html) 
+    - Word Embeddings (Python notebook): [Google colab link](https://colab.research.google.com/drive/1pKbGZJlvHWYxHTeRxUguCaUfNWHK8Jch?usp=sharing) 
+    - Fundamentals of Transformers (Python notebook): [Google colab link](https://colab.research.google.com/drive/1bHWbxej6KESFzMC_ocoCarE7hRkwOGPm?usp=sharing) 
 
 
 ## Scope and Purpose
