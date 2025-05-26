@@ -83,7 +83,8 @@ An introductory course on machine learning methods for economics majors.
 
 13. **Large Language Models (LLMs)**
 
-    -   Slides: [html](Slides/LLMs.html) 
+    -   Slides (only): [html](Slides/LLMs.html) 
+
 
 ## Scope and Purpose
 
